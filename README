@@ -2,3 +2,14 @@ This is the Cappuccino port of the GNUstep Renaissance.
 Cappusance lets you build your GUI and bindings in XML markup.
 Cappusance also brings powerful autolayout capabilities to Cappuccino.
 See <http://www.gnustep.it/Renaissance/> for GNUstep Renaissance documentation.
+
+Basic example: Set up a TextView within a Scrollview in a new window:
+
+- (void) applicationDidFinishLaunching:(CPNotification)aNotification
+{	var data=[CPData dataWithRawString: '<gsmarkup><objects><window title="Enter your markup here" closable="no"><vbox>'+
+				'<scrollView width="300" height="200"><textView id="tv"> Edit me</textView></scrollView><button title="Run it" action="createObjects:"/></vbox></window></objects>'+
+				'<connectors><outlet source="#CPOwner" target="tv" label="#textView"/>'+
+				'</connectors></gsmarkup>'];
+	[CPBundle loadGSMarkupData: data externalNameTable: [CPDictionary dictionaryWithObject:self forKey:"CPOwner"]
+				localizableStringsTable: nil inBundle: nil tagMapping: nil];
+}
