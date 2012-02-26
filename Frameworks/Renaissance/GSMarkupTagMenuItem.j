@@ -23,26 +23,9 @@
    If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-#include <TagCommonInclude.h>
-#include "GSMarkupTagMenu.h"
-#include "GSMarkupTagMenuItem.h"
-#include "GSMarkupTagObjectAdditions.h"
+@import "GSMarkupTagObject.j"
 
-
-#ifndef GNUSTEP
-# include <Foundation/Foundation.h>
-# include <AppKit/AppKit.h>
-# include "GNUstep.h"
-#else
-# include <Foundation/CPString.h>
-# include <AppKit/CPCell.h>
-# include <AppKit/CPImage.h>
-# include <AppKit/CPMenu.h>
-# include <AppKit/CPMenuItem.h>
-# include <AppKit/CPView.h>
-#endif
-
-@implementation GSMarkupTagMenuItem
+@implementation GSMarkupTagMenuItem: GSMarkupTagObject
 + (CPString) tagName
 {
   return @"menuItem";

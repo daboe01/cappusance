@@ -23,36 +23,11 @@
    If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-#include <TagCommonInclude.h>
-#include "GSMarkupTagMenu.h"
-#include "GSMarkupTagMenuItem.h"
+
+@import "GSMarkupTagObject.j"
 
 
-#ifndef GNUSTEP
-# include <Foundation/Foundation.h>
-# include <AppKit/AppKit.h>
-# include "GNUstep.h"
-#else
-# include <Foundation/CPString.h>
-# include <AppKit/CPApplication.h>
-# include <AppKit/CPFontManager.h>
-# include <AppKit/CPMenu.h>
-# include <AppKit/CPView.h>
-#endif
-
-/* This is a hack because of a very confusing situation.  It seems
- * that on Apple Mac OS X you have to call [CPApp setAppleMenu: xxx]
- * to get your menu to work, but that method was removed from the
- * Apple headers, with no replacement.  So - like everyone else on the
- * internet - we use a hack and declare it here.
- */
-#ifndef GNUSTEP
-@interface CPApplication (AppleMenu)
-- (void) setAppleMenu: (CPMenu)menu;
-@end
-#endif
-
-@implementation GSMarkupTagMenu
+@implementation GSMarkupTagMenu: GSMarkupTagObject
 + (CPString) tagName
 {
   return @"menu";
@@ -63,13 +38,16 @@
   var platformObject = nil;
   var type = [_attributes objectForKey: @"type"];
 
+
   if (type != nil)
-    {
-      if ([type isEqualToString: @"font"])
+  {
+    if ([type isEqualToString: @"font"])
 	{
 	  platformObject = [[CPFontManager sharedFontManager] fontMenu: YES];  
-	  RETAIN (platformObject);
+	} else if( [type isEqualToString: @"main"])
+	{ platformObject=[CPApp mainMenu];
 	}
+
     }
   
   if (platformObject == nil)
@@ -80,15 +58,15 @@
   return platformObject;
 }
 
+
 - (id) initPlatformObject: (id)platformObject
 {
-  var i, count;
 
   /* title */
   {
     var title = [self localizedStringValueForAttribute: @"title"];
 
-    if ([[_attributes objectForKey: @"type"] isEqualToString: @"font"])
+    if ([[_attributes objectForKey: @"type"] isEqualToString: @"font"] )
       {
 	/* This is special.  In this case, allocPlatformObject gave us
 	 * an instance which is already init-ed!
@@ -101,7 +79,6 @@
     else
       {
 	/* In all other cases, we must do an -init of some sort now.
-	 * :-)
 	 */
 	if (title != nil)
 	  {
@@ -114,32 +91,6 @@
       }
   }
   
-  /* Create content.  */
-  count = [_content count];
-  
-  for (i = 0; i < count; i++)
-    {
-      /* We have as content either <menuItem> tags, or <menu> tags.  */
-      var tag = [_content objectAtIndex: i];
-      var item = [tag platformObject];
-
-      /* If what we decoded really is a CPMenu, not a CPMenuItem,
-       * wrap it up into a CPMenuItem.
-       */
-      if ([item isKindOfClass: [CPMenu class]])
-	{
-	  var menu = (CPMenu)item;
-	  item = [[CPMenuItem alloc] initWithTitle: [menu title]
-				     action: NULL
-				     keyEquivalent: @""];
-	  [item setSubmenu: menu];
-	}
-      
-      if (item != nil  &&  [item isKindOfClass: [CPMenuItem class]])
-	{
-	  [platformObject addItem: item];
-	}
-    }
   
   /* type */
   {
@@ -147,11 +98,7 @@
   
     if (type != nil)
       {
-	if ([type isEqualToString: @"main"])
-	  {
-	    [CPApp setMainMenu: platformObject];
-	  }
-	else if ([type isEqualToString: @"windows"])
+	 if ([type isEqualToString: @"windows"])
 	  {
 	    [CPApp setWindowsMenu: platformObject];
 	  }
@@ -162,12 +109,6 @@
 	else if ([type isEqualToString: @"font"])
 	  {
 	    /* The menu has already been created as font menu.  */
-          }
-        else if ([type isEqualToString: @"apple"])
-	  {
-#ifndef GNUSTEP
-	    [CPApp setAppleMenu: platformObject];
-#endif
           }
 	/* Other types ignored for compatibility with future
 	 * expansions.  */
@@ -185,7 +126,41 @@
   
   return platformObject;
 }
+-(id) postInitPlatformObject: platformObject
+{	var type = [_attributes objectForKey: @"type"];
+	if( type&& [type isEqualToString: @"main"])
+		[CPMenu setMenuBarVisible:YES];
 
+  /* Create content.  */
+  var count = [_content count];
+  
+  for (var i = 0; i < count; i++)
+    {
+      /* We have as content either <menuItem> tags, or <menu> tags.  */
+      var tag = [_content objectAtIndex: i];
+      var item = [tag platformObject];
+
+      /* If what we decoded really is a CPMenu, not a CPMenuItem,
+       * wrap it up into a CPMenuItem.
+       */
+	if ([item isKindOfClass: [CPMenu class]])
+	{
+	  var menu = item;
+	  item = [[CPMenuItem alloc] initWithTitle: [menu title]
+				     action: NULL
+				     keyEquivalent: @""];
+		[item setSubmenu: menu];
+
+	  [platformObject addItem: item];
+	  [platformObject setSubmenu:menu forItem: item ];
+	}
+      
+	 if (item != nil  &&  [item isKindOfClass: [CPMenuItem class]])
+	 {	[platformObject addItem: item];
+	 }
+    }
+	return platformObject;
+}
 + (CPArray) localizableAttributes
 {
   return [CPArray arrayWithObject: @"title"];
