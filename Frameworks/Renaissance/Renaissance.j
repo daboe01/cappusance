@@ -40,6 +40,9 @@
 @import <Renaissance/GSMarkupTagPopUpButton.j>
 @import <Renaissance/GSMarkupTagTableView.j>
 @import <Renaissance/GSMarkupTagTableColumn.j>
+@import <Renaissance/GSMarkupTagMenu.j>
+@import <Renaissance/GSMarkupTagMenuItem.j>
+@import <Renaissance/GSMarkupTagSplitView.j>
 
 @import <Renaissance/GSAutoLayoutDefaults.j>
 @import <Renaissance/GSMarkupDecoder.j>
