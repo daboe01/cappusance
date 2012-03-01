@@ -71,6 +71,11 @@
       style &= ~CPTitledWindowMask;
     }
 
+  if ([self boolValueForAttribute: @"HUD"] == 1)
+    {
+      style |= CPHUDBackgroundWindowMask;
+    }
+
   /* closable */
   if ([self boolValueForAttribute: @"closable"] == 0)
     {
