@@ -1,4 +1,4 @@
-This is the Cappuccino port of the GNUstep Renaissance.
+This is the Cappuccino port of GNUstep Renaissance.
 Cappusance lets you build your GUI and bindings in XML markup, with powerful autolayout capabilities.
 Cappusance also comes with support of KVO bindings.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
