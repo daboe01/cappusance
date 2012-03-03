@@ -116,6 +116,14 @@
 	[platformObject setAllowsEmptySelection: NO];
       }
   }
+  {
+    var value = [self boolValueForAttribute: @"usesAlternatingRowBackgroundColors"];
+
+    if (value == 1)
+      {
+	[platformObject setUsesAlternatingRowBackgroundColors:YES];
+      }
+  }
 
   /* allowsColumnSelection */
   {

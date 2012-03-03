@@ -43,6 +43,7 @@
 @import <Renaissance/GSMarkupTagMenu.j>
 @import <Renaissance/GSMarkupTagMenuItem.j>
 @import <Renaissance/GSMarkupTagSplitView.j>
+@import <Renaissance/GSMarkupTagHSpace.j>
 
 @import <Renaissance/GSAutoLayoutDefaults.j>
 @import <Renaissance/GSMarkupDecoder.j>

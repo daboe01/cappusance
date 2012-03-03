@@ -153,9 +153,7 @@
 
 	  [platformObject addItem: item];
 	  [platformObject setSubmenu:menu forItem: item ];
-	}
-      
-	 if (item != nil  &&  [item isKindOfClass: [CPMenuItem class]])
+	} else if (item != nil  &&  [item isKindOfClass: [CPMenuItem class]])
 	 {	[platformObject addItem: item];
 	 }
     }

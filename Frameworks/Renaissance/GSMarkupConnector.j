@@ -286,7 +286,7 @@
 				 usingNameTable: nameTable];
   var target = [GSMarkupConnector getObjectForIdString: _target
 				 usingNameTable: nameTable];
-	[source   bind:"value" toObject: target withKeyPath:_label options:nil];
+	[source bind: CPValueBinding toObject: target withKeyPath:_label options:nil];
 }
 
 @end
