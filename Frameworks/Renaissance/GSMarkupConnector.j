@@ -281,10 +281,9 @@
 }
 
 - (void) establishConnectionUsingNameTable: (CPDictionary)nameTable;
-{
-  var source = [GSMarkupConnector getObjectForIdString: _source 
+{	var source = [GSMarkupConnector getObjectForIdString: _source 
 				 usingNameTable: nameTable];
-  var target = [GSMarkupConnector getObjectForIdString: _target
+	var target = [GSMarkupConnector getObjectForIdString: _target
 				 usingNameTable: nameTable];
 	[source bind: CPValueBinding toObject: target withKeyPath:_label options:nil];
 }

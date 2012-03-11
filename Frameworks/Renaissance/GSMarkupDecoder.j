@@ -90,9 +90,11 @@
 
 @implementation GSMarkupDecoder: CPObject
 {	var _uniqueID;
-	CPMutableDictionary _nameTable, _tagNameToObjectClass;
+	CPMutableDictionary _nameTable;
+	CPMutableDictionary _tagNameToObjectClass;
 	CPString _xmlStr;
-	CPMutableArray _objects, _connectors;
+	CPMutableArray _objects;
+	CPMutableArray _connectors;
 }
 + (id) decoderWithContentsOfFile: (CPString)file
 {
