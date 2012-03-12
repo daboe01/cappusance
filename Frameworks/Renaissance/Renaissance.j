@@ -46,4 +46,5 @@
 @import <Renaissance/GSMarkupTagHSpace.j>
 
 @import <Renaissance/GSAutoLayoutDefaults.j>
+@import <Renaissance/GSMarkupTagFireside.j>
 @import <Renaissance/GSMarkupDecoder.j>

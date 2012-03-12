@@ -29,39 +29,28 @@
 
 @implementation CPString (CapitalizedString)
 - (CPString) stringByUppercasingFirstCharacter
-{
-  var length = [self length];
+{	var length = [self length];
 
-  if (length < 1)
-	{
-	  return self;
-	}
-  else
-	{
-	  var s;
-	  /* Get the first character.  */
-	  var c = [self characterAtIndex: 0];
+	if (length < 1) return self;
+	else {
+		var s;
+		/* Get the first character.  */
+		var c = [self characterAtIndex: 0];
 
-	  /* If it's not lowercase ... */
-	  if (c < 'a'  ||  c > 'z')
-	{
-	  /* then no need to uppercase.  */
-	  return self;
-	}
+		/* If it's not lowercase ... */
+		if (c < 'a'  ||  c > 'z')
+		{
+		/* then no need to uppercase.  */
+			return self;
+		}
 	  
-	  /* Else, uppercase the first character.  */
-	  c = c.toUpperCase();
+		/* Else, uppercase the first character.  */
+		c = c.toUpperCase();
 	  
-	  s = [CPString stringWithString:c];
+		s = [CPString stringWithString:c];
 	  
-	  if (length == 1)
-	{
-	  return s;
-	}
-	  else
-	{
-	  return [s stringByAppendingString: [self substringFromIndex: 1]];
-	}
+		if (length == 1)  return s;
+		else  return [s stringByAppendingString: [self substringFromIndex: 1]];
 	}
 }
 - (CPString) trimmedString
@@ -76,10 +65,7 @@
 
 - (id)initWithContentsOfURL:(CPURL)aURL
 {	var plist = [CPURLConnection sendSynchronousRequest:[CPURLRequest requestWithURL:aURL] returningResponse:nil error:nil];
-	if (plist == nil)
-	{
-		return nil;
-	}
+	if (plist == nil) return nil;
 	return plist;
 }
 
@@ -89,12 +75,12 @@
 @end
 
 @implementation GSMarkupDecoder: CPObject
-{	var _uniqueID;
+{	var					_uniqueID;
 	CPMutableDictionary _nameTable;
 	CPMutableDictionary _tagNameToObjectClass;
-	CPString _xmlStr;
-	CPMutableArray _objects;
-	CPMutableArray _connectors;
+	CPString			_xmlStr;
+	CPMutableArray		_objects;
+	CPMutableArray		_connectors;
 }
 + (id) decoderWithContentsOfFile: (CPString)file
 {
@@ -112,12 +98,10 @@
 }
 
 - (Class) objectClassForTagName: (CPString)tagName mappedByFormatArray: arr
-{	var capitalizedTagName;
-	var className;
-	var c;
-	capitalizedTagName = [tagName stringByUppercasingFirstCharacter];
+{	var c;
+	var capitalizedTagName = [tagName stringByUppercasingFirstCharacter];
 
-	className = [_tagNameToObjectClass objectForKey: tagName];
+	var className = [_tagNameToObjectClass objectForKey: tagName];
 	if (className != nil) [arr insertObject:className atIndex:0];
 	var i, cnt=arr.length;
 
@@ -134,40 +118,19 @@
 }
 
 - (id) connectorClassForTagName: (CPString)tagName
-{
-  var capitalizedTagName;
-  var className;
-  var c;
-
-  
-  if (className != nil)
-	{
-	  c = CPClassFromString (className);
-	  if (c != Nil)
-	{
-	  return c;
+{	if (tagName =="control")
+	{	return [GSMarkupControlConnector class];
+	} else if (tagName == "outlet")
+	{	return [GSMarkupOutletConnector class];
 	}
-	}
-
-  switch ([tagName characterAtIndex: 0])
-	{
-	case 'c':
-	  if ([tagName isEqualToString: @"control"])
-	{
-	  return [GSMarkupControlConnector class];
-	}
-	  break;
-	case 'o':
-	  if ([tagName isEqualToString: @"outlet"])
-	{
-	  return [GSMarkupOutletConnector class];
-	}
-	  break;
-	}
-
 	return [self objectClassForTagName: tagName
 			mappedByFormatArray: [CPArray arrayWithObjects: @"GSMarkup%@Connector",  @"GSMarkupConnector%@",  @"GS%@Connector", @"GSConnector%@",  @"%@Connector",@"Connector%@"]];
+}
 
+
+
+- (id) entityClassForTagName: (CPString)tagName
+{	return [self objectClassForTagName: tagName mappedByFormatArray: [CPArray arrayWithObjects: @"GSMarkup%@"]];
 }
 
 
@@ -177,7 +140,7 @@
 	var ret=[CPMutableDictionary dictionary];
 	var i,cnt=attributes.length;
 	for(i=0;i<cnt;i++)
-	{	[ret setValue: attributes[i].nodeValue forKey:attributes[i].nodeName];
+	{	[ret setValue: attributes[i].nodeValue forKey: attributes[i].nodeName];
 	}
 	return ret;
 }
@@ -190,7 +153,7 @@
 		var childrenCount=children.length;
 		var i;
 		for(i=0;i<childrenCount;i++)
-		{	var co=[self insertMarkupObjectFromDOMNode:children[i] intoContainer: nil];
+		{	var co=[self insertMarkupObjectFromDOMNode: children[i] intoContainer: nil];
 			if(co) [tagChildren addObject: co ];
 			else
 			{	var cnv=children[i].nodeValue;
@@ -205,11 +168,14 @@
 
 - (id) insertMarkupObjectFromDOMNode: o intoContainer: container
 {
-	var nclass= (container==_connectors)? [self connectorClassForTagName: o.nodeName]:[self objectClassForTagName: o.nodeName];
-	if (nclass)
-	{
+	var nclass;
+	nclass=[self objectClassForTagName: o.nodeName];
+	if(!nclass) nclass=[self connectorClassForTagName: o.nodeName];
+	if(!nclass) nclass=[self entityClassForTagName: o.nodeName];
 
-		var attribs=[self attributesForDOMNode: o];
+//if (container==_entites) alert(o.nodeName+" "+ nclass);
+	if (nclass)
+	{	var attribs=[self attributesForDOMNode: o];
 		var oid=[attribs objectForKey:@"id"];
 		if(!oid) oid=[CPString stringWithFormat: @"%@%d", o.nodeName, ++_uniqueID];
 
@@ -222,7 +188,7 @@
 			if(![key length]) continue;
 			value = [attribs objectForKey: key];
 
-			if (container!=_connectors && [value hasPrefix: @"#"])
+			if (container!=_connectors && container!=_entites && [value hasPrefix: @"#"])
 			{	if ([value hasPrefix: @"##"])
 				{
 					/* A leading doubled '#' is an escape sequence,
@@ -249,7 +215,6 @@
 				  }
 			}
 		}
-//if(container==_connectors && _connectors.length) alert("tim "+o.nodeName+" "+[[_connectors objectAtIndex:0] description]);
 		var newo= [[nclass alloc] initWithAttributes: attribs content: [self insertChildrenOfDOMNode: o intoContainer: container]];
 		if(!newo) return nil;
 		if(container) [container addObject:newo];
@@ -283,6 +248,7 @@
 	_tagNameToObjectClass=[CPMutableDictionary dictionary];
 	_objects=[CPMutableArray array];
 	_connectors=[CPMutableArray array];
+	_entites=[CPMutableArray array];
 	return self;
 }
 - (void) setObjectClass: (CPString)className
@@ -291,35 +257,31 @@
   [_tagNameToObjectClass setObject: className  forKey: tagName];
 }
 
-- (void) makeConnectorsFromDOMNode: aDOMNode
+- (void) processDOMNode: aDOMNode intoContainer:(id) aContainer
 {	if(!aDOMNode) return;
 	var children;
-	if(children=aDOMNode.childNodes)
+	if (children = aDOMNode.childNodes)
 	{	var childrenCount=children.length;
 
 		for(i=0;i<childrenCount;i++)
-		{	[self insertMarkupObjectFromDOMNode: children[i] intoContainer: _connectors];
-//alert([[_connectors objectAtIndex:0] description]);
+		{	[self insertMarkupObjectFromDOMNode: children[i] intoContainer: aContainer];
 		}
 	}
 }
 
 -(void) parse
-{
-	var t=[self parseXMLString:_xmlStr];
-	var objs= t.getElementsByTagName("objects");
+{	var t= [self parseXMLString:_xmlStr];
 
-	if (objs && objs[0].childNodes)
-	{	var cns=objs[0].childNodes;
-		var i,cnt=cns.length;
-		for(i=0; i< cnt; i++)
-		{	[self insertMarkupObjectFromDOMNode: cns[i] intoContainer: _objects];
-		}
-	}
-// alert([_objects description]);
+	var objs= t.getElementsByTagName("objects");
+	if(objs) [self processDOMNode: objs[0] intoContainer: _objects];
+
 	var  cons= t.getElementsByTagName("connectors");
-	if(cons) [self makeConnectorsFromDOMNode: cons[0]];
+	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];
+
+	var  entities= t.getElementsByTagName("entities");
+	if(entities) [self processDOMNode: entities[0] intoContainer: _entites];
 }
+
 -(id) nameTable
 {	return _nameTable;
 }
