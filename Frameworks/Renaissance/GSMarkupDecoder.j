@@ -1,11 +1,5 @@
 /* -*-objc-*-
-
-
-   Author: Nicola Pero <n.pero@mi.flashnet.it>
-   Date: January 2003
-   Author of Cappuccino port: Daniel Boehringer (2012)
-
-   This file is part of GNUstep Renaissance
+   Author: Daniel Boehringer (2012)
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public
@@ -16,16 +10,10 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    Library General Public License for more details.
-
-   You should have received a copy of the GNU Library General Public
-   License along with this library; see the file COPYING.LIB.
-   If not, write to the Free Software Foundation,
-   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */ 
 
 @import <Foundation/CPObject.j>
 @import "GSMarkupConnector.j"
-
 
 @implementation CPString (CapitalizedString)
 - (CPString) stringByUppercasingFirstCharacter
@@ -275,11 +263,11 @@
 	var objs= t.getElementsByTagName("objects");
 	if(objs) [self processDOMNode: objs[0] intoContainer: _objects];
 
-	var  cons= t.getElementsByTagName("connectors");
-	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];
-
 	var  entities= t.getElementsByTagName("entities");
 	if(entities) [self processDOMNode: entities[0] intoContainer: _entites];
+
+	var  cons= t.getElementsByTagName("connectors");
+	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];
 }
 
 -(id) nameTable
@@ -290,6 +278,9 @@
 }
 -(id) connectors
 {	return _connectors;
+}
+-(id) entities
+{	return _entities;
 }
 @end
 
