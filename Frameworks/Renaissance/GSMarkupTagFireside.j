@@ -16,8 +16,8 @@ var entityNameTable;
 -(CPString) name
 {	return [_attributes objectForKey: @"name"];
 }
--(CPString) isPK
-{	return [self boolValueForAttribute: @"primaryKey"];
+-(BOOL) isPK
+{	return [self boolValueForAttribute: @"primaryKey"]==1;
 }
 /* Will never be called.  */
 - (id) allocPlatformObject
@@ -42,7 +42,7 @@ var entityNameTable;
 -(CPString) bindingColumn
 {	return [_attributes objectForKey: @"bindingColumn"];
 }
--(CPString) isToMany
+-(BOOL) isToMany
 {	return [_attributes objectForKey: @"type"]=="toMany";
 }
 
@@ -76,12 +76,12 @@ var entityNameTable;
 	{	var v = _content[i];
 		if([v isKindOfClass: [GSMarkupColumn class] ])
 		{	if([v isPK])
-			{	if(myPK) [CPException raise:CPInvalidArgumentException reason:@"Duplicate PK "+[v name]+" "+ myPK+" already is PK!"];
-				myPK=[v name];
+			{	if(myPK) [CPException raise:CPInvalidArgumentException reason:@"Duplicate PK "+[v name]+"! "+ myPK+" already is PK!"];
+				else myPK=[v name];
 			}
 			[myCols addObject: [v name]];
 		} else if([v isKindOfClass: [GSMarkupRelationship class] ])
-		{	var rel=[[FSRelationship alloc] initWithName: [v name] andTargetEntity: [v targetEntity]];	//fixme: set object, not name
+		{	var rel=[[FSRelationship alloc] initWithName: [v name] andTargetEntity: [v target]];	//fixme: set object, not name
 			if([v bindingColumn]) [rel setBindingColumn: [v bindingColumn] ];
 			if([v targetColumn]) [rel setBindingColumn: [v targetColumn] ];
 			if([v isToMany]) [rel  setType: FSRelationshipTypeToMany];
@@ -89,7 +89,7 @@ var entityNameTable;
 		}
 	}
 	[platformObject setColumns:myCols];
-	if(myPK) [platformObject setPK: myPK];
+	if(myPK) [platformObject setPk: myPK];
 	return platformObject;
 }
 
