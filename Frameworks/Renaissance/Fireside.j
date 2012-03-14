@@ -139,6 +139,10 @@ FSRelationshipTypeToMany=1;
 	}
 	return nil;
 }
+-(CPArray) relationships
+{	return [_relations allObjects];
+}
+
 -(void) addRelationship:(FSRelationship) someRel
 {	if(!_relations) _relations=[CPSet setWithObject:someRel];
 	else [_relations addObject: someRel];

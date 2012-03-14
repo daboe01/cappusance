@@ -260,7 +260,7 @@
   var target = [GSMarkupConnector getObjectForIdString: _target
 				 usingNameTable: nameTable];
 //alert("connecting  "+source+" "+target+"  "+ _target+" "+_label);
-  [source setValue: target  forKey: [_label substringFromIndex: 1]];
+  [source setValue: target  forKey: [_label substringFromIndex: [_label characterAtIndex:0]=='#'?1:0]];
 }
 
 @end

@@ -83,6 +83,7 @@ var staticNameTable;
 	var topLevelObjects = nil;
 	var awaker = [GSMarkupAwaker new];
 	var decoder=[[GSMarkupDecoder alloc] initWithXMLString: [data rawString]];
+	[decoder setExternalNameTable:context];
 	[decoder parse];
 	var objects=[decoder objects];
 

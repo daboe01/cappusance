@@ -14,7 +14,7 @@ var entityNameTable;
   return @"column";
 }
 -(CPString) name
-{	return [_attributes objectForKey: @"name"];
+{	return [_attributes objectForKey: @"id"];
 }
 -(BOOL) isPK
 {	return [self boolValueForAttribute: @"primaryKey"]==1;
@@ -31,7 +31,7 @@ var entityNameTable;
   return @"relationship";
 }
 -(CPString) name
-{	return [_attributes objectForKey: @"name"];
+{	return [_attributes objectForKey: @"id"];
 }
 -(CPString) target
 {	return [_attributes objectForKey: @"target"];
@@ -64,6 +64,7 @@ var entityNameTable;
 
 - (id) initPlatformObject: (id)platformObject
 {	var store = [_attributes objectForKey: @"store"];
+
 	var name = [_attributes objectForKey: @"name"];
 	platformObject = [platformObject initWithName: name andStore: store ];
 
@@ -81,7 +82,7 @@ var entityNameTable;
 			}
 			[myCols addObject: [v name]];
 		} else if([v isKindOfClass: [GSMarkupRelationship class] ])
-		{	var rel=[[FSRelationship alloc] initWithName: [v name] andTargetEntity: [v target]];	//fixme: set object, not name
+		{	var rel=[[FSRelationship alloc] initWithName: [v name] andTargetEntity: [v target]];	//set name as a temorary symbolic link. will be resolved in decoder later on.
 			if([v bindingColumn]) [rel setBindingColumn: [v bindingColumn] ];
 			if([v targetColumn]) [rel setBindingColumn: [v targetColumn] ];
 			if([v isToMany]) [rel  setType: FSRelationshipTypeToMany];

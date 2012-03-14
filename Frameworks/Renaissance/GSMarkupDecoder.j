@@ -65,6 +65,7 @@
 @implementation GSMarkupDecoder: CPObject
 {	var					_uniqueID;
 	CPMutableDictionary _nameTable;
+	CPDictionary		_externalNameTable;
 	CPMutableDictionary _tagNameToObjectClass;
 	CPString			_xmlStr;
 	CPMutableArray		_objects;
@@ -176,31 +177,35 @@
 			if(![key length]) continue;
 			value = [attribs objectForKey: key];
 
-			if (container!=_connectors && container!=_entites && [value hasPrefix: @"#"])
-			{	if ([value hasPrefix: @"##"])
-				{
-					/* A leading doubled '#' is an escape sequence,
+			if (container!=_connectors && [value hasPrefix: @"#"])
+			{	if ([value  hasPrefix: @"##"])
+				{	/* A leading doubled '#' is an escape sequence,
 					 * so we must replace the value with a version in
 					 * which the * escape character has been removed.
 					 */
-					[attribs setObject: [value substringFromIndex: 1]
-						   forKey: key];
+					[attribs setObject: [value substringFromIndex: 1] forKey: key];
 				}
 				else
-				{	var outlet;	// GSMarkupOutletConnector
+				{	if(container==_entites)
+					{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
+					} else
+					{	var outlet;	// GSMarkupOutletConnector
 
-					/* We pass the value unchanged to the outlet.  If
-					 * value contains a key value path using dots, those
-					 * will be processed by the outlet when it is
-					 * established.  */
-					var outlet = [[GSMarkupOutletConnector alloc] 
-						   initWithSource: oid
-						   target: value
-						   label: key];
-					if(outlet) [_connectors addObject: outlet];
-					/* Hide the attribute - it has been already processed.  */
-					[attribs removeObjectForKey: key];
-				  }
+						/* We pass the value unchanged to the outlet.  If
+						 * value contains a key value path using dots, those
+						 * will be processed by the outlet when it is
+						 * established.  */
+						var outlet = [[GSMarkupOutletConnector alloc] 
+							   initWithSource: oid
+							   target: value
+							   label: key];
+						if(outlet)
+						{	[_connectors addObject: outlet];
+							/* Hide the attribute - it has been already processed.  */
+							[attribs removeObjectForKey: key];
+						}
+					}
+				}
 			}
 		}
 		var newo= [[nclass alloc] initWithAttributes: attribs content: [self insertChildrenOfDOMNode: o intoContainer: container]];
@@ -239,6 +244,11 @@
 	_entites=[CPMutableArray array];
 	return self;
 }
+- (void) setExternalNameTable:(CPDictionary) context
+{	_externalNameTable=context;
+
+}
+
 - (void) setObjectClass: (CPString)className
 		 forTagName: (CPString)tagName
 {
@@ -257,6 +267,20 @@
 	}
 }
 
+// replace symbolic relationships in entities with the real objects
+- (void) _postprocessEntities
+{	var i, l=_entites.length;
+	for(i=0;i<l;i++)
+	{	var    e=_entites[i];
+		var  eFS=[e platformObject];
+		var rels=[eFS relationships];
+		var j,l1=rels.length;
+		for(j=0;j<l1;j++)
+		{	[rels[j] setTarget: [[_nameTable objectForKey: [rels[j] target] ] platformObject] ];
+		}
+	}
+}
+
 -(void) parse
 {	var t= [self parseXMLString:_xmlStr];
 
@@ -264,7 +288,10 @@
 	if(objs) [self processDOMNode: objs[0] intoContainer: _objects];
 
 	var  entities= t.getElementsByTagName("entities");
-	if(entities) [self processDOMNode: entities[0] intoContainer: _entites];
+	if(entities)
+	{	[self processDOMNode: entities[0] intoContainer: _entites];
+		[self _postprocessEntities];
+	}
 
 	var  cons= t.getElementsByTagName("connectors");
 	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];
