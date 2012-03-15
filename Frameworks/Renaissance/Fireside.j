@@ -149,11 +149,11 @@ FSRelationshipTypeToMany=1;
 }
 
 -(CPArray) allObjects
-{	return [_store fetchAllObjectsInEntity: self];
+{
+	return [_store fetchAllObjectsInEntity: self];
 }
 -(id) objectWithPK: (id) pk
 {	return [_store fetchObjectWithPK: pk inEntity: self];
-
 }
 
 -(void) _registerObjectInPKCache:(id) someObj
@@ -220,7 +220,7 @@ FSRelationshipTypeToMany=1;
 		if(!targetPK) return nil;
 		var results=[[targetEntity store] fetchObjectsWithKey: [rel targetColumn] equallingValue: targetPK inEntity: targetEntity];
 		return [rel type]== FSRelationshipTypeToMany? results: ((results && results.length)? [results objectAtIndex: 0] : nil) ;
-	} else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
+	} else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column in entity "+[_entity name]];
 	
 }
 - (void)setValue: someval forKey:(CPString)aKey

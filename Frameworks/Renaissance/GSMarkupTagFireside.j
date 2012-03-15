@@ -14,7 +14,7 @@ var entityNameTable;
   return @"column";
 }
 -(CPString) name
-{	return [_attributes objectForKey: @"id"];
+{	return [_attributes objectForKey: @"name"];
 }
 -(BOOL) isPK
 {	return [self boolValueForAttribute: @"primaryKey"]==1;
@@ -31,7 +31,7 @@ var entityNameTable;
   return @"relationship";
 }
 -(CPString) name
-{	return [_attributes objectForKey: @"id"];
+{	return [_attributes objectForKey: @"name"];
 }
 -(CPString) target
 {	return [_attributes objectForKey: @"target"];
@@ -65,11 +65,11 @@ var entityNameTable;
 - (id) initPlatformObject: (id)platformObject
 {	var store = [_attributes objectForKey: @"store"];
 
-	var name = [_attributes objectForKey: @"name"];
+	var name = [_attributes objectForKey: @"id"];
 	platformObject = [platformObject initWithName: name andStore: store ];
 
 // now extract columns and PK...
-	var myCols=[CPMutableArray new];
+	var myCols=[CPMutableSet new];
 
 	var myPK;
     var i, count = _content.length;
@@ -84,8 +84,9 @@ var entityNameTable;
 		} else if([v isKindOfClass: [GSMarkupRelationship class] ])
 		{	var rel=[[FSRelationship alloc] initWithName: [v name] andTargetEntity: [v target]];	//set name as a temorary symbolic link. will be resolved in decoder later on.
 			if([v bindingColumn]) [rel setBindingColumn: [v bindingColumn] ];
-			if([v targetColumn]) [rel setBindingColumn: [v targetColumn] ];
+			if([v targetColumn]) [rel setTargetColumn: [v targetColumn] ];
 			if([v isToMany]) [rel  setType: FSRelationshipTypeToMany];
+			else [rel setType: FSRelationshipTypeToOne];
 			[platformObject addRelationship: rel];
 		}
 	}
