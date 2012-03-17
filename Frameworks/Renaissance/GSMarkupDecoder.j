@@ -162,7 +162,6 @@
 	if(!nclass) nclass=[self connectorClassForTagName: o.nodeName];
 	if(!nclass) nclass=[self entityClassForTagName: o.nodeName];
 
-//if (container==_entites) alert(o.nodeName+" "+ nclass);
 	if (nclass)
 	{	var attribs=[self attributesForDOMNode: o];
 		var oid=[attribs objectForKey:@"id"];
@@ -246,13 +245,11 @@
 }
 - (void) setExternalNameTable:(CPDictionary) context
 {	_externalNameTable=context;
-
 }
 
 - (void) setObjectClass: (CPString)className
 		 forTagName: (CPString)tagName
-{
-  [_tagNameToObjectClass setObject: className  forKey: tagName];
+{	[_tagNameToObjectClass setObject: className  forKey: tagName];
 }
 
 - (void) processDOMNode: aDOMNode intoContainer:(id) aContainer
@@ -280,6 +277,53 @@
 		}
 	}
 }
+- (void) _postprocessArray:(CPArray) someArr
+{	var i, l=someArr.length;
+	for(i=0;i<l;i++)
+	{	var o=someArr[i];
+		var oPO=[o platformObject];
+		var peek;
+		if (peek=[[o attributes] objectForKey: "valueBinding"])
+		{	var r = [peek rangeOfString: @"."];
+			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually
+			{	if([oPO isKindOfClass: [CPTableView class] ])
+				{	var target=[[_nameTable objectForKey: peek] platformObject];
+					[oPO bind:@"content" toObject: target withKeyPath: @"contentArray" options:nil]; 
+					var _content=[o content];
+					var j, l1 = _content.length;
+					for (j = 0; j < l1; j++)
+					{	var column =_content[j];
+						if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]])
+						{    [[column platformObject]	bind: CPValueBinding
+													toObject: target
+												 withKeyPath: @"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
+													 options: nil]; 
+						}
+					}
+				}
+			}
+			else
+			{	var objectName = [peek substringToIndex: r.location];
+				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
+				var target = [[_nameTable objectForKey: objectName] platformObject];
+				var binding=CPValueBinding;
+				if([oPO isKindOfClass: [CPArrayController class]]) binding="contentArray";
+				[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
+			}
+		}
+		if([oPO isKindOfClass: [CPArrayController class]])
+		{	if( [o boolValueForAttribute: "autoFetch"] == 1 )
+			{	var entityName=[[o attributes] objectForKey: "entity"];
+				if (entityName)
+				{	var entity;
+					if (entity=[[_nameTable objectForKey: entityName ] platformObject])
+					{	[oPO setContent: [entity allObjects] ];
+					}
+				}
+			}
+		} [self _postprocessArray:[o content]];
+	}
+}
 
 -(void) parse
 {	var t= [self parseXMLString:_xmlStr];
@@ -292,6 +336,7 @@
 	{	[self processDOMNode: entities[0] intoContainer: _entites];
 		[self _postprocessEntities];
 	}
+	[self _postprocessArray:_objects];
 
 	var  cons= t.getElementsByTagName("connectors");
 	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];

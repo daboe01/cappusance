@@ -267,6 +267,8 @@
 
 
 @implementation GSMarkupBindingConnector: GSMarkupOneToOneConnector
+{	CPString _entityName;
+}
 
 + (CPString) tagName
 {
@@ -275,9 +277,11 @@
 
 - (id) initWithAttributes: (CPDictionary)attributes
 		  content: (CPArray)content
-{	return [self initWithSource: [attributes objectForKey: @"source"]
+{	var o=[self initWithSource: [attributes objectForKey: @"source"]
 	       target: [attributes objectForKey: @"target"]
 	       label: [attributes objectForKey: @"label"]];
+	_entityName=[attributes objectForKey: @"entity"];
+	return o;
 }
 
 - (void) establishConnectionUsingNameTable: (CPDictionary)nameTable;
@@ -285,6 +289,10 @@
 				 usingNameTable: nameTable];
 	var target = [GSMarkupConnector getObjectForIdString: _target
 				 usingNameTable: nameTable];
+
+	if([source isKindOfClass: [CPTableView class]] && [target isKindOfClass: [CPArrayController class]])
+	{
+	}
 	[source bind: CPValueBinding toObject: target withKeyPath:_label options:nil];
 }
 

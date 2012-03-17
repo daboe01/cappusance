@@ -96,3 +96,19 @@ var entityNameTable;
 }
 
 @end
+
+@implementation GSMarkupArrayController: GSMarkupTagObject
++ (CPString) tagName
+{	return @"arrayController";
+}
+
++ (Class) platformObjectClass
+{	return [CPArrayController class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [platformObject init];
+	return platformObject;
+}
+
+@end
