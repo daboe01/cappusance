@@ -1,12 +1,12 @@
 /*
  * Fireside: yet another restful ORM mapper for cappuccino
  * ToDo:
- *  load a xml model file (steal code from renaissance)
- *	Store should rely on CRUD-set of methods that return CPURLRequest for optimal subclassability (FSAbstractStore with a Store for the Mojolicious example-backend)
- *  Check whether quoting is necessary in keys and vals (FSStore)
- *  catch write conflicts
+ *	Store refactoring: FSAbstractStore with a Store for the Mojolicious example-backend.
+ *  Check whether quoting is necessary in keys and vals (FSStore).
+ *  catch write conflicts.
  *	TableView: looses changes when changing selection during edit: https://github.com/cappuccino/cappuccino/issues/1435
- *
+ *  invalidate relation caches when objects are added or removed from inside Fireside.
+ *  make use of websockets to push backend changes to Fireside
  */
 
 @import <Foundation/CPObject.j>
@@ -44,8 +44,7 @@
 	{	var pk=j[i][[someEntity pk]];
 		var peek;
 		if (peek=[someEntity _registeredObjectForPK: pk])	// enforce singleton pattern
-		{
-			[a addObject:peek]; 
+		{	[a addObject:peek]; 
 		} else
 		{	var t=[[FSObject alloc] initWithEntity: someEntity];
 			[t _setDataFromJSONObject: j[i]];
@@ -61,26 +60,24 @@
 -(CPArray) fetchAllObjectsInEntity:(FSEntity) someEntity
 {	return [self fetchObjectsForURLRequest: [self requestForFetchingAllObjectsInEntity: someEntity] inEntity:someEntity];
 }
--(id) fetchObjectWithPK: (id) pk inEntity:(FSEntity) someEntity
-{	var peek;
-	if(peek=[someEntity _registeredObjectForPK: pk]) return peek;
-	return [[self fetchObjectsWithKey: [someEntity pk] equallingValue: pk inEntity: someEntity] objectAtIndex:0];
-}
 
 -(CPURLRequest) requestForFetchingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
 {	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+someval];
-//	[request setHTTPMethod:"GET"];
 	return request;
 }
 
 -(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
-{	var request =[self requestForFetchingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
+{	if( aKey == [someEntity pk] ) 
+	{	var peek;
+		if(peek=[someEntity _registeredObjectForPK: someval]) return [CPArray arrayWithObject: peek];
+	}
+
+	var request =[self requestForFetchingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	return [self fetchObjectsForURLRequest: request inEntity: someEntity];
 }
 
 @end
 
-// <!> fixme: subject to removal
 FSRelationshipTypeToOne=0;
 FSRelationshipTypeToMany=1;
 
@@ -90,6 +87,7 @@ FSRelationshipTypeToMany=1;
 	CPString _bindingColumn @accessors(property=bindingColumn);
 	CPString _targetColumn @accessors(setter=setTargetColumn:);
 	CPString _type @accessors(property=type);
+	var _target_cache;
 }
 -(id) initWithName:(CPString) aName andTargetEntity:(FSEntity) anEntity
 {	self = [super init];
@@ -107,6 +105,19 @@ FSRelationshipTypeToMany=1;
 -(CPString) targetColumn
 {	if(_targetColumn && _targetColumn.length) return _targetColumn;
 	return [_target pk];
+}
+-(CPArray) fetchObjectsForKey:(id) targetPK
+{	if(!targetPK) return nil;
+	var peek;
+	if(!_target_cache) _target_cache=[];
+	if(peek=_target_cache[targetPK]) return peek;
+	var res= [[_target store] fetchObjectsWithKey: [self targetColumn] equallingValue: targetPK inEntity: _target];
+	_target_cache[targetPK]=res;
+	return res;
+}
+
+-(void) invalidateCache
+{	_target_cache=[];
 }
 @end
 
@@ -152,9 +163,6 @@ FSRelationshipTypeToMany=1;
 {
 	return [_store fetchAllObjectsInEntity: self];
 }
--(id) objectWithPK: (id) pk
-{	return [_store fetchObjectWithPK: pk inEntity: self];
-}
 
 -(void) _registerObjectInPKCache:(id) someObj
 {	if(!_pkcache) _pkcache=[CPMutableArray new];
@@ -164,6 +172,10 @@ FSRelationshipTypeToMany=1;
 {	if(!_pkcache) return nil;
 	return _pkcache[somePK];
 }
+-(void) invalidateRelationshipCaches
+{	[_relations makeObjectsPerformSelector:@selector(invalidateCache)];
+}
+
 @end
 
 @implementation FSObject : CPObject 
@@ -213,16 +225,16 @@ FSRelationshipTypeToMany=1;
 		return [_data objectForKey: aKey];
 	} else if(type == 1)	// to one relation: aKey is accessed
 	{	var rel=[_entity relationOfName: aKey];
-		var targetEntity=[rel target];
 		var bindingColumn=[rel bindingColumn];
 		if(!bindingColumn) bindingColumn=[_entity pk];
-		var targetPK=[self valueForKey: bindingColumn];
-		if(!targetPK) return nil;
-		var results=[[targetEntity store] fetchObjectsWithKey: [rel targetColumn] equallingValue: targetPK inEntity: targetEntity];
+
+		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] ];
+
 		return [rel type]== FSRelationshipTypeToMany? results: ((results && results.length)? [results objectAtIndex: 0] : nil) ;
 	} else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column in entity "+[_entity name]];
 	
 }
+
 - (void)setValue: someval forKey:(CPString)aKey
 {	var type= [self typeOfKey: aKey];
 	if(type == 0)
