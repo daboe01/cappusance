@@ -271,6 +271,7 @@
 	{	var    e=_entites[i];
 		var  eFS=[e platformObject];
 		var rels=[eFS relationships];
+		if(!rels) continue;
 		var j,l1=rels.length;
 		for(j=0;j<l1;j++)
 		{	[rels[j] setTarget: [[_nameTable objectForKey: [rels[j] target] ] platformObject] ];
@@ -312,7 +313,32 @@
 				[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
 			}
 		}
-		if([oPO isKindOfClass: [CPArrayController class]])
+		if (peek=[[o attributes] objectForKey: "itemsBinding"])		// items such as in pull-down or combobox
+		{	var r = [peek rangeOfString: @"."];
+			if (r.location == CPNotFound)	// "unspecific" binding, <!> fixme: i am currently not sure what this means
+			{
+			} else
+			{	var objectName = [peek substringToIndex: r.location];
+				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
+				var target = [[_nameTable objectForKey: objectName] platformObject];
+
+				if([oPO isKindOfClass: [CPPopUpButton class]])	// insert popupbutton items from target datasource
+				{	var r = [keyValuePath rangeOfString: @"."];
+				//<!> throw exception if r== CPNotFound
+					var arrkey = [peek substringToIndex: r.location];
+					var titlekey = [keyValuePath substringFromIndex: CPMaxRange(r)];
+					var list=[target valueForKey: key];
+					if(list)
+					{	var j, l1 = _content.length;
+						for (j = 0; j < l1; j++)
+						{	var column =_content[j];
+							[oPO addItemWithTitle: title];
+						}
+					}
+				}
+			}
+		}
+		if([oPO isKindOfClass: [CPArrayController class]])		// autofetching
 		{	if( [o boolValueForAttribute: "autoFetch"] == 1 )
 			{	var entityName=[[o attributes] objectForKey: "entity"];
 				if (entityName)
