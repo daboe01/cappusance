@@ -44,7 +44,8 @@
 @import <Renaissance/GSMarkupTagMenuItem.j>
 @import <Renaissance/GSMarkupTagSplitView.j>
 @import <Renaissance/GSMarkupTagHSpace.j>
-
+@import <Renaissance/GSMarkupTagCappuccinoAdditions.j>
 @import <Renaissance/GSAutoLayoutDefaults.j>
 @import <Renaissance/GSMarkupTagFireside.j>
 @import <Renaissance/GSMarkupDecoder.j>
+@import <Renaissance/GSMarkupBundleAdditions.j>

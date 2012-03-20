@@ -312,5 +312,14 @@ var staticNameTable;
     }
 }
 
+// convenience method
++ (BOOL) loadRessourceNamed: (CPString) fileName owner:(id) anOwner
+{	var	configData=[[CPData alloc]
+		initWithContentsOfURL: [CPURL URLWithString:[CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], fileName ]]];
+
+	return [CPBundle loadGSMarkupData: configData externalNameTable: [CPDictionary dictionaryWithObject: anOwner forKey:"CPOwner"]
+			localizableStringsTable: nil inBundle: nil tagMapping: nil];
+}
+
 
 @end

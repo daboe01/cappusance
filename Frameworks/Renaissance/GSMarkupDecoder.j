@@ -281,6 +281,7 @@
 {	var i, l=someArr.length;
 	for(i=0;i<l;i++)
 	{	var o=someArr[i];
+		if(![o respondsToSelector:@selector(platformObject)]) continue;
 		var oPO=[o platformObject];
 		var peek;
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
