@@ -1,5 +1,5 @@
 This is the Cappuccino port of GNUstep Renaissance.
-With Cappusance you can write the whole GUI with bindings in XML. Cappusance comes with powerful autolayout capabilities.
+With Cappusance you can write the whole GUI in XML (including bindings). Cappusance comes with powerful autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
 See Slider<->Textview example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
