@@ -4,7 +4,7 @@ See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance do
 Cappusance lets you build your GUI and bindings in XML markup, with powerful autolayout capabilities.
 Cappusance also comes with support of KVO bindings. See Slider<->Textview example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
-I recently included Fireside, a lightweight RESTful ORM mapper to allow rich database-to-GUI mapping in the spirit of EOF/WebObjects associations.
+I recently included Fireside, a lightweight RESTful ORM mapper to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
 
 
 usage:
