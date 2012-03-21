@@ -1,10 +1,9 @@
 This is the Cappuccino port of GNUstep Renaissance.
+With Cappusance you can write the whole GUI with bindings in XML. Cappusance comes with powerful autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
-
-You can write the GUI including (KVO) bindings in XML markup. Cappusance comes with powerful autolayout capabilities.
 See Slider<->Textview example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
-I recently included Fireside, a lightweight RESTful ORM mapper to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
+Cappusance also includes a RESTful ORM mapper to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
 
 
 usage:
