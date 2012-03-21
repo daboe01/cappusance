@@ -51,7 +51,7 @@ var staticNameTable;
   [staticNameTable setObject: object  forKey: itsId];
 }
 
-+ (BOOL)    loadGSMarkupData: (CPData)data
++ (id)    loadGSMarkupData: (CPData)data
 	   externalNameTable: (CPDictionary)context
      localizableStringsTable: (CPString)table
 		    inBundle: (CPBundle)bundle
@@ -258,62 +258,12 @@ var staticNameTable;
 	}
 
 	success = YES;
-	return success;
+	return success? decoder:nil;
 }
 
-
-
-+ (BOOL) loadGSMarkupNamed: (CPString) fileName
-		     owner:  owner
-{
-  var table;
-  var bundle;
-
-  if (owner == nil || fileName == nil)
-    {
-      return NO;
-    }
-  table = [CPDictionary dictionaryWithObject: owner  forKey: @"CPOwner"];
-  bundle = [self bundleForClass: [owner class]];
-
-  if (bundle == nil)
-    {
-      bundle = [self mainBundle];
-    }
-
-  return [bundle loadGSMarkupFile: fileName
-		 externalNameTable: table];
-}
-
-- (BOOL)    loadGSMarkupFile: (CPString)fileName
-	   externalNameTable: (CPDictionary)context
-     localizableStringsTable: (CPString)table
-{
-  var path;
-
-  if (![[fileName pathExtension] isEqual: @"gsmarkup"])
-    {
-      fileName = [fileName stringByAppendingPathExtension: @"gsmarkup"];
-    }
-
-  path = [self pathForLocalizedResource: fileName];
-  
-  if (path != nil)
-    {
-      return [CPBundle loadGSMarkupFile: path
-		       externalNameTable: context
-		       localizableStringsTable: table
-		       inBundle: self];
-    }
-  else 
-    {
-      /* TODO/FIXME: Turn this into a debug log.  */
-      return NO;
-    }
-}
 
 // convenience method
-+ (BOOL) loadRessourceNamed: (CPString) fileName owner:(id) anOwner
++ (id) loadRessourceNamed: (CPString) fileName owner:(id) anOwner
 {	var	configData=[[CPData alloc]
 		initWithContentsOfURL: [CPURL URLWithString:[CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], fileName ]]];
 
