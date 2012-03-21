@@ -6,6 +6,15 @@ Cappusance also comes with support of KVO bindings. See Slider<->Textview exampl
 
 I recently included Fireside, a lightweight RESTful ORM mapper to allow rich database-to-GUI mapping in the spirit of EOF/WebObjects associations.
 
+
+usage:
+@import <Renaissance/Renaissance.j>
+[...]
+- (void) applicationDidFinishLaunching:(CPNotification)aNotification
+{	store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"];
+	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
+}
+
 example markup:
 
 <?xml version="1.0"?>
