@@ -320,19 +320,20 @@
 			} else
 			{	var objectName = [peek substringToIndex: r.location];
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
-				var target = [[_nameTable objectForKey: objectName] platformObject];
 
+				var target = [[_nameTable objectForKey: objectName] platformObject];
 				if([oPO isKindOfClass: [CPPopUpButton class]])	// insert popupbutton items from target datasource
 				{	var r = [keyValuePath rangeOfString: @"."];
+
 				//<!> throw exception if r== CPNotFound
-					var arrkey = [peek substringToIndex: r.location];
+					var arrkey = [keyValuePath substringToIndex: r.location];
 					var titlekey = [keyValuePath substringFromIndex: CPMaxRange(r)];
-					var list=[target valueForKey: key];
+					var list=[target valueForKey: arrkey];
 					if(list)
-					{	var j, l1 = _content.length;
+					{	var j, l1 = list.length;
 						for (j = 0; j < l1; j++)
-						{	var column =_content[j];
-							[oPO addItemWithTitle: title];
+						{	var column =list[j];
+							[oPO addItemWithTitle: [column objectForKey: titlekey]];
 						}
 					}
 				}
