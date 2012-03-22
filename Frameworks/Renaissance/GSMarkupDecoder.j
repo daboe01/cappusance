@@ -324,13 +324,13 @@
 				{	 list =[GSMarkupConnector getObjectForIdString:[peek substringWithRange: CPMakeRange(1,r.location-1)] usingNameTable: _externalNameTable];
 				} else list=[[GSMarkupConnector getObjectForIdString:[peek substringWithRange: CPMakeRange(0,r.location)] usingNameTable: _nameTable] platformObject];
 				var face = [peek substringFromIndex: CPMaxRange(r)];
-alert(face);
 				if([oPO isKindOfClass: [CPPopUpButton class]])	// insert popupbutton items from target datasource
-				{	if(list)
+				{
+					if(list)
 					{	var j, l1 = list.length;
 						for (j = 0; j < l1; j++)
 						{	var column =list[j];
-							[oPO addItemWithTitle: [column objectForKey: face]];
+							[oPO addItemWithTitle: [column valueForKey: face]];
 						}
 					}
 				}
