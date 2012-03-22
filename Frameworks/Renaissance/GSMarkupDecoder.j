@@ -187,7 +187,7 @@
 				else
 				{	if(container==_entites)
 					{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
-					} else
+					} else if(key != 'itemsBinding')	// itemsBinding will be processed elsewhere
 					{	var outlet;	// GSMarkupOutletConnector
 
 						/* We pass the value unchanged to the outlet.  If
@@ -318,22 +318,19 @@
 			if (r.location == CPNotFound)	// "unspecific" binding, <!> fixme: i am currently not sure what this means
 			{
 			} else
-			{	var objectName = [peek substringToIndex: r.location];
-				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
-
-				var target = [[_nameTable objectForKey: objectName] platformObject];
+			{	var list;
+				r = [peek rangeOfString: @"." options: CPBackwardsSearch];
+				if ([peek hasPrefix: @"#"])
+				{	 list =[GSMarkupConnector getObjectForIdString:[peek substringWithRange: CPMakeRange(1,r.location-1)] usingNameTable: _externalNameTable];
+				} else list=[[GSMarkupConnector getObjectForIdString:[peek substringWithRange: CPMakeRange(0,r.location)] usingNameTable: _nameTable] platformObject];
+				var face = [peek substringFromIndex: CPMaxRange(r)];
+alert(face);
 				if([oPO isKindOfClass: [CPPopUpButton class]])	// insert popupbutton items from target datasource
-				{	var r = [keyValuePath rangeOfString: @"."];
-
-				//<!> throw exception if r== CPNotFound
-					var arrkey = [keyValuePath substringToIndex: r.location];
-					var titlekey = [keyValuePath substringFromIndex: CPMaxRange(r)];
-					var list=[target valueForKey: arrkey];
-					if(list)
+				{	if(list)
 					{	var j, l1 = list.length;
 						for (j = 0; j < l1; j++)
 						{	var column =list[j];
-							[oPO addItemWithTitle: [column objectForKey: titlekey]];
+							[oPO addItemWithTitle: [column objectForKey: face]];
 						}
 					}
 				}
