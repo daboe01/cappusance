@@ -1,10 +1,10 @@
 Cappusance is a powerful textual GUI builder based on GNUstep Renaissance.
-Cappusance comes with strong autolayout capabilities.
+Cappusance features strong autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
 See Slider<->TextField example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
-Cappusance ships with a RESTful ORM to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
-Cappusance also runs without any backend. Here, you can connect bindings and outlets directly to your instance variables and objects (through KVC).
+Cappusance has a RESTful ORM built in to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
+Cappusance also runs without any backend. Here, you can connect bindings and outlets directly to your instance variables and objects.
 
 
 usage:
@@ -12,9 +12,9 @@ usage:
 [...]
 - (void) applicationDidFinishLaunching:(CPNotification)aNotification
 {
-// this instance variable is accessed from within the markup file via KVC
+// this instance variable is accessed from within the markup file (via owner:self below)
 	store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
-  //gui.gsmarkup is loaded from the Ressources folder
+ // gui.gsmarkup is loaded from the Ressources folder
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
 }
 // no further coding requred for "CRUD" functionality
