@@ -1,9 +1,9 @@
-This is the Cappuccino port of GNUstep Renaissance.
-With Cappusance you can write the whole GUI in XML (including bindings). Cappusance comes with powerful autolayout capabilities.
+Cappusance is a powerful textual GUI builder based on GNUstep Renaissance.
+Cappusance comes with powerful autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
 See Slider<->TextField example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
-Cappusance ships with a RESTful ORM to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
+Cappusance ships with amn optional RESTful ORM to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
 
 
 usage:
@@ -14,7 +14,7 @@ usage:
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
 }
 
-example markup:
+gui.gsmarkup (in Ressources folder):
 
 <?xml version="1.0"?>
 <!DOCTYPE gsmarkup>
