@@ -310,7 +310,8 @@
 				var target = [[_nameTable objectForKey: objectName] platformObject];
 				var binding=CPValueBinding;
 				if([oPO isKindOfClass: [CPArrayController class]]) binding="contentArray";
-				[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
+
+//<!>				if(objectName.length) [oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
 			}
 		}
 		if (peek=[[o attributes] objectForKey: "itemsBinding"])		// items such as in pull-down or combobox
@@ -327,10 +328,20 @@
 				if([oPO isKindOfClass: [CPPopUpButton class]])	// insert popupbutton items from target datasource
 				{
 					if(list)
-					{	var j, l1 = list.length;
+					{	var peek;
+						var valFace;
+						if (peek=[[o attributes] objectForKey: "valueBinding"])
+						{	r = [peek rangeOfString: @"." options: CPBackwardsSearch];
+							if(r.location!=CPNotFound)
+							{	valFace=[peek substringFromIndex:r.location];
+							}
+						}
+						var j, l1 = list.length;
 						for (j = 0; j < l1; j++)
-						{	var column =list[j];
-							[oPO addItemWithTitle: [column valueForKey: face]];
+						{	var item  =list[j];
+							var newItem=[[CPMenuItem alloc] initWithTitle: [item valueForKey: face] action:NULL keyEquivalent:nil];
+							if(valFace) [newItem setTag: [item valueForKey: valFace] ];
+							[oPO addItem: newItem];
 						}
 					}
 				}
