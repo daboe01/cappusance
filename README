@@ -3,7 +3,7 @@ Cappusance comes with strong autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
 See Slider<->TextField example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
-Cappusance comes along with a RESTful ORM to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
+Cappusance ships with a RESTful ORM to allow painless database-to-GUI mapping in the spirit of EOF/WebObjects.
 You can also use KVO bindings and outlets without using it.
 
 
