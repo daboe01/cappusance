@@ -26,7 +26,7 @@
 @import "GSMarkupTagView.j"
 @import "GSAutoLayoutHSpace.j"
 
-@implementation GSMarkupTagHspace
+@implementation GSMarkupTagHspace: GSMarkupTagView
 
 + (NSString *) tagName
 {
