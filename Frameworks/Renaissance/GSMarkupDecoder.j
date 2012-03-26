@@ -62,6 +62,8 @@
 }
 @end
 
+var _arrayControllerToPKMapper;
+
 @implementation GSMarkupDecoder: CPObject
 {	var					_uniqueID;
 	CPMutableDictionary _nameTable;
@@ -70,6 +72,19 @@
 	CPString			_xmlStr;
 	CPMutableArray		_objects;
 	CPMutableArray		_connectors;
+}
+
++ initialize
+{	if(self=[super initialize])
+	{		}
+	return self;
+}
++ pkForPlatformObject:(id) anObj
+{	return [_arrayControllerToPKMapper objectForKey: [anObj UID]];
+}
++(void) registerPk:(CPString) somePK forPlatformObject:(id) anObj
+{	if(!_arrayControllerToPKMapper) _arrayControllerToPKMapper=[CPMutableDictionary new];
+	return [_arrayControllerToPKMapper setObject: somePK forKey: [anObj UID]];
 }
 + (id) decoderWithContentsOfFile: (CPString)file
 {
@@ -177,32 +192,23 @@
 			value = [attribs objectForKey: key];
 
 			if (container!=_connectors && [value hasPrefix: @"#"])
-			{	if ([value  hasPrefix: @"##"])
-				{	/* A leading doubled '#' is an escape sequence,
-					 * so we must replace the value with a version in
-					 * which the * escape character has been removed.
-					 */
-					[attribs setObject: [value substringFromIndex: 1] forKey: key];
-				}
-				else
-				{	if(container==_entites)
-					{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
-					} else if(key != 'itemsBinding')	// itemsBinding will be processed elsewhere
-					{	var outlet;	// GSMarkupOutletConnector
+			{	if(container==_entites)
+				{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
+				} else if(key != 'itemsBinding')	// itemsBinding will be processed elsewhere
+				{	var outlet;	// GSMarkupOutletConnector
 
-						/* We pass the value unchanged to the outlet.  If
-						 * value contains a key value path using dots, those
-						 * will be processed by the outlet when it is
-						 * established.  */
-						var outlet = [[GSMarkupOutletConnector alloc] 
-							   initWithSource: oid
-							   target: value
-							   label: key];
-						if(outlet)
-						{	[_connectors addObject: outlet];
-							/* Hide the attribute - it has been already processed.  */
-							[attribs removeObjectForKey: key];
-						}
+					/* We pass the value unchanged to the outlet.  If
+					 * value contains a key value path using dots, those
+					 * will be processed by the outlet when it is
+					 * established.  */
+					var outlet = [[GSMarkupOutletConnector alloc] 
+						   initWithSource: oid
+						   target: value
+						   label: key];
+					if(outlet)
+					{	[_connectors addObject: outlet];
+						/* Hide the attribute - it has been already processed.  */
+						[attribs removeObjectForKey: key];
 					}
 				}
 			}
@@ -234,8 +240,7 @@
 	return t;
 }
 - (id) initWithXMLString:aXMLStr
-{
-	_xmlStr=aXMLStr;
+{	_xmlStr=aXMLStr;
 	_nameTable=[CPMutableDictionary dictionary];
 	_tagNameToObjectClass=[CPMutableDictionary dictionary];
 	_objects=[CPMutableArray array];
@@ -278,14 +283,41 @@
 		}
 	}
 }
-- (void) _postprocessArray:(CPArray) someArr
+-(id) _getObjectForIdString:(CPString) peek
+{	var ret;
+	if ([peek hasPrefix: @"#"])
+	{	 ret =[GSMarkupConnector getObjectForIdString: [peek substringFromIndex:1] usingNameTable: _externalNameTable];
+	} else ret= [GSMarkupConnector getPlatformObjectForIdString: peek usingNameTable: _nameTable];
+	return ret;
+}
+
+- (void) _postprocessForBindings:(CPArray) someArr
 {	var i, l=someArr.length;
 	for(i=0;i<l;i++)
 	{	var o=someArr[i];
 		if(![o respondsToSelector:@selector(platformObject)]) continue;
 		var oPO=[o platformObject];
 		var peek;
-		if (peek=[[o attributes] objectForKey: "valueBinding"])
+		if (peek=[[o attributes] objectForKey: "itemsBinding"])		// items such as in pull-down or combobox
+		{	var r = [peek rangeOfString: @"."];
+			if (r.location != CPNotFound)
+			{	r = [peek rangeOfString: @"." options: CPBackwardsSearch];
+				var pathComponents=[peek componentsSeparatedByString:"."];
+				var subPathArray=[pathComponents subarrayWithRange: CPMakeRange(0, pathComponents.length-2)];
+				var baseObjectPath=(subPathArray.length>1)? subPathArray.join("."):subPathArray[0];
+				var arrCtrl= [self _getObjectForIdString: baseObjectPath];
+				var itemsFace = [peek substringFromIndex: CPMaxRange(r)];
+				var valItemsFace=[GSMarkupDecoder pkForPlatformObject: arrCtrl];
+
+				if([oPO isKindOfClass: [CPPopUpButton class]])
+				{	if(itemsFace && valItemsFace)
+					{	var peek=[[o attributes] objectForKey: "valueBinding"];
+						[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];	// <!>fixme: hardcoded arrangedObjects.
+						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options:nil];
+					}
+				}
+			}
+		} if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
 			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually
 			{	if([oPO isKindOfClass: [CPTableView class] ])
@@ -305,50 +337,33 @@
 				}
 			}
 			else
-			{	var objectName = [peek substringToIndex: r.location];
+			{	var objectName = [peek substringToIndex: r.location];	// <!> fixme: replace with _getObjectForIdString
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
 				var target = [[_nameTable objectForKey: objectName] platformObject];
 				var binding=CPValueBinding;
-				if([oPO isKindOfClass: [CPArrayController class]]) binding="contentArray";
-
-//<!>				if(objectName.length) [oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
-			}
-		}
-		if (peek=[[o attributes] objectForKey: "itemsBinding"])		// items such as in pull-down or combobox
-		{	var r = [peek rangeOfString: @"."];
-			if (r.location == CPNotFound)	// "unspecific" binding, <!> fixme: i am currently not sure what this means
-			{
-			} else
-			{	var list;
-				r = [peek rangeOfString: @"." options: CPBackwardsSearch];
-				if ([peek hasPrefix: @"#"])
-				{	 list =[GSMarkupConnector getObjectForIdString:[peek substringWithRange: CPMakeRange(1,r.location-1)] usingNameTable: _externalNameTable];
-				} else list=[[GSMarkupConnector getObjectForIdString:[peek substringWithRange: CPMakeRange(0,r.location)] usingNameTable: _nameTable] platformObject];
-				var face = [peek substringFromIndex: CPMaxRange(r)];
-				if([oPO isKindOfClass: [CPPopUpButton class]])	// insert popupbutton items from target datasource
-				{
-					if(list)
-					{	var peek;
-						var valFace;
-						if (peek=[[o attributes] objectForKey: "valueBinding"])
-						{	r = [peek rangeOfString: @"." options: CPBackwardsSearch];
-							if(r.location!=CPNotFound)
-							{	valFace=[peek substringFromIndex:r.location];
-							}
-						}
-						var j, l1 = list.length;
-						for (j = 0; j < l1; j++)
-						{	var item  =list[j];
-							var newItem=[[CPMenuItem alloc] initWithTitle: [item valueForKey: face] action:NULL keyEquivalent:nil];
-							if(valFace) [newItem setTag: [item valueForKey: valFace] ];
-							[oPO addItem: newItem];
-						}
-					}
+				if([oPO  isKindOfClass: [CPArrayController class]]) binding="contentArray";
+				else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
+				if(objectName.length)
+				{	[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
 				}
 			}
 		}
+		[self _postprocessForBindings:[o content]];
+	}
+}
+- (void) _postprocessForEntities:(CPArray) someArr
+{	var i, l=someArr.length;
+	for(i=0;i<l;i++)
+	{	var o=someArr[i];
+		if(![o respondsToSelector:@selector(platformObject)]) continue;
+		var oPO=[o platformObject];
 		if([oPO isKindOfClass: [CPArrayController class]])		// autofetching
-		{	if( [o boolValueForAttribute: "autoFetch"] == 1 )
+		{	var peek;
+			if(peek=[[o attributes] objectForKey:"entity"])
+			{	var pk=[[[_nameTable objectForKey: peek] platformObject] pk];
+				[GSMarkupDecoder registerPk: pk  forPlatformObject: oPO];
+			}
+			if( [o boolValueForAttribute: "autoFetch"] == 1 )
 			{	var entityName=[[o attributes] objectForKey: "entity"];
 				if (entityName)
 				{	var entity;
@@ -357,7 +372,7 @@
 					}
 				}
 			}
-		} [self _postprocessArray:[o content]];
+		} [self _postprocessForEntities:[o content]];
 	}
 }
 
@@ -372,7 +387,8 @@
 	{	[self processDOMNode: entities[0] intoContainer: _entites];
 		[self _postprocessEntities];
 	}
-	[self _postprocessArray:_objects];
+	[self _postprocessForEntities:_objects];
+	[self _postprocessForBindings:_objects];
 
 	var  cons= t.getElementsByTagName("connectors");
 	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];

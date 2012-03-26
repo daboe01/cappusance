@@ -113,3 +113,74 @@
 }
 
 @end
+
+@implementation CPPopUpButton(KVK4Items)
+
+-(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
+{	var myCurrentArr=[self itemArray];
+	var l=myCurrentArr.length;
+	var l1 = someArray.length;
+	var j;
+	if(l==l1) return;	// length  is identical: nothing to do
+	else if(l<l1)	// new array is larger->append appropriate amount of items at the end
+	{	for(j=0;j<(l1-l);j++)
+		{	[self addItemWithTitle:""];
+		}
+	} else			// new array is smaller->remove appropriate amount of items from the end
+	{	var removingIndex=l1;	// last item should be preserved
+		for(j=0;j<(l-l1);j++)
+		{	[self removeItemAtIndex: removingIndex];
+		}
+	}
+
+}
+
+-(void) setIntegerValue:(int) someValue
+{	[self selectItemWithTag: someValue];
+}
+-(int) integerValue
+{	return [[self selectedItem] tag];
+}
+
+/*
+-(void) setValue:(id) someValue
+{	if( [self indexOfItemWithTag: someValue] != CPNotFound)
+	{	[self  selectItemWithTag: someValue];
+	} else [self selectItemWithTitle: someValue];
+}
+-(id) value
+{	var tag=[[self selectedItem] tag];
+	if (tag === undefined)
+	{	return [[self selectedItem] title];
+	} return tag;
+}
+*/
+
+// itemArray part of standard API
+-(void)setItemArray:(CPArray) someArray
+{
+	var myCurrentArr=[self itemArray];
+	[self _consolidateItemArrayLengthToArray: someArray];
+	var  j, l1 = someArray.length;
+	for (j = 0; j < l1; j++)
+	{	[myCurrentArr[j] setTitle: someArray[j]];
+	} [self sizeToFit];
+}
+
+-(void)tagArray
+{	return [];
+}
+-(void)setTagArray:(CPArray) someArray
+{
+	var myCurrentArr=[self itemArray];
+	[self _consolidateItemArrayLengthToArray: someArray];
+	var  j, l1 = someArray.length;
+	for (j = 0; j < l1; j++)
+	{	[myCurrentArr[j] setTag: someArray[j]];
+	}
+
+}
+
+
+@end
+
