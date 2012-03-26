@@ -114,6 +114,7 @@
 
 @end
 
+
 @implementation CPPopUpButton(KVK4Items)
 
 -(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
@@ -134,27 +135,19 @@
 	}
 
 }
-
 -(void) setIntegerValue:(int) someValue
-{	[self selectItemWithTag: someValue];
+{
+	[self selectItemWithTag: someValue];
 }
 -(int) integerValue
 {	return [[self selectedItem] tag];
 }
 
-/*
--(void) setValue:(id) someValue
-{	if( [self indexOfItemWithTag: someValue] != CPNotFound)
-	{	[self  selectItemWithTag: someValue];
-	} else [self selectItemWithTitle: someValue];
+- (void)_reverseSetBinding
+{	var binderClass = [[self class] _binderClassForBinding: "integerValue"],
+        theBinding = [binderClass getBinding:"integerValue" forObject:self];
+    [theBinding reverseSetValueFor:@"integerValue"];
 }
--(id) value
-{	var tag=[[self selectedItem] tag];
-	if (tag === undefined)
-	{	return [[self selectedItem] title];
-	} return tag;
-}
-*/
 
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
@@ -164,10 +157,11 @@
 	var  j, l1 = someArray.length;
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
-	} [self sizeToFit];
+	}
+//	[self synchronizeTitleAndSelectedItem];
 }
 
--(void)tagArray
+-(CPArray)tagArray
 {	return [];
 }
 -(void)setTagArray:(CPArray) someArray

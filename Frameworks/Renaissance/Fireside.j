@@ -16,21 +16,6 @@
 	unsigned _fetchLimit @accessors(property=fetchLimit);
 }
 
-/*
-+ (void)initialize
-{	if (self !== [FSStore class])
-		return;
-
-	[self exposeBinding:@"value"];
-	[self exposeBinding:@"tagValue"];
-}
-
-
-+ (CPSet)keyPathsForValuesAffectingValue
-{	return [CPSet setWithObjects:"value","tagValue"];
-}
-*/
-
 -(id) initWithBaseURL:(CPString) someURL
 {	self = [super init];
     if (self)
@@ -264,12 +249,4 @@ FSRelationshipTypeToMany=1;
 	
 }
 
-/*
-- (void)setTagValue: someval forKey:(CPString)aKey
-{	[self setValue: someval forKey:aKey];
-}
--(id) tagValueForKey:(CPString)aKey
-{	return [self valueForKey:aKey];
-}
-*/
 @end

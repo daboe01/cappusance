@@ -319,7 +319,7 @@ var _arrayControllerToPKMapper;
 			}
 		} if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
-			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually
+			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	if([oPO isKindOfClass: [CPTableView class] ])
 				{	var target=[[_nameTable objectForKey: peek] platformObject];
 					[oPO bind:@"content" toObject: target withKeyPath: @"contentArray" options:nil]; 
@@ -343,9 +343,7 @@ var _arrayControllerToPKMapper;
 				var binding=CPValueBinding;
 				if([oPO  isKindOfClass: [CPArrayController class]]) binding="contentArray";
 				else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
-				if(objectName.length)
-				{	[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
-				}
+				[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
 			}
 		}
 		[self _postprocessForBindings:[o content]];
