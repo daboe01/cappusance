@@ -29,10 +29,19 @@
 	return request;
 }
 
-//<!> fixme: replace with something like writeChangesInObject
 -(void) writeKey:(CPString) aKey ofObject: (id)obj
 {	var request = [self requestForWritingKey: aKey ofObject: obj toEntity: [obj entity]];
 	[CPURLConnection connectionWithRequest:request delegate: nil];
+}
+
+-(void) writeChangesInObject: (id)obj
+{	var keys=[obj._changes allKeys];
+	var i,l=keys.length;
+	for(i=0;i<l;i++)
+	{	var key=keys[i];
+		var val=[obj._changes objectForKey:key];
+		[self writeKey: key ofObject: obj];
+	}
 }
 
 -(CPArray) fetchObjectsForURLRequest:(CPURLRequest) request inEntity: (FSEntity) someEntity
@@ -118,6 +127,7 @@ FSRelationshipTypeToMany=1;
 
 -(void) invalidateCache
 {	_target_cache=[];
+	if([_target _hasCaches]) [_target invalidateRelationshipCaches];
 }
 @end
 
@@ -173,9 +183,17 @@ FSRelationshipTypeToMany=1;
 	return _pkcache[somePK];
 }
 -(void) invalidateRelationshipCaches
-{	[_relations makeObjectsPerformSelector:@selector(invalidateCache)];
+{	[_relations makeObjectsPerformSelector: @selector(invalidateCache)];
 }
-
+-(BOOL) _hasCaches
+{	var rels=[_relations allObjects];
+	var i,l=rels.length;
+	for(i=0;i<l;i++)
+	{	var r=rels[i];
+		if(r._target_cache && r._target_cache.length) return YES;
+	}
+	return NO;
+}
 @end
 
 @implementation FSObject : CPObject 
@@ -209,7 +227,7 @@ FSRelationshipTypeToMany=1;
 -(int) typeOfKey:(CPString)aKey
 {	if( [[_entity columns] containsObject: aKey]) return 0;
 	if( [_entity relationOfName: aKey]) return 1;
-	return -1;
+	return CPNotFound;
 }
 
 - (id)valueForKey:(CPString)aKey
@@ -242,7 +260,9 @@ FSRelationshipTypeToMany=1;
 		[self willChangeValueForKey:aKey];
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
-		[[_entity store] writeKey: aKey ofObject:self];
+		[[_entity store] writeChangesInObject: self];
+//<!> if we write to a toOne relationship key: update the target array
+		[_entity invalidateRelationshipCaches];	// <!>
 	} else if(type == 1)
 	{	//<!> fixme: provide meaningful implementation for "Relation: "+aKey+" is written at"
 	} else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
