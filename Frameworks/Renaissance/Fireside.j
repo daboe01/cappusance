@@ -290,7 +290,7 @@ var _allRelationships;
 		[self didChangeValueForKey:aKey];
 		[[_entity store] writeChangesInObject: self];
 		var peekRels=[FSEntity relationshipsWithTargetProperty: aKey];
-		if (peekRels) //if we write to a toOne relationship key: update the target array-> todo: create a toOne automatically if there is a toMany on the other side
+		if (peekRels) //if we write to a relationship key: update the target array forcing an update of the arraycontrollers
 		{	var i,l=peekRels.length;
 			for(i=0; i<l; i++)
 			{	var rel = peekRels[i];
