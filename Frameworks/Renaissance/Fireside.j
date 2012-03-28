@@ -31,7 +31,7 @@
 
 -(void) writeKey:(CPString) aKey ofObject: (id)obj
 {	var request = [self requestForWritingKey: aKey ofObject: obj toEntity: [obj entity]];
-	[CPURLConnection connectionWithRequest:request delegate: nil];
+	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
 }
 
 -(void) writeChangesInObject: (id)obj
@@ -92,24 +92,27 @@ FSRelationshipTypeToMany=1;
 
 @implementation FSRelationship : CPObject 
 {	CPString _name @accessors(property=name);
+	FSEntity _source @accessors(property=source);
 	FSEntity _target @accessors(property=target);
 	CPString _bindingColumn @accessors(property=bindingColumn);
 	CPString _targetColumn @accessors(setter=setTargetColumn:);
 	CPString _type @accessors(property=type);
 	var _target_cache;
 }
--(id) initWithName:(CPString) aName andTargetEntity:(FSEntity) anEntity
+-(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
 {	self = [super init];
     if (self)
 	{	_target = anEntity;
 		_name = aName;
+		_source = someSource;
 		_type= FSRelationshipTypeToOne;
     }
+	[FSEntity _registerRelationship:self];
     return self;
 
 }
 -(id) init
-{	return [self initWithName: nil andTargetEntity: nil];
+{	return [self initWithName: nil source: nil andTargetEntity: nil];
 }
 -(CPString) targetColumn
 {	if(_targetColumn && _targetColumn.length) return _targetColumn;
@@ -131,6 +134,7 @@ FSRelationshipTypeToMany=1;
 }
 @end
 
+var _allRelationships;
 @implementation FSEntity : CPObject 
 {	CPString _name @accessors(property=name);
 	CPString _pk @accessors(property=pk);
@@ -139,6 +143,22 @@ FSRelationshipTypeToMany=1;
 	FSStore	_store @accessors(property=store);
 	CPMutableArray _pkcache;
 }
++(CPArray) relationshipsWithTargetProperty: aKey
+{	var ret=[];
+	if(!_allRelationships) return ret;
+	var i,l=_allRelationships.length;
+	for(i=0;i<l;i++)
+	{	var r=_allRelationships[i];
+		if([r targetColumn] == aKey) [ret addObject: r];
+	}
+	return ret;
+}
++(void) _registerRelationship:(FSRelationship) someRel
+{	if(!_allRelationships) _allRelationships=[CPMutableArray new];
+	return [_allRelationships addObject: someRel];
+}
+
+
 -(id) initWithName:(CPString) aName andStore:(FSStore) someStore
 {	self = [super init];
     if (self)
@@ -149,6 +169,12 @@ FSRelationshipTypeToMany=1;
 }
 -(id) init
 {	return [self initWithName: nil andStore: nil];
+}
+
+-(id) objectWithPK:(id) somePK
+{	var a=[[self store] fetchObjectsWithKey: [self pk] equallingValue: somePK inEntity: self];
+	if(a.length==1) return a[0];
+	return nil;
 }
 
 -(FSRelationship) relationOfName:(CPString) aName
@@ -163,6 +189,7 @@ FSRelationshipTypeToMany=1;
 -(CPArray) relationships
 {	return [_relations allObjects];
 }
+
 
 -(void) addRelationship:(FSRelationship) someRel
 {	if(!_relations) _relations=[CPSet setWithObject:someRel];
@@ -255,18 +282,32 @@ FSRelationshipTypeToMany=1;
 
 - (void)setValue: someval forKey:(CPString)aKey
 {	var type= [self typeOfKey: aKey];
+	var oldval=[self valueForKey: aKey];
 	if(type == 0)
 	{	if(!_changes) _changes = [CPMutableDictionary dictionary];
 		[self willChangeValueForKey:aKey];
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
 		[[_entity store] writeChangesInObject: self];
-//<!> if we write to a toOne relationship key: update the target array
-		[_entity invalidateRelationshipCaches];	// <!>
+		var peekRels=[FSEntity relationshipsWithTargetProperty: aKey];
+		if (peekRels) //if we write to a toOne relationship key: update the target array-> todo: create a toOne automatically if there is a toMany on the other side
+		{	var i,l=peekRels.length;
+			for(i=0; i<l; i++)
+			{	var rel = peekRels[i];
+				if([rel type] == FSRelationshipTypeToMany)
+				{	[rel invalidateCache];
+					var affectedObject=[[rel source] objectWithPK: oldval];	// force updating the current selection in the arraycontrollers
+					var newValOfAffectedObject= [rel fetchObjectsForKey: oldval]
+					[affectedObject willChangeValueForKey: [rel name]];
+					[affectedObject setValue: newValOfAffectedObject forKey: [rel name] ];
+					[affectedObject didChangeValueForKey: [rel name]];
+				}
+			}
+		}
 	} else if(type == 1)
-	{	//<!> fixme: provide meaningful implementation for "Relation: "+aKey+" is written at"
-	} else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
-	
+	{	// this is only to make KVC upates happen in order to update theu selection in the arraycontrollers.
+	}
+	else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
 }
 
 @end

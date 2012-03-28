@@ -82,7 +82,7 @@ var entityNameTable;
 			}
 			[myCols addObject: [v name]];
 		} else if([v isKindOfClass: [GSMarkupRelationship class] ])
-		{	var rel=[[FSRelationship alloc] initWithName: [v name] andTargetEntity: [v target]];	//set name as a temorary symbolic link. will be resolved in decoder later on.
+		{	var rel=[[FSRelationship alloc] initWithName: [v name] source: platformObject andTargetEntity: [v target]];	//set name as a temorary symbolic link. will be resolved in decoder later on.
 			if([v bindingColumn]) [rel setBindingColumn: [v bindingColumn] ];
 			if([v targetColumn]) [rel setTargetColumn: [v targetColumn] ];
 			if([v isToMany]) [rel  setType: FSRelationshipTypeToMany];
