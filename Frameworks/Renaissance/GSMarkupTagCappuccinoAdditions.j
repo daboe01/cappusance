@@ -164,7 +164,7 @@
 			[rowTemplates addObject: rowTemplate];
 		}
 	}
-
+	[platformObject setRowTemplates: rowTemplates];
 	return platformObject;
 }
 
