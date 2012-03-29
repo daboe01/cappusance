@@ -39,3 +39,17 @@
 }
 
 @end
+
+@implementation GSMarkupTagVspace: GSMarkupTagView
+
++ (NSString *) tagName
+{
+  return @"vspace";
+}
+
++ (Class) platformObjectClass
+{
+  return [GSAutoLayoutVSpace class];
+}
+
+@end

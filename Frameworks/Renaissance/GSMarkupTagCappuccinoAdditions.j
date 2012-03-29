@@ -49,6 +49,27 @@
 }
 @end
 
+@implementation GSMarkupOperator: GSMarkupTagObject
+
++ (CPString) tagName
+{
+  return @"operator";
+}
+-(CPArray) content
+{	return _content;
+}
+/* Will never be called.  */
+- (id) allocPlatformObject
+{	return nil;
+}
+-(CPNumber) operator
+{	var type= [_attributes objectForKey:"type"];
+	if( type == "equal") return [CPNumber numberWithInt: CPEqualToPredicateOperatorType];
+	return nil
+}
+@end
+
+
 @implementation GSMarkupLexpression: GSMarkupTagObject
 
 + (CPString) tagName
@@ -62,17 +83,35 @@
 - (id) allocPlatformObject
 {	return nil;
 }
+-(CPString) keyPath
+{	return [_attributes objectForKey:"keyPath"];
+}
+@end
+
+@implementation GSMarkupRexpression: GSMarkupTagObject
+
++ (CPString) tagName
+{
+  return @"rexpression";
+}
+-(CPArray) content
+{	return _content;
+}
+/* Will never be called.  */
+- (id) allocPlatformObject
+{	return nil;
+}
+-(CPString) keyPath
+{	return [_attributes objectForKey:"keyPath"];
+}
 @end
 
 
-@implementation GSMarkupPredicateRowTemplate: GSMarkupTagObject
+@implementation GSMarkupRowTemplate: GSMarkupTagObject
 
 + (CPString) tagName
 {
   return @"rowTemplate";
-}
--(CPString) keyPath
-{	return [_attributes objectForKey:"keyPath"];
 }
 /* Will never be called.  */
 - (id) allocPlatformObject
@@ -99,14 +138,30 @@
 {	platformObject = [super initPlatformObject: platformObject];
 
 // now extract columns and PK...
-	var myRows=[CPMutableArray new];
-
+	var rowTemplates=[CPMutableArray new];
     var i, count = _content.length;
 	for (i = 0 ; i < count; i++)
 	{	var v = _content[i];
-		if([v isKindOfClass: [GSMarkupPredicateRowTemplate class] ])
-		{
-		alert([[[v content] objectAtIndex:0] keyPath]);
+		if([v isKindOfClass: [GSMarkupRowTemplate class] ])
+		{	var expressions=[v content];
+			var j,l1=expressions.length;
+			var lexpressions=[CPMutableArray new];
+			var rexpressions=[CPMutableArray new];
+			var ops=[CPMutableArray new];
+			for(j=0;j<l1;j++)
+			{	var expr=expressions[j];
+					if([expr isKindOfClass: [GSMarkupLexpression class] ])		[lexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
+					else if([expr isKindOfClass: [GSMarkupRexpression class] ]) [rexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]]
+					else if([expr isKindOfClass: [GSMarkupOperator class] ])
+						 if([expr operator]) [ops addObject: [expr operator]]
+			}
+			var rowTemplate=[[CPPredicateEditorRowTemplate alloc]
+				 initWithLeftExpressions: lexpressions
+						rightExpressions: rexpressions
+								modifier: CPAllPredicateModifier	//<!> fixme
+							   operators: ops
+								 options: 0];						//<!> fixme
+			[rowTemplates addObject: rowTemplate];
 		}
 	}
 
