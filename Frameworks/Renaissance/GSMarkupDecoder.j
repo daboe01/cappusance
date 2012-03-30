@@ -286,7 +286,7 @@ var _arrayControllerToPKMapper;
 -(id) _getObjectForIdString:(CPString) peek
 {	var ret;
 	if ([peek hasPrefix: @"#"])
-	{	 ret =[GSMarkupConnector getObjectForIdString: [peek substringFromIndex:1] usingNameTable: _externalNameTable];
+	{	 ret =[GSMarkupConnector getObjectForIdString: [peek substringFromIndex:1] usingNameTable: _externalNameTable];	// external objects are already platformObjects
 	} else ret= [GSMarkupConnector getPlatformObjectForIdString: peek usingNameTable: _nameTable];
 	return ret;
 }
@@ -317,7 +317,13 @@ var _arrayControllerToPKMapper;
 					}
 				}
 			}
-		} if (peek=[[o attributes] objectForKey: "valueBinding"])
+		}
+		if (peek=[[o attributes] objectForKey: "filterPredicate"])
+		{	if([oPO isKindOfClass: [CPArrayController class]])
+			{	[oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
+			}
+		}
+		if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
 			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	if([oPO isKindOfClass: [CPTableView class] ])
@@ -337,9 +343,9 @@ var _arrayControllerToPKMapper;
 				}
 			}
 			else
-			{	var objectName = [peek substringToIndex: r.location];	// <!> fixme: replace with _getObjectForIdString
-				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
+			{	var objectName = [peek substringToIndex: r.location];	// <!> fixme: replace with [self _getObjectForIdString: peek];
 				var target = [[_nameTable objectForKey: objectName] platformObject];
+				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
 				var binding=CPValueBinding;
 				if([oPO  isKindOfClass: [CPArrayController class]]) binding="contentArray";
 				else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";

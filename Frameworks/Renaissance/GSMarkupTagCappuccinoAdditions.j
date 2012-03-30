@@ -151,9 +151,9 @@
 			for(j=0;j<l1;j++)
 			{	var expr=expressions[j];
 					if([expr isKindOfClass: [GSMarkupLexpression class] ])		[lexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
-					else if([expr isKindOfClass: [GSMarkupRexpression class] ]) [rexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]]
+					else if([expr isKindOfClass: [GSMarkupRexpression class] ]) [rexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
 					else if([expr isKindOfClass: [GSMarkupOperator class] ])
-						 if([expr operator]) [ops addObject: [expr operator]]
+						 if([expr operator]) [ops addObject: [expr operator]];
 			}
 			var rowTemplate=[[CPPredicateEditorRowTemplate alloc]
 				 initWithLeftExpressions: lexpressions
@@ -164,9 +164,26 @@
 			[rowTemplates addObject: rowTemplate];
 		}
 	}
+//alert(rowTemplates);
 	[platformObject setRowTemplates: rowTemplates];
+	var test=[CPPredicate predicateWithFormat: @"name == %@" argumentArray: ["test"] ];
+	//[platformObject setObjectValue: test];
 	return platformObject;
 }
+@end
 
+@implementation GSMarkupTagPredicate : GSMarkupTagObject
++ (CPString) tagName
+{	return @"predicate";
+}
+
++ (Class) platformObjectClass
+{	return nil;
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject=[CPPredicate predicateWithFormat: [_attributes objectForKey:"format"] argumentArray: nil ];
+	return platformObject;
+}
 
 @end
