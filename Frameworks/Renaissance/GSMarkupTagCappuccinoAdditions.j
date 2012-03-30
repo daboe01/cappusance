@@ -146,28 +146,32 @@
 		{	var expressions=[v content];
 			var j,l1=expressions.length;
 			var lexpressions=[CPMutableArray new];
-			var rexpressions=[CPMutableArray new];
 			var ops=[CPMutableArray new];
 			for(j=0;j<l1;j++)
 			{	var expr=expressions[j];
 					if([expr isKindOfClass: [GSMarkupLexpression class] ])		[lexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
-					else if([expr isKindOfClass: [GSMarkupRexpression class] ]) [rexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
 					else if([expr isKindOfClass: [GSMarkupOperator class] ])
 						 if([expr operator]) [ops addObject: [expr operator]];
 			}
 			var rowTemplate=[[CPPredicateEditorRowTemplate alloc]
 				 initWithLeftExpressions: lexpressions
-						rightExpressions: rexpressions
-								modifier: CPAllPredicateModifier	//<!> fixme
+			rightExpressionAttributeType: CPStringAttributeType		//<!> fixme
+								modifier: CPDirectPredicateModifier	//<!> fixme
 							   operators: ops
-								 options: 0];						//<!> fixme
+								 options: CPCaseInsensitivePredicateOption];	//<!> fixme
 			[rowTemplates addObject: rowTemplate];
 		}
 	}
 //alert(rowTemplates);
+/*
+	var compoundTypesArr = [CPArray arrayWithObjects: [CPNumber numberWithInt:CPNotPredicateType],
+                                                   [CPNumber numberWithInt:CPAndPredicateType],
+                                                   [CPNumber numberWithInt:CPOrPredicateType]];
+
+	var compound = [[CPPredicateEditorRowTemplate alloc] initWithCompoundTypes: compoundTypesArr];
+	[rowTemplates addObject: compound];
+*/
 	[platformObject setRowTemplates: rowTemplates];
-	var test=[CPPredicate predicateWithFormat: @"name == %@" argumentArray: ["test"] ];
-	//[platformObject setObjectValue: test];
 	return platformObject;
 }
 @end

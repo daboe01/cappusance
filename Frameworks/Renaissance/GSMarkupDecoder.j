@@ -326,9 +326,9 @@ var _arrayControllerToPKMapper;
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
 			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually but through "identifier" property
-			{	if([oPO isKindOfClass: [CPTableView class] ])
-				{	var target=[[_nameTable objectForKey: peek] platformObject];
-					[oPO bind:@"content" toObject: target withKeyPath: @"contentArray" options:nil]; 
+			{	var target=[[_nameTable objectForKey: peek] platformObject];	// <!> fixme: replace with [self _getObjectForIdString: peek];
+				if([oPO isKindOfClass: [CPTableView class] ])
+				{	[oPO bind:@"content" toObject: target withKeyPath: @"contentArray" options:nil]; 
 					var _content=[o content];
 					var j, l1 = _content.length;
 					for (j = 0; j < l1; j++)
@@ -340,6 +340,9 @@ var _arrayControllerToPKMapper;
 													 options: nil]; 
 						}
 					}
+				} else if([oPO isKindOfClass: [CPPredicateEditor class] ])
+				{	//[[oPO rowTemplates] makeObjectsPerformSelector:@selector(setPredicate:) withObject: target];
+					[oPO setObjectValue: target];
 				}
 			}
 			else
