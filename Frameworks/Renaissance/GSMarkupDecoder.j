@@ -319,7 +319,7 @@ var _arrayControllerToPKMapper;
 			}
 		}
 		if (peek=[[o attributes] objectForKey: "filterPredicate"])
-		{	if([oPO isKindOfClass: [CPArrayController class]])
+		{	if( [oPO isKindOfClass: [CPArrayController class]])
 			{	[oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
 			}
 		}
@@ -328,7 +328,7 @@ var _arrayControllerToPKMapper;
 			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	var target=[[_nameTable objectForKey: peek] platformObject];	// <!> fixme: replace with [self _getObjectForIdString: peek];
 				if([oPO isKindOfClass: [CPTableView class] ])
-				{	[oPO bind:@"content" toObject: target withKeyPath: @"contentArray" options:nil]; 
+				{	[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil]; 
 					var _content=[o content];
 					var j, l1 = _content.length;
 					for (j = 0; j < l1; j++)
@@ -341,7 +341,8 @@ var _arrayControllerToPKMapper;
 						}
 					}
 				} else if([oPO isKindOfClass: [CPPredicateEditor class] ])
-				{	//[[oPO rowTemplates] makeObjectsPerformSelector:@selector(setPredicate:) withObject: target];
+				{
+alert([[oPO rowTemplates] description]);
 					[oPO setObjectValue: target];
 				}
 			}
@@ -366,7 +367,7 @@ var _arrayControllerToPKMapper;
 		var oPO=[o platformObject];
 		if([oPO isKindOfClass: [CPArrayController class]])		// autofetching
 		{	var peek;
-			if(peek=[[o attributes] objectForKey:"entity"])
+			if (peek=[[o attributes] objectForKey:"entity"])
 			{	var pk=[[[_nameTable objectForKey: peek] platformObject] pk];
 				[GSMarkupDecoder registerPk: pk  forPlatformObject: oPO];
 			}

@@ -149,28 +149,24 @@
 			var ops=[CPMutableArray new];
 			for(j=0;j<l1;j++)
 			{	var expr=expressions[j];
-					if([expr isKindOfClass: [GSMarkupLexpression class] ])		[lexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
-					else if([expr isKindOfClass: [GSMarkupOperator class] ])
-						 if([expr operator]) [ops addObject: [expr operator]];
+				if([expr isKindOfClass: [GSMarkupLexpression class] ])
+					[lexpressions addObject: [CPExpression expressionForKeyPath: [expr keyPath] ]];
+				else if([expr isKindOfClass: [GSMarkupOperator class] ])
+					 if([expr operator]) [ops addObject: [expr operator]];
 			}
 			var rowTemplate=[[CPPredicateEditorRowTemplate alloc]
 				 initWithLeftExpressions: lexpressions
 			rightExpressionAttributeType: CPStringAttributeType		//<!> fixme
-								modifier: CPDirectPredicateModifier	//<!> fixme
+								modifier: 0	//<!> fixme
 							   operators: ops
-								 options: CPCaseInsensitivePredicateOption];	//<!> fixme
+								 options: 0];	//<!> fixme
 			[rowTemplates addObject: rowTemplate];
 		}
 	}
-//alert(rowTemplates);
-/*
-	var compoundTypesArr = [CPArray arrayWithObjects: [CPNumber numberWithInt:CPNotPredicateType],
-                                                   [CPNumber numberWithInt:CPAndPredicateType],
-                                                   [CPNumber numberWithInt:CPOrPredicateType]];
 
-	var compound = [[CPPredicateEditorRowTemplate alloc] initWithCompoundTypes: compoundTypesArr];
-	[rowTemplates addObject: compound];
-*/
+//	[platformObject setNestingMode: CPRuleEditorNestingModeCompound];
+	[rowTemplates addObject: [ [CPPredicateEditorRowTemplate alloc] initWithCompoundTypes:
+			[CPArray arrayWithObjects: [CPNumber numberWithInt: CPAndPredicateType], [CPNumber numberWithInt: CPOrPredicateType]  ] ] ];
 	[platformObject setRowTemplates: rowTemplates];
 	return platformObject;
 }
