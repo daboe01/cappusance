@@ -340,20 +340,22 @@ var _arrayControllerToPKMapper;
 													 options: nil]; 
 						}
 					}
-				} else if([oPO isKindOfClass: [CPPredicateEditor class] ])
-				{
-alert([[oPO rowTemplates] description]);
-					[oPO setObjectValue: target];
 				}
 			}
 			else
 			{	var objectName = [peek substringToIndex: r.location];	// <!> fixme: replace with [self _getObjectForIdString: peek];
 				var target = [[_nameTable objectForKey: objectName] platformObject];
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
-				var binding=CPValueBinding;
-				if([oPO  isKindOfClass: [CPArrayController class]]) binding="contentArray";
-				else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
-				[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
+				if([oPO isKindOfClass: [CPPredicateEditor class]])
+				{	[oPO setObjectValue: [self _getObjectForIdString: peek] ];
+					[target bind: "filterPredicate" toObject: oPO withKeyPath: "objectValue" options:nil];
+
+				} else
+				{	var binding=CPValueBinding;
+					if([oPO  isKindOfClass: [CPArrayController class]]) binding="contentArray";
+					else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
+					[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
+				}
 			}
 		}
 		[self _postprocessForBindings:[o content]];
@@ -395,11 +397,12 @@ alert([[oPO rowTemplates] description]);
 	{	[self processDOMNode: entities[0] intoContainer: _entites];
 		[self _postprocessEntities];
 	}
-	[self _postprocessForEntities:_objects];
-	[self _postprocessForBindings:_objects];
 
 	var  cons= t.getElementsByTagName("connectors");
 	if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];
+
+	[self _postprocessForEntities:_objects];
+	[self _postprocessForBindings:_objects];
 }
 
 -(id) nameTable

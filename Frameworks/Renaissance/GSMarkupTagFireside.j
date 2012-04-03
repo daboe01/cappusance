@@ -108,6 +108,8 @@ var entityNameTable;
 
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [platformObject init];
+	[platformObject setAutomaticallyRearrangesObjects:YES];
+	[platformObject setObjectClass:[FSObject class]];
 	return platformObject;
 }
 

@@ -266,8 +266,11 @@ var _allRelationships;
 		}
 	
 		var o=[_changes objectForKey: aKey];
-		if (o) return o;
-		return [_data objectForKey: aKey];
+		if (!o)  o = [_data objectForKey: aKey];
+		if  (o)
+		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
+				 o=[CPString stringWithFormat:"%d", o];
+		} return o;
 	} else if(type == 1)	// to one relation: aKey is accessed
 	{	var rel=[_entity relationOfName: aKey];
 		var bindingColumn=[rel bindingColumn];
