@@ -66,6 +66,7 @@
 {	var type= [_attributes objectForKey:"type"];
 	if( type == "equal") return [CPNumber numberWithInt: CPEqualToPredicateOperatorType];
 	else if( type == "begins") return [CPNumber numberWithInt: CPBeginsWithPredicateOperatorType];
+	else if( type == "ends") return [CPNumber numberWithInt: CPEndsWithPredicateOperatorType];
 	return nil
 }
 @end
@@ -167,7 +168,7 @@
 
 	[platformObject setNestingMode: CPRuleEditorNestingModeCompound];
 	[rowTemplates addObject: [ [CPPredicateEditorRowTemplate alloc] initWithCompoundTypes:
-			[CPArray arrayWithObjects: [CPNumber numberWithInt: CPAndPredicateType], [CPNumber numberWithInt: CPOrPredicateType]  ] ] ];
+			[CPArray arrayWithObjects: [CPNumber numberWithInt: CPAndPredicateType], [CPNumber numberWithInt: CPOrPredicateType], [CPNumber numberWithInt: CPNotPredicateType]  ] ] ];
 	[platformObject setRowTemplates: rowTemplates];
 	return platformObject;
 }
@@ -185,11 +186,5 @@
 - (id) initPlatformObject: (id)platformObject
 {	platformObject=[CPPredicate predicateWithFormat: [_attributes objectForKey:"format"] argumentArray: nil ];
 	return platformObject;
-}
-@end
-@implementation CPNumber(DBG)
--(int) length
-{	debugger;
-	return 0;
 }
 @end

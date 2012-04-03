@@ -265,7 +265,7 @@ var _allRelationships;
 		{
 		}
 	
-		var o=[_changes objectForKey: aKey];
+		var  o=[_changes objectForKey: aKey];
 		if (!o)  o = [_data objectForKey: aKey];
 		if  (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
