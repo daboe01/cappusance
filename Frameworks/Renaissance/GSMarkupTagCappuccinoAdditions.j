@@ -170,6 +170,7 @@
 	[rowTemplates addObject: [ [CPPredicateEditorRowTemplate alloc] initWithCompoundTypes:
 			[CPArray arrayWithObjects: [CPNumber numberWithInt: CPAndPredicateType], [CPNumber numberWithInt: CPOrPredicateType], [CPNumber numberWithInt: CPNotPredicateType]  ] ] ];
 	[platformObject setRowTemplates: rowTemplates];
+	[platformObject setFormattingStringsFilename: nil];	// fixes capp issue
 	return platformObject;
 }
 @end
