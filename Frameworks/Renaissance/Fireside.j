@@ -11,6 +11,20 @@
 
 @import <Foundation/CPObject.j>
 
+@implementation CPDictionary(JSONExport)
+-(CPString) toJSON
+{	var keys=[self allKeys];
+	var i,l=keys.length;
+	var o={};
+	for(i=0;i<l;i++)
+	{	var key=keys[i];
+		o[key]=[self objectForKey:key];
+	}
+	return JSON.stringify(o);
+}
+@end
+
+
 @implementation FSStore : CPObject 
 {	CPString _baseURL @accessors(property=baseURL);
 	unsigned _fetchLimit @accessors(property=fetchLimit);
@@ -23,25 +37,17 @@
     }
     return self;
 }
--(CPURLRequest) requestForWritingKey:(CPString) aKey ofObject: (id)obj toEntity:(FSEntity) someEntity
-{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+[obj valueForKey: [someEntity pk]]+"/"+aKey+'/'+[obj valueForKey: aKey]];
-    [request setHTTPMethod:"PUT"];
+
+-(CPURLRequest) requestForWritingDictionary:(CPDictionary) obj toPK:(id) somePK inEntity:(FSEntity) someEntity
+{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+[someEntity pk]+"/"+somePK ];
+    [request setHTTPMethod:"POST"];
+	[request setHTTPBody: [obj toJSON] ];
 	return request;
 }
 
--(void) writeKey:(CPString) aKey ofObject: (id)obj
-{	var request = [self requestForWritingKey: aKey ofObject: obj toEntity: [obj entity]];
+-(void) writeChangesInObject: (id) obj
+{	var request=  [self requestForWritingDictionary: obj._changes toPK: [obj valueForKey: [[obj entity] pk]] inEntity: [obj entity]];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
-}
-
--(void) writeChangesInObject: (id)obj
-{	var keys=[obj._changes allKeys];
-	var i,l=keys.length;
-	for(i=0;i<l;i++)
-	{	var key=keys[i];
-		var val=[obj._changes objectForKey:key];
-		[self writeKey: key ofObject: obj];
-	}
 }
 
 -(CPArray) fetchObjectsForURLRequest:(CPURLRequest) request inEntity: (FSEntity) someEntity
