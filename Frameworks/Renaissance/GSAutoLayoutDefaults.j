@@ -81,7 +81,7 @@
 
 - (GSAutoLayoutAlignment) autolayoutDefaultVerticalAlignment
 {
-  return GSAutoLayoutExpand;
+  return GSAutoLayoutAlignMin;
 }
 
 @end

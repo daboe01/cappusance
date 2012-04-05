@@ -18,9 +18,15 @@
 	var min;
 	var max;
 	var current;
-
-	if([self boolValueForAttribute: @"indeterminate"] ==1) [platformObject setIndeterminate:YES];
-	if([self boolValueForAttribute: @"displayWhenStopped"] ==1) [platformObject  setDisplayedWhenStopped:YES];
+	if([self boolValueForAttribute: @"indeterminate"] ==1)
+	{	[platformObject setIndeterminate:YES];
+		[platformObject setStyle: CPProgressIndicatorSpinningStyle];
+		[platformObject setControlSize: CPMiniControlSize];
+		[_attributes setObject: @"16" forKey: @"height"]
+		[_attributes setObject: @"16" forKey: @"width"]
+	}
+	if([self boolValueForAttribute: @"displayWhenStopped"] ==1)
+		[platformObject  setDisplayedWhenStopped:YES];
 
 	min = [_attributes objectForKey: @"min"];
 	if (min != nil)
@@ -189,3 +195,64 @@
 	return platformObject;
 }
 @end
+
+@implementation GSMarkupTagTabViewItem : GSMarkupTagObject
++ (CPString) tagName
+{
+  return @"tabViewItem";
+}
+
++ (Class) platformObjectClass
+{
+  return nil;
+}
+
+-(CPString) title
+{	return [_attributes objectForKey:"title"];
+}
+- (id) initPlatformObject: (id)platformObject
+{	platformObject=[[CPTabViewItem alloc] initWithIdentifier: [self title] ];
+	return platformObject;
+}
+@end
+
+@implementation GSMarkupTagTabView : GSMarkupTagView
++ (CPString) tagName
+{
+  return @"tabView";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPTabView class];
+}
+
+-(int) type
+{	if([_attributes objectForKey: "type"]=="topBezel") return CPTopTabsBezelBorder;
+	return CPNoTabsBezelBorder;
+}
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+	[platformObject setTabViewType: [self type]];
+
+    var  i, count = _content.length;
+	for (i = 0 ; i < count; i++)
+	{	var item = [_content[i] platformObject];
+        [item setView: [[_content[i] content][0] platformObject] ];
+        [item setLabel: [_content[i] title] ];
+		[platformObject addTabViewItem: item];
+	}
+	return platformObject;
+}
+@end
+
+@implementation  CPTabView(AutoLayoutDefaults)
+- (GSAutoLayoutAlignment) autolayoutDefaultVerticalAlignment
+{	return GSAutoLayoutExpand;
+}
+- (GSAutoLayoutAlignment) autolayoutDefaultHorizontalAlignment
+{	return GSAutoLayoutExpand;
+}
+
+@end
+

@@ -15,6 +15,8 @@
 @import <Foundation/CPObject.j>
 @import "GSMarkupConnector.j"
 
+
+
 @implementation CPString (CapitalizedString)
 - (CPString) stringByUppercasingFirstCharacter
 {	var length = [self length];
@@ -194,7 +196,7 @@ var _arrayControllerToPKMapper;
 			if (container!=_connectors && [value hasPrefix: @"#"])
 			{	if(container==_entites)
 				{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
-				} else if(key != 'itemsBinding')	// itemsBinding will be processed elsewhere
+				} else if(key != 'itemsBinding' && key != 'valueBinding')	// bindings will be processed elsewhere
 				{	var outlet;	// GSMarkupOutletConnector
 
 					/* We pass the value unchanged to the outlet.  If
@@ -318,15 +320,10 @@ var _arrayControllerToPKMapper;
 				}
 			}
 		}
-		if (peek=[[o attributes] objectForKey: "filterPredicate"])
-		{	if( [oPO isKindOfClass: [CPArrayController class]])
-			{	[oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
-			}
-		}
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
 			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually but through "identifier" property
-			{	var target=[[_nameTable objectForKey: peek] platformObject];	// <!> fixme: replace with [self _getObjectForIdString: peek];
+			{	var target=[self _getObjectForIdString: peek];
 				if([oPO isKindOfClass: [CPTableView class] ])
 				{	[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil]; 
 					var _content=[o content];
@@ -343,10 +340,11 @@ var _arrayControllerToPKMapper;
 				}
 			}
 			else
-			{	var objectName = [peek substringToIndex: r.location];	// <!> fixme: replace with [self _getObjectForIdString: peek];
-				var target = [[_nameTable objectForKey: objectName] platformObject];
+			{	var objectName = [peek substringToIndex: r.location];
+				var target = [self _getObjectForIdString: objectName];
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
-				if([oPO isKindOfClass: [CPPredicateEditor class]])
+
+				if( [oPO isKindOfClass: [CPPredicateEditor class]])
 				{	[oPO setObjectValue: [self _getObjectForIdString: peek] ];
 					[target bind: "filterPredicate" toObject: oPO withKeyPath: "objectValue" options:nil];
 
@@ -356,6 +354,12 @@ var _arrayControllerToPKMapper;
 					else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
 					[oPO bind: binding toObject: target withKeyPath: keyValuePath options:nil];
 				}
+			}
+		}
+		if (peek=[[o attributes] objectForKey: "filterPredicate"])
+		{	if( [oPO isKindOfClass: [CPArrayController class]])
+			{
+				[oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
 			}
 		}
 		[self _postprocessForBindings:[o content]];
