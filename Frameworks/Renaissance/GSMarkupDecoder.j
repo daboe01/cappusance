@@ -324,7 +324,7 @@ var _arrayControllerToPKMapper;
 		{	var r = [peek rangeOfString: @"."];
 			if (r.location == CPNotFound)	// "unspecific" binding, such as in tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	var target=[self _getObjectForIdString: peek];
-				if([oPO isKindOfClass: [CPTableView class] ])
+				if( [oPO isKindOfClass: [CPTableView class] ])
 				{	[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil]; 
 					var _content=[o content];
 					var j, l1 = _content.length;

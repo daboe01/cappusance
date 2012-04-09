@@ -11,6 +11,10 @@
 
 @import <Foundation/CPObject.j>
 
+@implementation CPArray(AllObjects)
+-(CPArray) allObjects {return self;}
+@end
+
 @implementation CPDictionary(JSONExport)
 -(CPString) toJSON
 {	var keys=[self allKeys];
