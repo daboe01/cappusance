@@ -362,6 +362,18 @@ var _arrayControllerToPKMapper;
 				[oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
 			}
 		}
+		if (peek=[[o attributes] objectForKey: "formatterClass"])
+		{	var displayFormat=[[o attributes] objectForKey: "displayFormat"];
+			var editingFormat=[[o attributes] objectForKey: "editingFormat"];
+			var emptyIsValid=([o boolValueForAttribute: "editingFormat"]==1);
+			if(!displayFormat && !editingFormat)
+				 [oPO setFormatter: [CPClassFromString(peek) new]];
+			else [oPO setFormatter: [CPClassFromString(peek)
+					formatterWithDisplayFormat: displayFormat
+					editingFormat: editingFormat
+					emptyIsValid: emptyIsValid]];
+
+		}
 		[self _postprocessForBindings:[o content]];
 	}
 }
