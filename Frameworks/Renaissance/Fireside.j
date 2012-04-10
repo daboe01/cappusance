@@ -152,6 +152,7 @@ var _allRelationships;
 	CPSet _relations;
 	FSStore	_store @accessors(property=store);
 	CPMutableArray _pkcache;
+	CPMutableDictionary _formatters;
 }
 +(CPArray) relationshipsWithTargetProperty: aKey
 {	var ret=[];
@@ -179,6 +180,15 @@ var _allRelationships;
 }
 -(id) init
 {	return [self initWithName: nil andStore: nil];
+}
+
+-(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
+{	if(!_formatters) _formatters=[CPMutableDictionary new];
+	[_formatters setObject:aFormatter forKey: aName];
+}
+-(CPFormatter) formatterForColumnName:(CPString) aName
+{	if(!_formatters) return nil;
+	return [_formatters objectForKey: aName];
 }
 
 -(id) objectWithPK:(id) somePK
@@ -236,6 +246,7 @@ var _allRelationships;
 @implementation FSObject : CPObject 
 {	CPMutableDictionary _data;
 	CPMutableDictionary _changes;
+	CPMutableDictionary _formatters;
 	FSEntity _entity @accessors(property=entity);
 }
 
@@ -255,6 +266,14 @@ var _allRelationships;
     {	var propName = cols[i];
 		[_data setObject: o[propName] forKey:propName];
     }
+}
+-(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
+{	if(!_formatters) _formatters=[CPMutableDictionary new];
+	[_formatters setObject:aFormatter forKey: aName];
+}
+-(CPFormatter) formatterForColumnName:(CPString) aName
+{	if(!_formatters) return nil;
+	return [_formatters objectForKey: aName];
 }
 
 - (id)description
@@ -280,7 +299,11 @@ var _allRelationships;
 		if  (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
 				 o=[CPString stringWithFormat:"%d", o];
-		} return o;
+		}
+		var peek=[self formatterForColumnName:aKey];
+		if(peek || (peek=[_entity formatterForColumnName:aKey]))
+		{	return [peek stringForObjectValue: o];
+		} else return o;
 	} else if(type == 1)	// to one relation: aKey is accessed
 	{	var rel=[_entity relationOfName: aKey];
 		var bindingColumn=[rel bindingColumn];
@@ -299,6 +322,11 @@ var _allRelationships;
 	if(type == 0)
 	{	if(!_changes) _changes = [CPMutableDictionary dictionary];
 		[self willChangeValueForKey:aKey];
+
+		var peek=[self formatterForColumnName: aKey];
+		if(peek || (peek=[_entity formatterForColumnName: aKey]))
+		{	someval= [peek objectValueForString: someval error: nil];	//<!> fixme handle errors somehow
+		}
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
 		[[_entity store] writeChangesInObject: self];
