@@ -298,7 +298,7 @@ var _allRelationships;
 		if (!o)  o = [_data objectForKey: aKey];
 		if  (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
-				 o=[CPString stringWithFormat:"%d", o];
+				 o=[o stringValue];
 		}
 		var peek=[self formatterForColumnName:aKey];
 		if(peek || (peek=[_entity formatterForColumnName:aKey]))
