@@ -256,3 +256,22 @@
 
 @end
 
+
+@implementation GSMarkupTagCheckBox : GSMarkupTagControl
++ (CPString) tagName
+{
+  return @"checkBox";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPCheckBox class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+	[platformObject setTitle: [_attributes objectForKey:"title"] ];
+	return platformObject;
+}
+@end
+
