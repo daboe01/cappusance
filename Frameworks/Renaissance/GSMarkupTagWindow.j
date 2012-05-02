@@ -75,6 +75,10 @@
     {
       style |= CPHUDBackgroundWindowMask;
     }
+  if ([self boolValueForAttribute: @"bridge"] == 1)
+    {
+      style |= CPBorderlessBridgeWindowMask;
+    }
 
   /* closable */
   if ([self boolValueForAttribute: @"closable"] == 0)
