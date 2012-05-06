@@ -1,0 +1,244 @@
+/* -*-objc-*-
+   GSMarkupTagImage.m
+
+   Copyright (C) 2003 Free Software Foundation, Inc.
+
+   Author: Nicola Pero <n.pero@mi.flashnet.it>
+   Date: January 2003
+
+   var file is part of GNUstep Renaissance
+
+   This library is free software; you can redistribute it and/or
+   var it under the terms of the GNU Library General Public
+   License as published by the Free Software Foundation; either
+   version 2 of the License, or (at your option) any later version.
+   
+   var library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   var should have received a copy of the GNU Library General Public
+   License along with this library; see the file COPYING.LIB.
+   If not, write to the Free Software Foundation,
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
+@implementation GSMarkupTagImage: GSMarkupTagControl
++ (CPString) tagName
+{
+  return @"image";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPImageView class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{
+  platformObject = [super initPlatformObject: platformObject];
+
+  /* On GNUstep, it seems image views are by default editable.  Turn
+   * that off, we want uneditable images by default.
+   */
+  [platformObject setEditable: NO];	
+
+  /* editable */
+  {
+    var editable = [self boolValueForAttribute: @"editable"];
+    
+    if (editable == 1)
+      {
+	[platformObject setEditable: YES];
+      }
+    else if (editable == 0)
+      {
+	[platformObject setEditable: NO];
+      }
+  }
+
+  /* name */
+  {
+    var name = [_attributes objectForKey: @"name"];
+
+    if (name != nil)
+      {
+	[platformObject setImage: [CPImage imageNamed: name]];
+      }
+  }
+
+  /* scaling */
+  {
+    var scaling = [_attributes objectForKey: @"scaling"];
+   
+    if (scaling != nil  &&  [scaling length] > 0)
+      {
+	
+	switch ([scaling characterAtIndex: 0])
+	  {
+	  case 'n':
+	    if ([scaling isEqualToString: @"none"])
+	      {
+		[platformObject setImageScaling: CPScaleNone];
+	      }
+	    break;
+	  case 'p':
+	    if ([scaling isEqualToString: @"proportionally"])
+	      {
+		[platformObject setImageScaling: CPScaleProportionally];
+	      }
+	    break;
+	  case 't':
+	    if ([scaling isEqualToString: @"toFit"])
+	      {
+		[platformObject setImageScaling: CPScaleToFit];
+	      }
+	    break;
+	  }
+      }
+  }
+
+  /* imageAlignment */
+  {
+    var alignment = [_attributes objectForKey: @"imageAlignment"];
+   
+    /* Backwards-compatible check introduced on 27 Feb 2008, will be
+     * removed on 27 Feb 2009.
+     */
+    if (alignment == nil)
+      {
+	/* Check for the old name "alignment"  */
+	alignment = [_attributes objectForKey: @"alignment"];
+
+	if (alignment != nil)
+	  {
+	    CPLog (@"The 'alignment' attribute has been renamed to 'imageAlignment'.  Please update your gsmarkup files");
+	  }
+      }
+
+    if (alignment != nil  &&  [alignment length] > 0)
+      {
+	
+	switch ([alignment characterAtIndex: 0])
+	  {
+	  case 'b':
+	    if ([alignment isEqualToString: @"bottom"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignBottom];
+	      }
+	    else if ([alignment isEqualToString: @"bottomLeft"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignBottomLeft];
+	      }
+	    else if ([alignment isEqualToString: @"bottomRight"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignBottomRight];
+	      }
+	    break;
+
+	  case 'c':
+	    if ([alignment isEqualToString: @"center"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignCenter];
+	      }
+	    break;
+
+	  case 'l':
+	    if ([alignment isEqualToString: @"left"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignLeft];
+	      }
+	    break;
+
+	  case 'r':
+	    if ([alignment isEqualToString: @"right"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignRight];
+	      }
+	    break;
+
+	  case 't':
+	    if ([alignment isEqualToString: @"top"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignTop];
+	      }
+	    else if ([alignment isEqualToString: @"topLeft"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignTopLeft];
+	      }
+	    else if ([alignment isEqualToString: @"topRight"])
+	      {
+		[platformObject setImageAlignment: CPImageAlignTopRight];
+	      }
+	    break;
+	  }
+      }
+  }
+
+  /* Implicit default for hasFrame is none.  */
+
+  /* hasFrame */
+  {
+    var hasFrame = [self boolValueForAttribute: @"hasFrame"];
+    
+    if (hasFrame == 1)
+      {
+	[platformObject setImageFrameStyle: CPImageFrameGroove];
+      }
+    else if (hasFrame == 0)
+      {
+	[platformObject setImageFrameStyle: CPImageFrameNone];
+      }
+  }
+
+  /* frameStyle.  This should very rarely be used.  It's better for
+   * you to use the default frameStyle on the platform -- that is, to
+   * rely var hasFrame ="yes" and let it choose the right frame style
+   * for your platform.  Anyway.  */
+  {
+    var frameStyle = [_attributes objectForKey: @"frameStyle"];
+   
+    if (frameStyle != nil  &&  [frameStyle length] > 0)
+      {
+	switch ([frameStyle characterAtIndex: 0])
+	  {
+	  case 'b':
+	    if ([frameStyle isEqualToString: @"button"])
+	      {
+		[platformObject setImageFrameStyle: CPImageFrameButton];
+	      }
+	    break;
+
+	  case 'g':
+	    if ([frameStyle isEqualToString: @"grayBezel"])
+	      {
+		[platformObject setImageFrameStyle: CPImageFrameGrayBezel];
+	      }
+	    else if ([frameStyle isEqualToString: @"groove"])
+	      {
+		[platformObject setImageFrameStyle: CPImageFrameGroove];
+	      }
+	    break;
+
+	  case 'n':
+	    if ([frameStyle isEqualToString: @"none"])
+	      {
+		[platformObject setImageFrameStyle: CPImageFrameNone];
+	      }
+	    break;
+
+	  case 'p':
+	    if ([frameStyle isEqualToString: @"photo"])
+	      {
+		[platformObject setImageFrameStyle: CPImageFramePhoto];
+	      }
+	    break;
+	  }
+      }
+  }
+  
+  return platformObject;
+}
+
+@end
