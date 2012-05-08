@@ -1,9 +1,9 @@
-Cappusance is a powerful textual GUI builder based on GNUstep Renaissance.
+Cappusance is a powerful textual GUI builder for cappuccino based on GNUstep Renaissance.
 Cappusance i.e. features strong autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
 
-Cappusance has a RESTful ORM builtin for painless database-to-GUI mapping in the spirit of EOF/WebObjects.
-Cappusance also runs without any backend. Here, you can connect bindings and outlets directly to your instance variables and objects.
+Cappusance has a light RESTful ORM builtin for painless database-to-GUI mapping in the spirit of EOF/WebObjects.
+Cappusance is also useful without any backend. Here, you can connect bindings and outlets directly to your instance variables and objects.
 See Slider<->TextField example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
 
 Example usage with backend:
