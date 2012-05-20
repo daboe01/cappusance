@@ -24,6 +24,18 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+
+@implementation CPImageView(URLSupport)
+/*
+- (GSAutoLayoutAlignment) autolayoutDefaultVerticalAlignment
+{	return GSAutoLayoutExpand;
+}
+- (GSAutoLayoutAlignment) autolayoutDefaultHorizontalAlignment
+{	return GSAutoLayoutExpand;
+}
+*/
+@end
+
 @implementation GSMarkupTagImage: GSMarkupTagControl
 + (CPString) tagName
 {
@@ -237,7 +249,18 @@
 	  }
       }
   }
-  
+	var height;
+	height = [_attributes objectForKey: @"height"];
+	if (height == nil)
+	{
+		[_attributes setObject: @"100" forKey: @"height"];
+	}
+	var width;
+	width = [_attributes objectForKey: @"width"];
+	if (width == nil)
+    {	[_attributes setObject: @"100" forKey: @"width"];
+    }
+
   return platformObject;
 }
 

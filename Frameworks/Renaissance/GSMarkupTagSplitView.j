@@ -26,6 +26,7 @@
 
 @import "GSMarkupTagView.j"
 
+
 @implementation GSMarkupTagSplitView: GSMarkupTagView
 
 + (CPString) tagName

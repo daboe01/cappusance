@@ -44,7 +44,7 @@
 
 -(CPURLRequest) requestForWritingDictionary:(CPDictionary) obj toPK:(id) somePK inEntity:(FSEntity) someEntity
 {	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+[someEntity pk]+"/"+somePK ];
-    [request setHTTPMethod:"POST"];
+    [request setHTTPMethod:"PUT"];
 	[request setHTTPBody: [obj toJSON] ];
 	return request;
 }
@@ -312,7 +312,11 @@ var _allRelationships;
 		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] ];
 
 		return [rel type]== FSRelationshipTypeToMany? results: ((results && results.length)? [results objectAtIndex: 0] : nil) ;
-	} else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column in entity "+[_entity name]];
+	} else
+	{	var propSEL = sel_getName(aKey);
+		if(propSEL && [self respondsToSelector: propSEL ]) return [self performSelector:propSEL];
+		else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column in entity "+[_entity name]];
+	}
 	
 }
 
@@ -349,6 +353,11 @@ var _allRelationships;
 	{	// this is only to make KVC upates happen in order to update theu selection in the arraycontrollers.
 	}
 	else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
+}
+
+- (void)insertObjects:(CPArray) theObjects atIndexes:(CPSet)theIndexes
+{
+	// <!> fixme do something reasonable
 }
 
 @end
