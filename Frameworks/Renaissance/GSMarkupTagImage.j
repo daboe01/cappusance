@@ -25,7 +25,7 @@
 */
 
 
-@implementation CPImageView(URLSupport)
+@implementation CPImageView(AutoLayoutSupport)
 /*
 - (GSAutoLayoutAlignment) autolayoutDefaultVerticalAlignment
 {	return GSAutoLayoutExpand;
@@ -36,6 +36,17 @@
 */
 @end
 
+@implementation CPImageViewProp:CPImageView
+
+-(void) setObjectValue: someImg
+{	var size=[someImg size];
+	[self setBounds: CPMakeRect(0,0, size.width, size.height)];
+	[super setObjectValue:someImg];
+}
+
+@end
+
+
 @implementation GSMarkupTagImage: GSMarkupTagControl
 + (CPString) tagName
 {
@@ -44,7 +55,7 @@
 
 + (Class) platformObjectClass
 {
-  return [CPImageView class];
+  return [CPImageViewProp class];
 }
 
 - (id) initPlatformObject: (id)platformObject
@@ -77,6 +88,15 @@
     if (name != nil)
       {
 	[platformObject setImage: [CPImage imageNamed: name]];
+      }
+  }
+  /* file */
+  {
+    var name = [_attributes objectForKey: @"ressource"];
+
+    if (name != nil)
+      {
+	[platformObject setImage: [[CPImage alloc] initWithContentsOfFile: [CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath],name ]] ];
       }
   }
 

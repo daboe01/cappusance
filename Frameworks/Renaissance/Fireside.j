@@ -357,6 +357,7 @@ var _allRelationships;
 
 - (void)insertObjects:(CPArray) theObjects atIndexes:(CPSet)theIndexes
 {
+document.title="insertObjects";
 	// <!> fixme do something reasonable
 }
 
