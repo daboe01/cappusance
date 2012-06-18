@@ -95,6 +95,7 @@
 
 @implementation FSArrayController: CPArrayController
 {	id _entity @accessors(property=entity);
+	id _defaultDict;
 }
 -(CPString) pk
 {	return [_entity pk];
@@ -105,10 +106,14 @@
 	return [s count]? [s objectAtIndex:0]:nil;
 }
 - (id)_defaultNewObject
-{	var r=[_entity createObject];
-	return r;
+{	return [_entity createObjectWithDictionary: _defaultDict];
 }
-
+- (void)setContent:(id)value
+{	if([value respondsToSelector: @selector(defaults) ])
+	{	_defaultDict=[value defaults];
+	}
+	[super setContent: value];
+}
 @end
 
 @implementation GSMarkupArrayController: GSMarkupTagObject

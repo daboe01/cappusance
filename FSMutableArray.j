@@ -104,16 +104,13 @@
 {	return [[self _representedObject] objectsAtIndexes:theIndexes];
 }
 
-- (void) _addToDBObject: anObject
-{	if([anObject isKindOfClass: [CPDictionary class]])
-	{	anObject=[_entity createObjectWithDictionary:anObject];
-	} else if(![anObject isKindOfClass: [FSObject class]])
-	{
-//<!> fixme warn or raise...
+- (FSObject) _addToDBObject: anObject
+{	var o= [_entity insertObject: anObject];
+	if(_defaults)
+	{	if(!o._changes) o._changes = [CPMutableDictionary dictionary];
+		[o._changes addEntriesFromDictionary: _defaults];	// fixme: do not overwrite...
 	}
-	if(_defaults) [anObject._changes addEntriesFromDictionary: _defaults];	// fixme: do not overwrite...
-	[_entity insertObject: anObject];
-	// <!> fixme: refetch anObject from database just in case the database applied some business logic
+	return o;
 }
 
 - (void)addObject:(id)anObject
@@ -136,15 +133,15 @@
 
 - (void)insertObjects:(CPArray)theObjects atIndexes:(CPIndexSet)theIndexes
 {	var target = [[self _representedObject] copy];
-
-	[target insertObjects:theObjects atIndexes:theIndexes];
-	[self _setRepresentedObject:target];
-
+	var myarr=[];
 	var l=[theObjects count];
 	for(var i=0; i<l; i++)
-	{	if(_entity) [self _addToDBObject: [theObjects objectAtIndex: i ] ];
-
+	{	var o=[theObjects objectAtIndex: i ];
+		if(_entity) o=[self _addToDBObject: o ];
+		[myarr addObject:o];
 	}
+	[target insertObjects: myarr atIndexes:theIndexes];
+	[self _setRepresentedObject:target];
 
 }
 

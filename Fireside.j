@@ -77,8 +77,15 @@ var _allRelationships;
 	return r;
 }
 
--(void) insertObject:  someObj
-{	[[self store] insertObject: someObj];
+-(FSObject) insertObject:  someObj
+{	if([someObj isKindOfClass: [CPDictionary class]])
+	{	someObj=[self createObjectWithDictionary: someObj];
+	} else if(![someObj isKindOfClass: [FSObject class]])
+	{	//<!> fixme warn or raise...
+	}
+	
+	[[self store] insertObject: someObj];
+	return someObj;
 }
 -(void) deleteObject:  someObj
 {	[[self store] deleteObject: someObj];
@@ -298,7 +305,6 @@ FSRelationshipTypeToMany=1;
 					[affectedObject willChangeValueForKey: [rel name]];
 					[affectedObject setValue: newValOfAffectedObject forKey: [rel name] ];
 					[affectedObject didChangeValueForKey: [rel name]];
-				
 				}
 			}
 		}
