@@ -186,6 +186,11 @@
 
 - (void)removeObjectsAtIndexes:(CPIndexSet)theIndexes
 {	var target = [[self _representedObject] copy];
+	var theObjects=[[self _representedObject] objectsAtIndexes: theIndexes ];
+	var l=[theObjects count];
+	for(var i=0; i<l; i++)
+	{	[_entity deleteObject: [theObjects objectAtIndex: i ] ];
+	}
 	[target removeObjectsAtIndexes:theIndexes];
 	[self _setRepresentedObject:target];
 }
