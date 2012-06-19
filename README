@@ -19,11 +19,11 @@ Example usage with backend:
 
 // gui.gsmarkup is loaded from the Ressources folder
 // we specify "self" (our AppController instance) as 'files owner'.
-// this object is aliased as '#CPOwner' within markup file.
-// You can adress the store from within the markup via '#CPOwner.store'.
+// this object is aliased as '#CPOwner' in the markup file.
+// You can access this object via '#CPOwner.store'.
 // Any key value compliant reference is possible.
 // Database entities map to ArrayControllers
-// Relations are mapped by master detail bindings
+// Relations are mapped by master detail bindings.
 
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
 // The gui markup will usually connect GUI objects to instance variables.
