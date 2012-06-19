@@ -105,12 +105,15 @@
 }
 
 - (FSObject) _addToDBObject: anObject
-{	var o= [_entity insertObject: anObject];
-	if(_defaults)
-	{	if(!o._changes) o._changes = [CPMutableDictionary dictionary];
-		[o._changes addEntriesFromDictionary: _defaults];	// fixme: do not overwrite...
+{	if(_defaults)
+	{	if([anObject isKindOfClass: [CPDictionary class]])
+		{	[anObject addEntriesFromDictionary: _defaults];
+		} else if( [anObject isKindOfClass: [FSObject class] ] )
+		{	if(!anObject._changes) anObject._changes = [CPMutableDictionary dictionary];
+			[anObject._changes addEntriesFromDictionary: _defaults];
+		}
 	}
-	return o;
+	return [_entity insertObject: anObject];
 }
 
 - (void)addObject:(id)anObject
@@ -137,12 +140,11 @@
 	var l=[theObjects count];
 	for(var i=0; i<l; i++)
 	{	var o=[theObjects objectAtIndex: i ];
-		if(_entity) o=[self _addToDBObject: o ];
-		[myarr addObject:o];
+		if(_entity) o= [self _addToDBObject: o ];
+		[myarr addObject: o];
 	}
 	[target insertObjects: myarr atIndexes:theIndexes];
 	[self _setRepresentedObject:target];
-
 }
 
 - (void)removeObject:(id)anObject

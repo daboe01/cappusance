@@ -374,10 +374,13 @@ FSRelationshipTypeToMany=1;
 
 
 -(void) writeChangesInObject: (id) obj
-{	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
+{	if([[obj entity] pk] === undefined) return;
+	if(!obj._changes) return;
+	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
     [request setHTTPMethod:"PUT"];
 	[request setHTTPBody: [obj._changes toJSON] ];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+	// <!> fixme refetch+ clear _changes
 }
 
 -(void) insertObject: someObj 
@@ -387,8 +390,11 @@ FSRelationshipTypeToMany=1;
 	[request setHTTPBody: [someObj._changes toJSON] ];
 	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
 	var j = JSON.parse( [data rawString]);	// this is necessary for retrieving the PK
-	var pk=j[[[someObj entity] pk]];
-	[someObj setValue: pk forKey:[[someObj entity] pk]];
+	var pk=j["pk"];
+	[someObj willChangeValueForKey: [entity pk]];
+	if(!someObj._data) someObj._data=[CPMutableDictionary new];
+	[someObj._data setObject: pk forKey: [entity pk]];
+	[someObj didChangeValueForKey: [entity pk]];
 }
 
 -(id) deleteObject: obj
