@@ -416,8 +416,21 @@
 		[button setAction: CPSelectorFromString (peek)];
 		[buttons addObject: button];
 	}
-	if([self boolValueForAttribute:"actionsButton"]==1) [buttons addObject:[CPButtonBar actionPopupButton] ];
-
+	if([self boolValueForAttribute:"actionsButton"]==1)
+	{	var actionButton;
+		[buttons addObject:actionButton=[CPButtonBar actionPopupButton] ];
+		var i, count = [_content count];
+    
+		for (i = 0; i < count; i++)
+		{	var item = [_content objectAtIndex: i];
+			var title = [item localizedStringValueForAttribute: @"title"];
+			if (title == nil) title = @"";
+			[actionButton addItemWithTitle: title];
+			var platformItem = [actionButton lastItem];
+			platformItem = [item initPlatformObject: platformItem];	// load additional attributes into the init platform object
+			[item setPlatformObject: platformItem];
+		}
+	}
 	[platformObject setButtons: buttons ];
 	return platformObject;
 }

@@ -77,7 +77,8 @@
 
 + initialize
 {	if(self=[super initialize])
-	{		}
+	{
+	}
 	return self;
 }
 
