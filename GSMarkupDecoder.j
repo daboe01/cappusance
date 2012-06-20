@@ -317,6 +317,7 @@
 			if ([oPO isKindOfClass: [CPTableView class] ])	// "unspecific" bindings for tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	var target=[self _getObjectForIdString: peek];
 				[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil];
+				[oPO bind:@"sortDescriptors" toObject: target withKeyPath: @"sortDescriptors" options:nil];
 
 				var _content=[o content];
 				var j, l1 = _content.length;
@@ -341,7 +342,9 @@
 
 				} else
 				{	var binding=CPValueBinding;
-					if([oPO  isKindOfClass: [FSArrayController class]]) binding="contentArray";
+					if([oPO  isKindOfClass: [FSArrayController class]])
+					{	binding="contentArray";
+					}
 					else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
 			//		var options=[CPDictionary dictionaryWithObject: [CPNumber numberWithBool: YES] forKey:CPHandlesContentAsCompoundValueBindingOption ];
 					[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options
@@ -377,6 +380,9 @@
 		var oPO=[o platformObject];
 		if([oPO isKindOfClass: [FSArrayController class]])		// autofetching
 		{	var peek;
+			if(peek=[[o attributes] objectForKey: "sortDescriptor"])
+			{	[oPO setSortDescriptors: [  [self _getObjectForIdString: peek ]  ] ];
+			}
 			if (peek=[[o attributes] objectForKey:"entity"])
 			{	var entity=[[_nameTable objectForKey: peek] platformObject];
 				[oPO setEntity: entity];

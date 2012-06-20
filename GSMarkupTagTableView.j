@@ -193,6 +193,7 @@
 
 - (id) postInitPlatformObject: (id)platformObject
 {
+// causes some weired sizing issues in capp...
   // platformObject = [super postInitPlatformObject: platformObject];
 
   /* Adjust columns/table to fit.  */
@@ -217,4 +218,20 @@
   return platformObject;
 }
 
+@end
+
+
+@implementation GSMarkupTagSortDescriptor : GSMarkupTagObject
++ (CPString) tagName
+{	return @"sortDescriptor";
+}
+
++ (Class) platformObjectClass
+{	return nil;
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject=[CPSortDescriptor sortDescriptorWithKey: [self stringValueForAttribute:"key"] ascending: [self boolValueForAttribute:"ascending"]!=0 ];
+	return platformObject;
+}
 @end
