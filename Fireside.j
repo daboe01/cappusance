@@ -73,7 +73,15 @@ var _allRelationships;
 
 -(id) createObjectWithDictionary:(CPDictionary) myDict
 {	var r=[[FSObject alloc] initWithEntity:self];
-	if(myDict) r._changes=myDict;
+	if(myDict)
+    {   r._changes=myDict;
+// <!> fixme
+//      for(i=0; i< l; i++)
+//		{   var peek=[self formatterForColumnName: aKey];
+//          {	someval= [peek objectValueForString: someval error: nil];	//<!> fixme handle errors somehow
+//          }
+//      }
+    }
 	return r;
 }
 
