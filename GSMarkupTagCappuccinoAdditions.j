@@ -300,32 +300,11 @@
 }
 @end
 
-@implementation SimleImageViewCollectionViewItem: CPCollectionViewItem
-{ CPImage _img;
-  CPImageView _imgv;
-}
-- (void)imageDidLoad:(CPImage)image
-{	var mySize=[image size];
-	[_imgv setBounds: CPMakeRect(0, 0, mySize.width, mySize.height)];
-}
--(CPView) loadView
-{	_img=[_representedObject provideCollectionViewImage];
-	_imgv=[CPImageView new];
-	[_imgv setImage: _img];
-	var size=[_img size];
-	if(size) [_imgv setBounds: CPMakeRect(0,0, size.width, size.height)];
-	else [_imgv setDelegate: self];
-	var myview=[CPBox new];
-    [myview setBorderType:CPBezelBorder];
-	[myview setContentView: _imgv];
-	[self setView: myview];
-	return myview;
-}
-@end
 
 @implementation CPCollectionView(KVB)
 -(void) setObjectValue: someArray
 {	[self setContent: someArray];
+//	_cachedItems=[];
 }
 -(CPArray) value
 {	return [self content];
@@ -355,8 +334,9 @@
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [super initPlatformObject: platformObject];
 	[platformObject setSelectable: [self boolValueForAttribute:"selectable"]==1 ];
+
 	[platformObject setAllowsEmptySelection: [self boolValueForAttribute:"emptySelectionAllowed"]==1 ];
-	[platformObject setAllowsMultipleSelection: [self boolValueForAttribute:"multipleSelectionAllowed"]==1 ];
+	[platformObject setAllowsMultipleSelection: [self boolValueForAttribute:"multipleSelectionAllowed"]!=0 ];
 	[platformObject setMaxNumberOfRows: [self intValueForAttribute:"maxRows"] ];
 	[platformObject setMaxNumberOfColumns: [self intValueForAttribute:"maxColumns"] ];
 	var width=[self intValueForAttribute:"itemWidth"];
@@ -376,7 +356,9 @@
 	if(width && height)
 	{	[platformObject setMaxItemSize: CPMakeSize(width,height) ];
 	}
-	var proto=[SimleImageViewCollectionViewItem new];
+	var protoClass=CPClassFromString([self stringValueForAttribute:"itemsClassName"]);
+	if(!protoClass) protoClass=[CPCollectionViewItem class];
+	var proto=[protoClass  new];
 	[platformObject setItemPrototype: proto];
 	return platformObject;
 }
