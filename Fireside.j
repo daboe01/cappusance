@@ -75,13 +75,18 @@ var _allRelationships;
 {	var r=[[FSObject alloc] initWithEntity:self];
 	if(myDict)
     {   r._changes=myDict;
-// <!> fixme
-//      for(i=0; i< l; i++)
-//		{   var peek=[self formatterForColumnName: aKey];
-//          {	someval= [peek objectValueForString: someval error: nil];	//<!> fixme handle errors somehow
-//          }
-//      }
-    }
+		var allKeys=[myDict allKeys];
+		var i, l=[allKeys count]
+		for(i=0; i< l; i++)
+		{	var aKey=[allKeys objectAtIndex: i];
+			var someval=[myDict objectForKey: aKey];
+			var peek;
+			if(peek=[self formatterForColumnName: aKey])
+			{	someval= [peek objectValueForString: someval error: nil];	//<!> fixme handle errors somehow
+				[myDict setObject: someval forKey: aKey];
+			}
+		}
+	}
 	return r;
 }
 
