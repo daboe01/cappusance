@@ -318,6 +318,13 @@
 - (GSAutoLayoutAlignment) autolayoutDefaultHorizontalAlignment
 {	return GSAutoLayoutExpand;
 }
+
+- (void)performDragOperation:(CPDraggingInfo)aSender
+{
+    [_delegate performDragOperation: aSender];
+    
+}
+
 @end
 
 @implementation GSMarkupTagCollectionView : GSMarkupTagView
