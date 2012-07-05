@@ -365,7 +365,8 @@
 	}
 	var protoClass=CPClassFromString([self stringValueForAttribute:"itemsClassName"]);
 	if(!protoClass) protoClass=[CPCollectionViewItem class];
-	var proto=[protoClass  new];
+	var proto=[protoClass new];
+	var peek;
 	[platformObject setItemPrototype: proto];
 	return platformObject;
 }
