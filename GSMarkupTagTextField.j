@@ -149,3 +149,26 @@
 }
 
 @end
+
+
+@implementation GSMarkupTagComboBox: GSMarkupTagTextField
++ (CPString) tagName
+{
+	return @"comboBox";
+}
+
++ (Class) platformObjectClass
+{
+	return [CPComboBox class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{
+	platformObject = [super initPlatformObject: platformObject];
+
+	return platformObject;
+}
+
+@end
+
+

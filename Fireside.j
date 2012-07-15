@@ -367,6 +367,7 @@ FSRelationshipTypeToMany=1;
 -(CPArray) fetchObjectsForURLRequest:(CPURLRequest) request inEntity: (FSEntity) someEntity
 {	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
 	var j = JSON.parse( [data rawString]);
+	if(!j) return [];
 	var a=[CPMutableArray new];
 	var i,l=j.length;
 	for(i=0;i<l;i++)
