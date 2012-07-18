@@ -165,6 +165,7 @@ var _allRelationships;
 
 FSRelationshipTypeToOne=0;
 FSRelationshipTypeToMany=1;
+FSRelationshipTypeFuzzy=2;
 
 @implementation FSRelationship : CPObject 
 {	CPString _name @accessors(property=name);
@@ -194,14 +195,17 @@ FSRelationshipTypeToMany=1;
 {	if(_targetColumn && _targetColumn.length) return _targetColumn;
 	return [_target pk];
 }
--(CPArray) fetchObjectsForKey:(id) targetPK
+-(CPArray) fetchObjectsForKey:(id) targetPK options: myOptions
 {	if(!targetPK) return nil;
 	var peek;
 	if(!_target_cache) _target_cache=[];
 	if(peek=_target_cache[targetPK]) return peek;
-	var res= [[_target store] fetchObjectsWithKey: [self targetColumn] equallingValue: targetPK inEntity: _target];
+	var res= [[_target store] fetchObjectsWithKey: [self targetColumn] equallingValue: targetPK inEntity: _target options: myOptions];
 	_target_cache[targetPK]=res;
 	return res;
+}
+-(CPArray) fetchObjectsForKey:(id) targetPK
+{	return [self fetchObjectsForKey: targetPK options: nil];
 }
 
 -(void) _invalidateCache
@@ -277,7 +281,12 @@ FSRelationshipTypeToMany=1;
 		if(!bindingColumn) bindingColumn=[_entity pk];
 
 		var isToMany=([rel type]== FSRelationshipTypeToMany);
-		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] ];
+		var myoptions=[CPMutableDictionary new];
+		if([rel type]== FSRelationshipTypeFuzzy)
+		{	isToMany=YES;
+			[myoptions setObject:"1" forKey:"FSFuzzySearch"];
+		}
+		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
 		if(isToMany)
 		{	var r=[[FSMutableArray alloc] initWithArray: results ofEntity:[rel target]];
 			var defaults=[CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn];
@@ -351,6 +360,10 @@ FSRelationshipTypeToMany=1;
 {	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+someval];
 	return request;
 }
+-(CPURLRequest) requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
+{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+someval];
+	return request;
+}
 -(CPURLRequest) requestForAddressingAllObjectsInEntity:(FSEntity) someEntity
 {	return [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name] ];
 }
@@ -391,13 +404,19 @@ FSRelationshipTypeToMany=1;
 
 // CRUD combo
 
--(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
+-(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity options: myOptions
 {	if( aKey == [someEntity pk] ) 
 	{	var peek;
 		if(peek=[someEntity _registeredObjectForPK: someval]) return [CPArray arrayWithObject: peek];
 	}
-	var request =[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
+	var request;
+	if(myOptions && [myOptions objectForKey: "FSFuzzySearch"])
+		 request=[self requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
+	else request=[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	return [self fetchObjectsForURLRequest: request inEntity: someEntity];
+}
+-(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity 
+{	return [self fetchObjectsWithKey: aKey equallingValue: someval inEntity: someEntity options: nil];
 }
 
 
