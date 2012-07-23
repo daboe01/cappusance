@@ -275,7 +275,7 @@ FSRelationshipTypeFuzzy=2;
 		if(peek || (peek=[_entity formatterForColumnName:aKey]))
 		{	return [peek stringForObjectValue: o];
 		} else return o;
-	} else if(type == 1)	// to one relation aKey is accessed
+	} else if(type == 1)	// a relationship is accessed
 	{	var rel=[_entity relationOfName: aKey];
 		var bindingColumn=[rel bindingColumn];
 		if(!bindingColumn) bindingColumn=[_entity pk];
@@ -361,7 +361,7 @@ FSRelationshipTypeFuzzy=2;
 	return request;
 }
 -(CPURLRequest) requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
-{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+someval];
+{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/like/"+someval];
 	return request;
 }
 -(CPURLRequest) requestForAddressingAllObjectsInEntity:(FSEntity) someEntity
