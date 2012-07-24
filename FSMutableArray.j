@@ -105,7 +105,8 @@
 }
 
 - (FSObject) _addToDBObject: anObject
-{	if(_defaults)
+{
+	if(_defaults)
 	{	if([anObject isKindOfClass: [CPDictionary class]])
 		{	[anObject addEntriesFromDictionary: _defaults];
 		} else if( [anObject isKindOfClass: [FSObject class] ] )

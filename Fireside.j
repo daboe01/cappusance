@@ -248,7 +248,9 @@ FSRelationshipTypeFuzzy=2;
 }
 
 - (id)description
-{	return [_data description];
+{	var o=[_data copy];
+	if(_changes) [o addEntriesFromDictionary: _changes];
+	return [o description];
 }
 
 -(int) typeOfKey:(CPString)aKey
