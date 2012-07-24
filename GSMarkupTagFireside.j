@@ -68,7 +68,7 @@
 	var myCols=[CPMutableSet new];
 
 	var myPK;
-    var i, count = _content.length;
+    var i, count = _content?_content.length:0;
 	for (i = 0 ; i < count; i++)
 	{	var v = _content[i];
 		if([v isKindOfClass: [GSMarkupColumn class] ])

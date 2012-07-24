@@ -321,7 +321,7 @@
 				[oPO bind:@"sortDescriptors" toObject: target withKeyPath: @"sortDescriptors" options:nil];
 
 				var _content=[o content];
-				var j, l1 = _content.length;
+				var j, l1 = _content? _content.length:0;
 				for (j = 0; j < l1; j++)
 				{	var column =_content[j];
 					if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]])

@@ -172,7 +172,7 @@
 
 // now extract columns and PK...
 	var rowTemplates=[CPMutableArray new];
-    var i, count = _content.length;
+    var i, count = _content?_content.length:0;
 	for (i = 0 ; i < count; i++)
 	{	var v = _content[i];
 		if([v isKindOfClass: [GSMarkupRowTemplate class] ])
@@ -260,7 +260,7 @@
 {	platformObject = [super initPlatformObject: platformObject];
 	[platformObject setTabViewType: [self type]];
 
-    var  i, count = _content.length;
+    var  i, count = _content? _content.length:0;
 	for (i = 0 ; i < count; i++)
 	{	var item = [_content[i] platformObject];
         [item setView: [[_content[i] content][0] platformObject] ];
