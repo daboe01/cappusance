@@ -210,4 +210,10 @@
 -(CPString) description
 {	return [[self _representedObject] description];
 }
+
+- (void)sortUsingFunction:(Function)aFunction context:(id)aContext
+{	[_proxyObject sortUsingFunction:aFunction context:aContext];
+}
+
+
 @end
