@@ -110,9 +110,16 @@
 }
 - (void)setContent:(id)value
 {	if([value respondsToSelector: @selector(defaults) ])
-	{	_defaultDict=[value defaults];
+	{	_defaultDict=[[value defaults] copy];
 	}
 	[super setContent: value];
+}
+
+-(void) addObject: anObject
+{	if(![anObject isKindOfClass: [FSObject class] ] )
+		anObject=[_entity createObjectWithDictionary:anObject];
+
+	[super addObject: anObject];
 }
 @end
 

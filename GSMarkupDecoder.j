@@ -310,6 +310,8 @@
 					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];	// <!>fixme: hardcoded arrangedObjects.
 						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options:nil];
 					}
+				} else if([oPO isKindOfClass: [CPComboBox class] ])
+				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 				}
 			}
 		}
@@ -317,8 +319,10 @@
 		{	var r = [peek rangeOfString: @"."];
 			if ([oPO isKindOfClass: [CPTableView class] ])	// "unspecific" bindings for tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	var target=[self _getObjectForIdString: peek];
-				[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil];
-				[oPO bind:@"sortDescriptors" toObject: target withKeyPath: @"sortDescriptors" options:nil];
+
+			// is harmful in the more recent capp versions
+			//	[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil];
+			//	[oPO bind:@"sortDescriptors" toObject: target withKeyPath: @"sortDescriptors" options:nil];
 
 				var _content=[o content];
 				var j, l1 = _content? _content.length:0;
@@ -345,8 +349,9 @@
 				{	var binding=CPValueBinding;
 					if([oPO  isKindOfClass: [FSArrayController class]])
 					{	binding="contentArray";
+					} else if([oPO isKindOfClass: [CPPopUpButton class]])
+					{	binding="integerValue";
 					}
-					else if([oPO isKindOfClass: [CPPopUpButton class]]) binding="integerValue";
 			//		var options=[CPDictionary dictionaryWithObject: [CPNumber numberWithBool: YES] forKey:CPHandlesContentAsCompoundValueBindingOption ];
 					[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options
 				}
