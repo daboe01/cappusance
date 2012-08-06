@@ -81,7 +81,10 @@
    */
   var autosaveName;
   if( autosaveName=[_attributes objectForKey: "autosaveName"])
-	[platformObject setAutosaveName: autosaveName];
+	{	[platformObject setAutosaveName: autosaveName];
+		[platformObject _restoreFromAutosave];
+
+	}
   [platformObject adjustSubviews];
 
   return platformObject;

@@ -390,7 +390,7 @@
 }
 
 - (id) initPlatformObject: (id)platformObject
-{	[_attributes setObject: @"25" forKey: @"height"];
+{	[_attributes setObject: @"20" forKey: @"height"];
 	platformObject = [super initPlatformObject: platformObject];
 	[platformObject setHasResizeControl: [self boolValueForAttribute:"resizable"]==1 ];
 	var buttons=[];
