@@ -1,13 +1,8 @@
 Cappusance is a powerful GUI builder for Cappuccino based on GNUstep Renaissance.
 Cappusance i.e. features strong autolayout capabilities.
-See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. Cappusance adds support for the more recent Cocoa controls and Cocoa bindings. However, Cappusance GUIs are fully backward-compatible to Renaissance.
+See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. Cappusance adds support for the more recent Cocoa controls and Cocoa bindings. Cappusance GUIs are fully backward-compatible to Renaissance.
 
-As a big plus, Cappusance and has a RESTful Object/Relational Mapper (ORM) built in. This ORM allows you to express a rich CRUD-functional Cappuccino application in a single XML-file -- without writing Objective-J code at all! The Cappusance ORM conveys painless database-to-GUI mapping in the spirit of EOF/WebObjects: Database entities map to ArrayControllers, Database relations map to ArrayController master-detail bindings and all data manipulations at Objective-J level are transparently forwarded to the database.
-
-Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
-Mojolicious comes with a powerful rest router and a builtin static server. This works well for serving the Cappuccino framework and the application.
-The REST dialect of Cappusance can be easily adapted to any backend. You only need to subclass FSStore and overriding three simple methods.
-
+As a big plus, Cappusance has a RESTful Object/Relational Mapper (ORM) built in. This ORM allows you to code a CRUD-functional application in a single XML-file -- without writing Objective-J code at all! The Cappusance ORM conveys automatic database-to-GUI mapping in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. Additionally, all data manipulations at the Objective-J level are transparently forwarded to the backend.
 
 Example usage with backend:
 @import <Renaissance/Renaissance.j>
@@ -26,6 +21,9 @@ Example usage with backend:
 // (e.g. insertion into Arrays) are magically mapped to the backend.
 }
 
+Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
+Mojolicious comes with a powerful rest router and a builtin static server. This works well for serving the Cappuccino framework and the application.
+The REST dialect of Cappusance can be easily adapted to any backend. You only need to subclass FSStore and overriding three simple methods.
 
 gui.gsmarkup and a mojolicous-based sample backend are here:
 <https://github.com/daboe01/cappusance/wiki>
