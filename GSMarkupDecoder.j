@@ -320,10 +320,6 @@
 			if ([oPO isKindOfClass: [CPTableView class] ])	// "unspecific" bindings for tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	var target=[self _getObjectForIdString: peek];
 
-			// is harmful in the more recent capp versions
-			//	[oPO bind:@"content" toObject: target withKeyPath: @"arrangedObjects" options:nil];
-			//	[oPO bind:@"sortDescriptors" toObject: target withKeyPath: @"sortDescriptors" options:nil];
-
 				var _content=[o content];
 				var j, l1 = _content? _content.length:0;
 				for (j = 0; j < l1; j++)
@@ -354,6 +350,17 @@
 					}
 			//		var options=[CPDictionary dictionaryWithObject: [CPNumber numberWithBool: YES] forKey:CPHandlesContentAsCompoundValueBindingOption ];
 					[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options
+					if([oPO isKindOfClass: [CPCollectionView class]])
+					{
+						if (r.location != CPNotFound)
+						{	var pathComponents=[peek componentsSeparatedByString:"."];
+							if(pathComponents.length>2)
+							{	var subPathArray=[pathComponents subarrayWithRange: CPMakeRange(1, pathComponents.length-2)];
+								keyValuePath =subPathArray.join(".")+".selectionIndexes";
+							} else keyValuePath="selectionIndexes";
+						} else keyValuePath="selectionIndexes"
+						[oPO bind: "selectionIndexes" toObject: target withKeyPath: keyValuePath options: nil ];
+					}
 				}
 			}
 		}

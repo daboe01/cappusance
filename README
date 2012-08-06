@@ -1,29 +1,24 @@
 Cappusance is a powerful GUI builder for Cappuccino based on GNUstep Renaissance.
 Cappusance i.e. features strong autolayout capabilities.
-In addition to the original GNUstep Renaissance, Cappusance also supports Cocoa bindings and has a RESTful ORM built in for painless database-to-GUI mapping in the spirit of EOF/WebObjects.
-Cappusance GUIs are written in plain XML.
-See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation.
-See Slider<->TextField example on <http://aug-fancy.ukl.uni-freiburg.de/NewApplication/>
+See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. Cappusance adds support for the more recent Cocoa controls and Cocoa bindings. However, Cappusance GUIs are fully backward-compatible to Renaissance.
+
+As a big plus, Cappusance and has a RESTful Object/Relational Mapper (ORM) built in. This ORM allows you to express a rich CRUD-functional Cappuccino application in a single XML-file -- without writing Objective-J code at all! The Cappusance ORM conveys painless database-to-GUI mapping in the spirit of EOF/WebObjects: Database entities map to ArrayControllers, Database relations map to ArrayController master-detail bindings and all data manipulations at Objective-J level are transparently forwarded to the database.
+
+Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
+Mojolicious comes with a powerful rest router and a builtin static server. This works well for serving the Cappuccino framework and the application.
+The REST dialect of Cappusance can be easily adapted to any backend. You only need to subclass FSStore and overriding three simple methods.
+
 
 Example usage with backend:
 @import <Renaissance/Renaissance.j>
 [...]
 - (void) applicationDidFinishLaunching:(CPNotification)aNotification
 {
-// I prefer the perl based mojolicious for creating backends (http://mojolicio.us/)
-// Mojolicious is a perfect match because of the powerful rest router and the static server
-// This can be easily be used to serve the frontend application.
+// You can access this object in your markup file via '#CPOwner.store'.
 	store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
-// The store can be any RESTful backend, though.
-// The REST dialect can be adapted to your backend by subclassing FSStore.
-
 // gui.gsmarkup is loaded from the Ressources folder
 // we specify "self" (our AppController instance) as 'files owner'.
 // this object is aliased as '#CPOwner' in the markup file.
-// You can access this object via '#CPOwner.store'.
-// Any key value compliant reference is possible.
-// Database entities map to ArrayControllers
-// Relations are mapped by master detail bindings.
 
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
 // The gui markup will usually connect GUI objects to instance variables.
@@ -32,7 +27,7 @@ Example usage with backend:
 }
 
 
-gui.gsmarkup and a sample backend are here:
+gui.gsmarkup and a mojolicous-based sample backend are here:
 <https://github.com/daboe01/cappusance/wiki>
 
 a comprehensive use case using all features is here:
