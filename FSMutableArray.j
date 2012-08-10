@@ -212,7 +212,9 @@
 }
 
 - (void)sortUsingFunction:(Function)aFunction context:(id)aContext
-{	[_proxyObject sortUsingFunction:aFunction context:aContext];
+{	var target = [[self _representedObject] copy];
+	[target sortUsingFunction:aFunction context:aContext];
+	[self _setRepresentedObject:target];
 }
 
 
