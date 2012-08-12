@@ -5,6 +5,9 @@
 {	id _entity @accessors(property=entity);
     id _proxyObject;
 	id _defaults @accessors(property=defaults);
+
+	id _kvoKey @accessors(property=kvoKey);
+	id _kvoOwner @accessors(property=kvoOwner);
 }
 
 + (id)alloc
@@ -217,5 +220,27 @@
 	[self _setRepresentedObject:target];
 }
 
+-(void) connection: someConnection didReceiveData: data
+{	var j = JSON.parse( data );
+	var a = [];
+	if(j)
+	{	var i,l=j.length;
+		for(i=0;i<l;i++)
+		{	var pk=j[i][[_entity pk]];
+			var peek;
+			if (peek=[_entity _registeredObjectForPK: pk])	// enforce singleton pattern
+			{	[a addObject:peek]; 
+			} else
+			{	var t=[[FSObject alloc] initWithEntity: _entity];
+				[t _setDataFromJSONObject: j[i]];
+				[_entity _registerObjectInPKCache: t];
+				[a addObject:t];
+			}
+		}
+	}
+	if(_kvoKey&& _kvoOwner) [_kvoOwner willChangeValueForKey: _kvoKey];
+	[self _setRepresentedObject: a];
+	if(_kvoKey&& _kvoOwner) [_kvoOwner didChangeValueForKey: _kvoKey];
+}
 
 @end

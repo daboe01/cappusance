@@ -304,7 +304,6 @@
 @implementation CPCollectionView(KVB)
 -(void) setObjectValue: someArray
 {	[self setContent: someArray];
-//	_cachedItems=[];
 }
 -(CPArray) value
 {	return [self content];

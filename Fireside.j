@@ -1,12 +1,8 @@
 /*
  * Fireside: yet another restful ORM mapper for cappuccino
  * ToDo:
- *	Store refactoring: FSAbstractStore with a Store for the Mojolicious example-backend.
- *  Check whether quoting is necessary in keys and vals (FSStore).
- *  catch write conflicts.
- *	TableView: looses changes when changing selection during edit: https://github.com/cappuccino/cappuccino/issues/1435
- *  invalidate relation caches when objects are added or removed from inside Fireside.
- *  make use of websockets to push backend changes to Fireside
+ *  catch write conflicts as in original EOF.
+ *	make FSEntity return asynchronous FSMutableArrays
  */
 
 @import <Foundation/CPObject.j>
@@ -31,11 +27,11 @@
 
 var _allRelationships;
 @implementation FSEntity : CPObject 
-{	CPString _name @accessors(property=name);
-	CPString _pk @accessors(property=pk);
-	CPSet _columns @accessors(property=columns);
-	CPSet _relations;
-	FSStore	_store @accessors(property=store);
+{	CPString	_name @accessors(property=name);
+	CPString	_pk @accessors(property=pk);
+	CPSet		_columns @accessors(property=columns);
+	CPSet		_relations;
+	FSStore		_store @accessors(property=store);
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
 }
@@ -52,6 +48,11 @@ var _allRelationships;
 +(void) _registerRelationship:(FSRelationship) someRel
 {	if(!_allRelationships) _allRelationships=[CPMutableArray new];
 	return [_allRelationships addObject: someRel];
+}
+- _arrayForArray: results withDefaults: someDefaults
+{	var r=[[FSMutableArray alloc] initWithArray: results ofEntity: self];
+	[r setDefaults: someDefaults];
+	return r;
 }
 
 
@@ -81,7 +82,7 @@ var _allRelationships;
 		{	var aKey=[allKeys objectAtIndex: i];
 			var someval=[myDict objectForKey: aKey];
 			var peek;
-			if(peek=[self formatterForColumnName: aKey])
+			if (peek=[self formatterForColumnName: aKey])
 			{	someval= [peek objectValueForString: someval error: nil];	//<!> fixme handle errors somehow
 				[myDict setObject: someval forKey: aKey];
 			}
@@ -114,7 +115,9 @@ var _allRelationships;
 }
 
 -(id) objectWithPK:(id) somePK
-{	var a=[[self store] fetchObjectsWithKey: [self pk] equallingValue: somePK inEntity: self];
+{	var myoptions=[CPDictionary dictionaryWithObject: "1" forKey: "FSSynchronous"];
+
+	var a=[[self store] fetchObjectsWithKey: [self pk] equallingValue: somePK inEntity: self options: myoptions];
 	if([a count]==1) return [a objectAtIndex: 0];
 	return nil;
 }
@@ -156,7 +159,7 @@ var _allRelationships;
 	var i,l=[rels count];
 	for(i=0;i<l;i++)
 	{	var r=[rels objectAtIndex: i];
-		if(r._target_cache && [r._target_cache count]) return YES;
+		if (r._target_cache && [r._target_cache count]) return YES;
 	}
 	return NO;
 }
@@ -174,15 +177,15 @@ FSRelationshipTypeFuzzy=2;
 	CPString _bindingColumn @accessors(property=bindingColumn);
 	CPString _targetColumn @accessors(setter=setTargetColumn:);
 	CPString _type @accessors(property=type);
-	var _target_cache;
+	var		 _target_cache;
 }
 -(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
 {	self = [super init];
     if (self)
-	{	_target = anEntity;
-		_name = aName;
+	{	_target	= anEntity;
+		_name	= aName;
 		_source = someSource;
-		_type= FSRelationshipTypeToOne;
+		_type	= FSRelationshipTypeToOne;
     }
 	[FSEntity _registerRelationship:self];
     return self;
@@ -205,7 +208,8 @@ FSRelationshipTypeFuzzy=2;
 	return res;
 }
 -(CPArray) fetchObjectsForKey:(id) targetPK
-{	return [self fetchObjectsForKey: targetPK options: nil];
+{	var myoptions=[CPDictionary dictionaryWithObject: "0" forKey: "FSSynchronous"];
+	return [self fetchObjectsForKey: targetPK options: myoptions];
 }
 
 -(void) _invalidateCache
@@ -288,13 +292,15 @@ FSRelationshipTypeFuzzy=2;
 		{	isToMany=YES;
 			[myoptions setObject:"1" forKey:"FSFuzzySearch"];
 		}
+		if(!isToMany) [myoptions setObject:"1" forKey:"FSSynchronous"];
 		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
 		if(isToMany)
-		{	var r=[[FSMutableArray alloc] initWithArray: results ofEntity:[rel target]];
-			var defaults=[CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn];
-			[r setDefaults: defaults];
-			return r;
-		} else return (results && results.length)? [results objectAtIndex: 0] : nil;
+		{	var defaults=[CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn];
+			[results setDefaults: defaults];
+			[results setKvoKey: aKey];
+			[results setKvoOwner: self];
+			return results;
+		} else return (results && [results count])? [results objectAtIndex: 0] : nil;
 	} else
 	{	var propSEL = sel_getName(aKey);
 		if (propSEL && [self respondsToSelector: propSEL ]) return [self performSelector:propSEL];
@@ -378,30 +384,37 @@ FSRelationshipTypeFuzzy=2;
     return self;
 }
 
-
--(CPArray) fetchObjectsForURLRequest:(CPURLRequest) request inEntity: (FSEntity) someEntity
-{	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
+-(CPArray) fetchObjectsForURLRequest:(CPURLRequest) request inEntity: (FSEntity) someEntity requestDelegate: someDelegate
+{	if(someDelegate)
+	{	[CPURLConnection connectionWithRequest:request delegate:someDelegate];
+		return someDelegate;
+	}
+	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
 	var j = JSON.parse( [data rawString]);
-	if(!j) return [];
 	var a=[CPMutableArray new];
-	var i,l=j.length;
-	for(i=0;i<l;i++)
-	{	var pk=j[i][[someEntity pk]];
-		var peek;
-		if (peek=[someEntity _registeredObjectForPK: pk])	// enforce singleton pattern
-		{	[a addObject:peek]; 
-		} else
-		{	var t=[[FSObject alloc] initWithEntity: someEntity];
-			[t _setDataFromJSONObject: j[i]];
-			[someEntity _registerObjectInPKCache: t];
-			[a addObject:t];
+	if(j)
+	{	var i,l=j.length;
+		for(i=0;i<l;i++)
+		{	var pk=j[i][[someEntity pk]];
+			var peek;
+			if (peek=[someEntity _registeredObjectForPK: pk])	// enforce singleton pattern
+			{	[a addObject:peek]; 
+			} else
+			{	var t=[[FSObject alloc] initWithEntity: someEntity];
+				[t _setDataFromJSONObject: j[i]];
+				[someEntity _registerObjectInPKCache: t];
+				[a addObject:t];
+			}
 		}
 	}
-	return a;
+	return [[FSMutableArray alloc] initWithArray: a ofEntity: someEntity];
 }
 
+
+
+
 -(CPArray) fetchAllObjectsInEntity:(FSEntity) someEntity
-{	return [self fetchObjectsForURLRequest: [self requestForAddressingAllObjectsInEntity: someEntity] inEntity:someEntity];
+{	return [self fetchObjectsForURLRequest: [self requestForAddressingAllObjectsInEntity: someEntity] inEntity:someEntity requestDelegate: nil];
 }
 
 // CRUD combo
@@ -412,15 +425,14 @@ FSRelationshipTypeFuzzy=2;
 		if(peek=[someEntity _registeredObjectForPK: someval]) return [CPArray arrayWithObject: peek];
 	}
 	var request;
-	if(myOptions && [myOptions objectForKey: "FSFuzzySearch"])
+	if(myOptions && parseInt([myOptions objectForKey: "FSFuzzySearch"]))
 		 request=[self requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	else request=[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
-	return [self fetchObjectsForURLRequest: request inEntity: someEntity];
+	var a=nil;
+	if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"])))
+		a=[[FSMutableArray alloc] initWithArray: [] ofEntity: someEntity];
+	return [self fetchObjectsForURLRequest: request inEntity: someEntity requestDelegate: a];
 }
--(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity 
-{	return [self fetchObjectsWithKey: aKey equallingValue: someval inEntity: someEntity options: nil];
-}
-
 
 -(void) writeChangesInObject: (id) obj
 {	if([[obj entity] pk] === undefined) return;
@@ -451,4 +463,5 @@ FSRelationshipTypeFuzzy=2;
     [request setHTTPMethod:"DELETE"];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
 }
+
 @end

@@ -109,7 +109,13 @@
 {	return [_entity createObjectWithDictionary: _defaultDict];
 }
 - (void)setContent:(id)value
-{	if([value respondsToSelector: @selector(defaults) ])
+{
+
+	if(!value || (value.hasOwnProperty('_proxyObject') && ![value._proxyObject isKindOfClass:[CPArray class]]))
+	{	value= [_entity _arrayForArray: [] withDefaults: _defaultDict ];
+	}
+
+	if([value respondsToSelector: @selector(defaults) ])
 	{	_defaultDict=[[value defaults] copy];
 	}
 	[super setContent: value];
