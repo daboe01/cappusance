@@ -263,7 +263,7 @@ FSRelationshipTypeFuzzy=2;
 	return CPNotFound;
 }
 
-- (id)valueForKey:(CPString)aKey
+- (id)valueForKey:(CPString)aKey synchronous:(BOOL) runSynced
 {	var type= [self typeOfKey: aKey];
 
 	if(type == 0)
@@ -292,7 +292,7 @@ FSRelationshipTypeFuzzy=2;
 		{	isToMany=YES;
 			[myoptions setObject:"1" forKey:"FSFuzzySearch"];
 		}
-		if(!isToMany) [myoptions setObject:"1" forKey:"FSSynchronous"];
+		if(!isToMany || runSynced) [myoptions setObject:"1" forKey:"FSSynchronous"];
 		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
 		if(isToMany)
 		{	var defaults=[CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn];
@@ -308,7 +308,9 @@ FSRelationshipTypeFuzzy=2;
 	}
 	
 }
-
+- (id)valueForKey:(CPString)aKey
+{	return [self valueForKey: aKey synchronous: NO];
+}
 - (void)setValue: someval forKey:(CPString)aKey
 {	var type= [self typeOfKey: aKey];
 	var oldval=[self valueForKey: aKey];
