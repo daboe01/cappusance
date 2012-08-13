@@ -22,11 +22,8 @@ Example usage with backend:
 }
 
 Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
-Mojolicious comes with a powerful rest router and a builtin static server. This works well for serving the Cappuccino framework and the application.
+This modern perl framework comes with a powerful rest router and a builtin static server for serving the Cappuccino framework.
 The REST dialect of Cappusance can be easily adapted to any backend. You only need to subclass FSStore and overriding three simple methods.
 
-gui.gsmarkup and a mojolicous-based sample backend are here:
-<https://github.com/daboe01/cappusance/wiki>
-
-a comprehensive use case using all features is here:
+Unfortunately, i did not yet have the time to write documentation for the ORM-part. However, a comprehensive use case with all features turned on is here:
 <https://github.com/daboe01/Cellfinder>
