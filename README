@@ -9,11 +9,12 @@ Example usage with backend:
 [...]
 - (void) applicationDidFinishLaunching:(CPNotification)aNotification
 {
-// You can access this object in your markup file via '#CPOwner.store'.
-	store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
+// _store is an instance variable
+	_store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
 // gui.gsmarkup is loaded from the Ressources folder
 // we specify "self" (our AppController instance) as 'files owner'.
 // this object is aliased as '#CPOwner' in the markup file.
+// You can access e.g. the store instance varibale via '#CPOwner.store' in your markup file.
 
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
 // The gui markup will usually connect GUI objects to instance variables.
