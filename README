@@ -1,4 +1,4 @@
-Cappusance is a powerful GUI builder for Cappuccino based on GNUstep Renaissance.
+Cappusance is a powerful GUI builder for Cappuccino.  Cappusance is actually a port of GNUstep Renaissance.
 Cappusance i.e. features strong autolayout capabilities.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. Cappusance adds support for the more recent Cocoa controls and Cocoa bindings. Cappusance GUIs are fully backward-compatible to Renaissance.
 
