@@ -233,6 +233,11 @@ FSRelationshipTypeFuzzy=2;
     return self;
 }
 
+-(void) reload
+{	var tmpbj= [[self entity] objectWithPK: [self valueForKey: [[self entity] pk] synchronous:YES]];
+	_data=  tmpbj._data;
+}
+
 - (void)_setDataFromJSONObject:(id) o
 {	_data = [CPMutableDictionary dictionary];
 	var cols=[[_entity columns] allObjects];
