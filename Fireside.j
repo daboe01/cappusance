@@ -350,19 +350,6 @@ FSRelationshipTypeFuzzy=2;
 	}
 	else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
 }
-- (void)encodeWithCoder: (CPCoder)aCoder
-{	[super encodeWithCoder:aCoder];
-	var mydata=[_data copy];
-	if(_changes) [mydata addEntriesFromDictionary: _changes];
-	[aCoder _encodeDictionaryOfObjects: mydata forKey:@"FS.objects"];
-}
-- (void)initWithCoder:(CPCoder)aCoder
-{	self=[super initWithCoder: aCoder];
-	if(self)
-	{	_changes=[aCoder _decodeDictionaryOfObjectsForKey:@"FS.objects"]
-	}
-	return self;
-}
 
 @end
 
