@@ -223,8 +223,16 @@
 			return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
 		} else if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
 			var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
-			xmlDoc.async = "false";
+			xmlDoc.async = false;
+			xmlDoc.validateOnParse = false;
 			xmlDoc.loadXML(xmlStr);
+			if (xmlDoc.parseError.errorCode != 0)
+			{	alert("Error in line " + xmlDoc.parseError.line +
+						" position " + xmlDoc.parseError.linePos +
+						"\nError Code: " + xmlDoc.parseError.errorCode +
+						"\nError Reason: " + xmlDoc.parseError.reason +
+						"Error Line: " + xmlDoc.parseError.srcText);
+			}
 			return xmlDoc;
 		}
 		else {

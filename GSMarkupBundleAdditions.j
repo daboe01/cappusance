@@ -173,7 +173,7 @@ var staticNameTable;
 	count = [connectors count];
 	for (i = 0; i < count; i++)
 	{	var connector = [connectors objectAtIndex: i];
-//alert([connector description]);
+// alert([connector description]);
 		[connector establishConnectionUsingNameTable: nameTable];
 	}
 
