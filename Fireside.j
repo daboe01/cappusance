@@ -459,3 +459,50 @@ FSRelationshipTypeFuzzy=2;
 }
 
 @end
+
+@implementation FSInMemoryStore : FSStore 
+{	var _store;
+}
+
+-(id) init
+{	self = [super initWithBaseURL:""];
+	_store=[];
+    return self;
+}
+
+
+-(CPArray) fetchAllObjectsInEntity:(FSEntity) someEntity
+{	return _store[[someEntity name]];
+}
+
+// CRUD combo
+
+-(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity options: myOptions
+{	var arr=_store[[someEntity name]];
+	var ret=[];
+	var l=[arr count];
+	for(var i=0;i<l;i++)
+	{	if([arr[i] valueForKey: aKey]===someval) ret.push(arr[i]);
+	}
+	return ret;
+}
+
+-(void) writeChangesInObject: (id) obj
+{
+// noop!
+}
+
+-(void) insertObject: someObj 
+{	var n =[[someObj entity] name];
+	var a=_store[n];
+	if(a===undefined) _store[n]=[];
+	_store[n].push(someObj);
+}
+
+-(id) deleteObject: obj
+{
+// <!> fixme: implementation missing
+}
+
+@end
+
