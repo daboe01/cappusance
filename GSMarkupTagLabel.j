@@ -66,18 +66,6 @@
   {
     var c = [self colorValueForAttribute: @"textColor"];
 
-    /* Backward-compatible hack to support obsolete attribute 'color'.
-     * It will be removed one year from now, on 4 March 2009.
-     */
-    if (c == nil)
-      {
-	c = [self colorValueForAttribute: @"color"];
-	if (c != nil)
-	  {
-	   CPLog (@"The 'color' attribute of the <label> tag is obsolete; please replace it with 'textColor'");
-	  }
-      }
-
     if (c != nil)
       {
 	[platformObject setTextColor: c];

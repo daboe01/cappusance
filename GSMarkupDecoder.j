@@ -343,6 +343,7 @@
 			else
 			{	var objectName = [peek substringToIndex: r.location];
 				var target = [self _getObjectForIdString: objectName];
+
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
 
 				if( [oPO isKindOfClass: [CPPredicateEditor class]])

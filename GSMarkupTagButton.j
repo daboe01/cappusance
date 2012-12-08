@@ -292,7 +292,7 @@
 	 */
 	if ([_attributes objectForKey: @"image"] == nil)
 	  {
-	    [platformObject setBezelStyle: CPRoundedBezelStyle];
+	//    [platformObject setBezelStyle: CPRoundedBezelStyle];
 	  }
 	else
 	  {
