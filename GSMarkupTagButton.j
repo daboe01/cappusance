@@ -290,7 +290,7 @@
 	/* For all text buttons, we use CPRoundedBezelStyle.  This is
 	 * very good, but the buttons are too spaced (FIXME ??).
 	 */
-	if ([_attributes objectForKey: @"image"] == nil)
+	if (0&&[_attributes objectForKey: @"image"] == nil)
 	  {
 	    [platformObject setBezelStyle: CPRoundedBezelStyle];
 	  }

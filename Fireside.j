@@ -75,7 +75,7 @@ var _allRelationships;
 -(id) createObjectWithDictionary:(CPDictionary) myDict
 {	var r=[[FSObject alloc] initWithEntity:self];
 	if(myDict)
-    {   r._changes=myDict;
+    {   r._changes=[myDict copy];
 		var allKeys=[myDict allKeys];
 		var i, l=[allKeys count]
 		for(i=0; i< l; i++)
@@ -258,6 +258,7 @@ FSRelationshipTypeFuzzy=2;
 
 - (id)description
 {	var o=[_data copy];
+	if(!o) o=[CPMutableDictionary new];
 	if(_changes) [o addEntriesFromDictionary: _changes];
 	return [o description];
 }
@@ -460,6 +461,8 @@ FSRelationshipTypeFuzzy=2;
 
 @end
 
+
+// does not (yet) work as espected for unknown reasons
 @implementation FSInMemoryStore : FSStore 
 {	var _store;
 }
@@ -482,7 +485,7 @@ FSRelationshipTypeFuzzy=2;
 	var ret=[];
 	var l=[arr count];
 	for(var i=0;i<l;i++)
-	{	if([arr[i] valueForKey: aKey]===someval) ret.push(arr[i]);
+	{	if([arr[i] valueForKey: aKey]===someval) [ret addObject: arr[i]];
 	}
 	return ret;
 }
@@ -496,7 +499,7 @@ FSRelationshipTypeFuzzy=2;
 {	var n =[[someObj entity] name];
 	var a=_store[n];
 	if(a===undefined) _store[n]=[];
-	_store[n].push(someObj);
+	[_store[n] addObject:someObj];
 }
 
 -(id) deleteObject: obj

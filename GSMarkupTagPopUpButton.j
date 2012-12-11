@@ -117,6 +117,7 @@
 
 @implementation CPPopUpButton(KVK4Items)
 
+
 -(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
 {	var myCurrentArr=[self itemArray];
 	var l=myCurrentArr.length;
@@ -158,7 +159,7 @@
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
 	}
-//	[self synchronizeTitleAndSelectedItem];
+	[self synchronizeTitleAndSelectedItem];
 }
 
 -(CPArray)tagArray
