@@ -187,10 +187,10 @@
 			if(![key length]) continue;
 			value = [attribs objectForKey: key];
 
-			if (container!=_connectors && [value hasPrefix: @"#"])
-			{	if(container==_entites)
+			if (container !== _connectors && (  key === 'delegate' || [value hasPrefix: @"#"]) )
+			{	if(container === _entites)
 				{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
-				} else if(key != 'itemsBinding' && key != 'valueBinding')	// bindings will be processed elsewhere
+				} else if(key !== 'itemsBinding' && key !== 'valueBinding')	// bindings will be processed elsewhere
 				{	var outlet;	// GSMarkupOutletConnector
 
 					/* We pass the value unchanged to the outlet.  If
