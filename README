@@ -24,7 +24,25 @@ Example usage with backend:
 
 Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
 This modern perl framework comes with a powerful rest router and a builtin static server for serving the Cappuccino framework.
-The REST dialect of Cappusance can be easily adapted to any backend. You only need to subclass FSStore and overriding three simple methods.
+The REST dialect of Cappusance can be easily adapted to any backend. Ideally, you only need to subclass FSStore and override two simple methods:
+- requestForAddressingObjectsWithKey: aKey equallingValue: inEntity:
+- requestForAddressingAllObjectsInEntity:
+
 
 Unfortunately, i did not yet have the time to write documentation for the ORM-part. However, a comprehensive use case with all features turned on is here:
 <https://github.com/daboe01/Cellfinder>
+
+
+LICENCE:
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
