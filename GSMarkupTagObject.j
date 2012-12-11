@@ -193,7 +193,7 @@
 
 - (id) platformObject
 {
-  if (_platformObject == nil)
+  if (!_platformObject)
     {
       /* Build the object.  */
       var platformObject = [self allocPlatformObject];
@@ -259,7 +259,7 @@
 - (CPString) description
 {
   return [CPString stringWithFormat: 
-		     @"%@\var attributes =%@\var content =%@\var platformObject =%@",
+		     @"%@\nvar attributes =%@\nvar content =%@\var platformObject =%@",
 		   [super description],
 		   [_attributes description],
 		   [_content description],

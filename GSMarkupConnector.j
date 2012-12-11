@@ -81,13 +81,15 @@
       
     }
 }
-// unused?!
+
 + (id) getPlatformObjectForIdString: (CPString)idString
 	     usingNameTable: (CPDictionary)nameTable
 {	var r = [idString rangeOfString: @"."];
 
 	if (r.location == CPNotFound)
-       return [[nameTable objectForKey: idString] platformObject];
+	{
+		return [[nameTable objectForKey: idString] platformObject];
+	}
 	else
 	{	var objectName = [idString substringToIndex: r.location];
 		var keyValuePath = [idString substringFromIndex: CPMaxRange(r)];

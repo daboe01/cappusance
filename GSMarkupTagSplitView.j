@@ -68,24 +68,31 @@
 	  }
       }
   }
-
   return platformObject;
 }
 
+/*
+- (BOOL) shouldTreatContentAsSubviews
+{
+  return YES;
+}
+*/
+
+-(void) _restoreFromAutosave: platformObject
+{	[platformObject setAutosaveName: [_attributes objectForKey: "autosaveName"] ];
+	[platformObject _restoreFromAutosave];
+}
 - (id) postInitPlatformObject: (id)platformObject
 {
-  platformObject = [super postInitPlatformObject: platformObject];
+	platformObject = [super postInitPlatformObject: platformObject];
 
   /* Make sure subviews are adjusted.  This must be done after the
    * size of the splitview has been set.
    */
-  var autosaveName;
-  if( autosaveName=[_attributes objectForKey: "autosaveName"])
-	{	[platformObject setAutosaveName: autosaveName];
-		[platformObject _restoreFromAutosave];
-
+	[platformObject adjustSubviews];
+	if([_attributes objectForKey: "autosaveName"])
+	{	[[CPRunLoop currentRunLoop] performSelector:@selector(_restoreFromAutosave:) target:self argument: platformObject order:0 modes:[CPDefaultRunLoopMode]];
 	}
-  [platformObject adjustSubviews];
 
   return platformObject;
 }
