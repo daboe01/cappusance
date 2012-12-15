@@ -1,15 +1,15 @@
 Cappusance is a powerful GUI builder for Cappuccino. 
 Cappusance i.e. features strong autolayout capabilities. Cappusance is actually a port of GNUstep Renaissance.
-See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. Cappusance adds support for the more recent Cocoa controls and Cocoa bindings. Cappusance GUIs are fully backward-compatible to Renaissance.
+See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. However, Cappusance adds support for the more recent Cocoa controls and Cocoa bindings.
 
-As a big plus, Cappusance comes with a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application in a single XML-file -- without coding Javascript/Objective-J! The Cappusance ORM conveys automatic database-to-GUI mapping in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. Additionally, all data manipulations at the Objective-J level are transparently forwarded to the backend.
+As a big plus, Cappusance comes with a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application in XML -- without writing code in Objective-J! The Cappusance ORM conveys automatic database-to-GUI mapping in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. Additionally, data manipulations from Objective-J are transparently forwarded to the backend.
 
 Example usage with backend:
 @import <Renaissance/Renaissance.j>
 [...]
 - (void) applicationDidFinishLaunching:(CPNotification)aNotification
 {
-// _store is an instance variable
+// _store is an instance variable with an accessor named store
 	_store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
 // gui.gsmarkup is loaded from the Ressources folder
 // we specify "self" (our AppController instance) as 'files owner'.
@@ -29,7 +29,7 @@ The REST dialect of Cappusance can be easily adapted to any backend. Ideally, yo
 - requestForAddressingAllObjectsInEntity:
 
 
-Unfortunately, i did not yet have the time to write documentation for the ORM-part. However, a comprehensive use case with all features turned on is here:
+Unfortunately, i did not yet have the time to write documentation for the ORM-part. However, a comprehensive use case is here:
 <https://github.com/daboe01/Cellfinder>
 
 

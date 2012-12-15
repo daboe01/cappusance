@@ -39,7 +39,7 @@
 {	return [_attributes objectForKey: @"bindingColumn"];
 }
 -(BOOL) isToMany
-{	return [_attributes objectForKey: @"type"]=="toMany";
+{	return [_attributes objectForKey: @"type"] === "toMany";
 }
 
 + (Class) platformObjectClass
@@ -140,7 +140,8 @@
 
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [platformObject init];
-	[platformObject setAutomaticallyRearrangesObjects:YES];
+	[platformObject setAutomaticallyRearrangesObjects: YES];
+	[platformObject setClearsFilterPredicateOnInsertion:NO];	//<!> fixme: make this configurable via markup
 	[platformObject setObjectClass:[FSObject class]];
 	[platformObject setEntity: [_attributes objectForKey: @"entity"] ];
 	return platformObject;
