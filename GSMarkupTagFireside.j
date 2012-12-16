@@ -110,7 +110,6 @@
 }
 - (void)setContent:(id)value
 {
-
 	if(!value || (value.hasOwnProperty('_proxyObject') && ![value._proxyObject isKindOfClass:[CPArray class]]))
 	{	value= [_entity _arrayForArray: [] withDefaults: _defaultDict ];
 	}
