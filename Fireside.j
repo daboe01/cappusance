@@ -234,7 +234,9 @@ FSRelationshipTypeFuzzy=2;
 }
 
 -(void) reload
-{	var tmpbj= [[self entity] objectWithPK: [self valueForKey: [[self entity] pk] synchronous:YES]];
+{	var mypk=[self valueForKey: [[self entity] pk] synchronous:YES];
+	if([self entity]._pkcache)   [self entity]._pkcache[mypk]=undefined;
+	var tmpbj= [[self entity] objectWithPK: mypk];
 	_data=  tmpbj._data;
 }
 
