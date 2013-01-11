@@ -28,7 +28,7 @@
 
 @implementation GSMarkupTagHspace: GSMarkupTagView
 
-+ (NSString *) tagName
++ (CPString) tagName
 {
   return @"hspace";
 }
@@ -42,7 +42,7 @@
 
 @implementation GSMarkupTagVspace: GSMarkupTagView
 
-+ (NSString *) tagName
++ (NSString) tagName
 {
   return @"vspace";
 }

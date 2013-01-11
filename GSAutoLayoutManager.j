@@ -353,7 +353,7 @@ function CPEqualRects(aRect, bRect)
   /* An array of GSAutoLayoutManagerSegment (or a subclass) objects.
    * Created/destroyed when the object is created/destroyed, but for
    * the rest managed directly by the GSAutoLayoutManager.  */
-  NSMutableArray *_segments;
+  NSMutableArray _segments;
 }
 
 - (id) init

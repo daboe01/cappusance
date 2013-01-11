@@ -150,7 +150,7 @@
   return nil;
 }
 
-- (void) setAwaker: (GSMarkupAwaker *)awaker
+- (void) setAwaker: (GSMarkupAwaker)awaker
 {
   var i, count;
 
@@ -338,7 +338,7 @@
   return -1;
 }
 
-- (void) setLocalizer: (GSMarkupLocalizer *)localizer
+- (void) setLocalizer: (GSMarkupLocalizer)localizer
 {
   var i, count;
 

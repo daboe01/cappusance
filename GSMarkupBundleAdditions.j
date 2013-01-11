@@ -41,7 +41,7 @@ var staticNameTable;
 }
 
 + (void) registerStaticObject: (id)object
-		     withName: (NSString *)itsId
+		     withName: (CPString)itsId
 {
   if (staticNameTable == nil)
     {
