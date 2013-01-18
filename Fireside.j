@@ -163,6 +163,10 @@ var _allRelationships;
 	}
 	return NO;
 }
+-(void) _invalidatePKCache
+{	_pkcache=[];
+}
+
 @end
 
 
@@ -214,6 +218,7 @@ FSRelationshipTypeFuzzy=2;
 
 -(void) _invalidateCache
 {	_target_cache=[];
+	[_target _invalidatePKCache];
 }
 @end
 
