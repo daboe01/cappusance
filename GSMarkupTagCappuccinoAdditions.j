@@ -80,6 +80,32 @@
 }
 @end
 
+//<!> fixme: only small spinner is currently supported
+@implementation GSMarkupTagProgresIndicator : GSMarkupTagLevelIndicator
++ (CPString) tagName
+{
+  return @"progresIndicator";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPProgressIndicator class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+	var current;
+
+	[platformObject setDisplayedWhenStopped:NO];
+	[platformObject setStyle:CPProgressIndicatorSpinningStyle];
+	[platformObject setControlSize:CPMiniControlSize];
+	[_attributes setObject: @"16" forKey: @"height"];
+	[_attributes setObject: @"16" forKey: @"width"];
+	return platformObject;
+}
+@end
+
+
 @implementation GSMarkupOperator: GSMarkupTagObject
 
 + (CPString) tagName
