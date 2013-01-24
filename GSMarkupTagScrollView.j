@@ -25,6 +25,9 @@
 
 @import "GSMarkupTagView.j"
 
+@implementation CPTextView:CPObject
+@end
+
 @implementation GSMarkupTagScrollView: GSMarkupTagView
 
 + (CPString) tagName
