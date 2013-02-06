@@ -293,8 +293,7 @@ FSRelationshipTypeFuzzy=2;
 		{
 		}
 	
-		var  o=[_changes objectForKey: aKey];
-		if (!o)  o = [_data objectForKey: aKey];
+		var  o= [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
 		if  (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
 				 o=[o stringValue];
@@ -514,7 +513,7 @@ FSRelationshipTypeFuzzy=2;
 -(void) insertObject: someObj 
 {	var n =[[someObj entity] name];
 	var a=_store[n];
-	if(a===undefined) _store[n]=[];
+	if(a === undefined) _store[n]=[];
 	[_store[n] addObject:someObj];
 }
 
