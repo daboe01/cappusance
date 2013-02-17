@@ -25,6 +25,7 @@
 
 @import "GSMarkupTagControl.j"
 @import "GSMarkupTagPopUpButtonItem.j"
+@import <AppKit/CPPopUpButton.j>
 
 @implementation GSMarkupTagPopUpButton: GSMarkupTagControl
 + (CPString) tagName

@@ -22,6 +22,11 @@
    If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */ 
+@import <AppKit/CPScrollView.j>
+@import <AppKit/CPSplitView.j>
+@import <AppKit/CPButton.j>
+@import <AppKit/CPWindow.j>
+
 
  GSAutoLayoutExpand = 0;
  GSAutoLayoutWeakExpand = 1;

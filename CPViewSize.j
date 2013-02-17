@@ -22,6 +22,13 @@
    If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */ 
+@import <AppKit/CPView.j>
+@import <AppKit/CPControl.j>
+@import <AppKit/CPBox.j>
+@import <AppKit/CPSplitView.j>
+@import <AppKit/CPTextField.j>
+@import <AppKit/CPImageView.j>
+@import <AppKit/CPColorWell.j>
 
 @implementation CPView (sizeToContent)
 

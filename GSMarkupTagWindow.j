@@ -23,6 +23,7 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */ 
 
+@import <AppKit/CPWindow.j>
 @import "GSMarkupTagObject.j"
 
 @implementation CPWindow(Autosaving);

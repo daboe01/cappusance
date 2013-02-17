@@ -1,6 +1,7 @@
 
 @import "GSMarkupTagObject.j"
 @import <Foundation/CPObject.j>
+@import <AppKit/CPArrayController.j>
 @import "Fireside.j"
 
 @implementation GSMarkupColumn: GSMarkupTagObject

@@ -1,5 +1,6 @@
 
 @import <Foundation/CPObject.j>
+@import <Foundation/CPMutableArray.j>
 
 @implementation FSMutableArray : CPMutableArray
 {	id _entity @accessors(property=entity);

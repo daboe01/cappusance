@@ -178,6 +178,8 @@
 }
 @end
 
+@import <AppKit/CPPredicateEditor.j>
+
 @implementation CPPredicateEditor(SizeToFitFix)
 -(void) sizeToFit
 {
@@ -267,6 +269,8 @@
 }
 @end
 
+@import <AppKit/CPTabView.j>
+
 @implementation GSMarkupTagTabView : GSMarkupTagView
 + (CPString) tagName
 {
@@ -307,7 +311,7 @@
 
 @end
 
-
+@import "GSMarkupTagControl.j"
 @implementation GSMarkupTagCheckBox : GSMarkupTagControl
 + (CPString) tagName
 {
@@ -326,6 +330,7 @@
 }
 @end
 
+@import <AppKit/CPCollectionView.j>
 
 @implementation CPCollectionView(KVB)
 -(void) setObjectValue: someArray
@@ -403,6 +408,7 @@
 }
 @end
 
+@import <AppKit/CPButtonBar.j>
 @implementation GSMarkupTagButtonBar : GSMarkupTagView
 + (CPString) tagName
 {

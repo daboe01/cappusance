@@ -6,6 +6,7 @@
  */
 
 @import <Foundation/CPObject.j>
+@import <Foundation/CPDictionary.j>
 @import "FSMutableArray.j"
 
 @implementation CPArray(AllObjects)
