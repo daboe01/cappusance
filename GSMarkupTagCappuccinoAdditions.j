@@ -80,6 +80,20 @@
 }
 @end
 
+@implementation GSMarkupTagStepper : GSMarkupTagLevelIndicator
++ (CPString) tagName
+{
+  return @"stepper";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPStepper class];
+}
+
+@end
+
+
 //<!> fixme: only small spinner is currently supported
 @implementation GSMarkupTagProgresIndicator : GSMarkupTagLevelIndicator
 + (CPString) tagName
