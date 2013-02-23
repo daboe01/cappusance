@@ -480,3 +480,32 @@
 {	return GSAutoLayoutExpand;
 }
 @end
+
+
+@import <AppKit/CPTokenField.j>
+@implementation GSMarkupTagTokenField : GSMarkupTagTextField
++ (CPString) tagName
+{
+  return @"tokenField";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPTokenField class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+
+	var peek;
+	if (peek=[self stringValueForAttribute:"placeholder"] )
+  	  [platformObject setPlaceholderString: peek];
+
+	peek=[self stringValueForAttribute:"tokenSeparators"];
+	if (!peek) peek=" ";
+	[platformObject setTokenizingCharacterSet:[CPCharacterSet characterSetWithCharactersInString: peek]];
+
+	return platformObject;
+}
+
+@end
