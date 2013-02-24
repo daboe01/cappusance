@@ -496,6 +496,7 @@
 
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [super initPlatformObject: platformObject];
+	[_attributes setObject: @"28" forKey: @"height"];
 
 	var peek;
 	if (peek=[self stringValueForAttribute:"placeholder"] )
@@ -506,6 +507,14 @@
 	[platformObject setTokenizingCharacterSet:[CPCharacterSet characterSetWithCharactersInString: peek]];
 
 	return platformObject;
+}
+@end
+
+@implementation CPTokenField (CPTokenFieldItemsBinding)
+- (CPArray)_completionsForSubstring:(CPString)substring indexOfToken:(int)tokenIndex indexOfSelectedItem:(int)selectedIndex
+{
+	if([substring length]) return [[self _autocompleteMenu] contentArray];
+	return nil;
 }
 
 @end

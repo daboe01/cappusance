@@ -315,12 +315,16 @@
 
 				if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	if(itemsFace && valItemsFace)
-					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];	// <!>fixme: hardcoded arrangedObjects.
+					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options:nil];
 					}
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
 				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
+				} else if([oPO isKindOfClass: [CPTokenField class] ])
+				{	var acm=[oPO _autocompleteMenu];
+					[acm bind:"contentArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 				}
+
 			}
 		}
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
