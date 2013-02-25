@@ -488,8 +488,13 @@
 {	var _itemArray;
 }
 - (CPArray)_completionsForSubstring:(CPString)substring indexOfToken:(int)tokenIndex indexOfSelectedItem:(int)selectedIndex
-{
-	if([substring length]) return _itemArray;
+{	var j=[_itemArray count];
+	var r=[];
+	for (var i = 0; i < j; i++)
+            if ([_itemArray objectAtIndex: i].toLowerCase().indexOf(substring.toLowerCase()) == 0)
+                r.push([_itemArray objectAtIndex: i]);
+
+	if([substring length]) return r;
 	return [];
 }
 -(void) itemArray
