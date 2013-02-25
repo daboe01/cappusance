@@ -483,6 +483,26 @@
 
 
 @import <AppKit/CPTokenField.j>
+
+@implementation FSTokenField : CPTokenField
+{	var _itemArray;
+}
+- (CPArray)_completionsForSubstring:(CPString)substring indexOfToken:(int)tokenIndex indexOfSelectedItem:(int)selectedIndex
+{
+	if([substring length]) return _itemArray;
+	return [];
+}
+-(void) itemArray
+{
+	return _itemArray;
+}
+-(void) setItemArray: myArr
+{	_itemArray=[myArr copy];
+	return [[self _autocompleteMenu] setContentArray: _itemArray];
+}
+@end
+
+
 @implementation GSMarkupTagTokenField : GSMarkupTagTextField
 + (CPString) tagName
 {
@@ -490,13 +510,12 @@
 }
 
 + (Class) platformObjectClass
-{
-  return [CPTokenField class];
+{	return [FSTokenField class];
 }
 
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [super initPlatformObject: platformObject];
-	[_attributes setObject: @"28" forKey: @"height"];
+	[_attributes setObject: @"29" forKey: @"height"];
 
 	var peek;
 	if (peek=[self stringValueForAttribute:"placeholder"] )
@@ -510,11 +529,4 @@
 }
 @end
 
-@implementation CPTokenField (CPTokenFieldItemsBinding)
-- (CPArray)_completionsForSubstring:(CPString)substring indexOfToken:(int)tokenIndex indexOfSelectedItem:(int)selectedIndex
-{
-	if([substring length]) return [[self _autocompleteMenu] contentArray];
-	return nil;
-}
 
-@end

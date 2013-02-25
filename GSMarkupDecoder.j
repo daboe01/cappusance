@@ -321,8 +321,7 @@
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
 				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 				} else if([oPO isKindOfClass: [CPTokenField class] ])
-				{	var acm=[oPO _autocompleteMenu];
-					[acm bind:"contentArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
+				{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 				}
 
 			}
