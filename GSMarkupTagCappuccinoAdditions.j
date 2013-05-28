@@ -534,4 +534,16 @@
 }
 @end
 
+@implementation GSMarkupTagSwitchButton: GSMarkupTagButton
++ (CPString) tagName
+{
+  return @"switchButton";
+}
+
++ (Class) platformObjectClass
+{	return [CPCheckBox class];
+}
+
+@end
+
 
