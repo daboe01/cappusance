@@ -363,12 +363,6 @@
 {	return GSAutoLayoutExpand;
 }
 
-- (void)performDragOperation:(CPDraggingInfo)aSender
-{
-    [_delegate performDragOperation: aSender];
-    
-}
-
 @end
 
 @implementation GSMarkupTagCollectionView : GSMarkupTagView
@@ -410,7 +404,6 @@
 	var protoClass=CPClassFromString([self stringValueForAttribute:"itemsClassName"]);
 	if(!protoClass) protoClass=[CPCollectionViewItem class];
 	var proto=[protoClass new];
-	var peek;
 	[platformObject setItemPrototype: proto];
 	return platformObject;
 }
