@@ -396,4 +396,19 @@
 
 @end
 
+@implementation GSMarkupTagPredicate : GSMarkupTagObject
++ (CPString) tagName
+{	return @"predicate";
+}
+
++ (Class) platformObjectClass
+{	return nil;
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject=[CPPredicate predicateWithFormat: [_attributes objectForKey:"format"] argumentArray: nil ];
+	return platformObject;
+}
+@end
+
 
