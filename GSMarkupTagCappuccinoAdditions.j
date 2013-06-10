@@ -483,31 +483,6 @@
 
 
 @import <AppKit/CPTokenField.j>
-
-@implementation FSTokenField : CPTokenField
-{	var _itemArray;
-}
-- (CPArray)_completionsForSubstring:(CPString)substring indexOfToken:(int)tokenIndex indexOfSelectedItem:(int)selectedIndex
-{	var j=[_itemArray count];
-	var r=[];
-	for (var i = 0; i < j; i++)
-            if ([_itemArray objectAtIndex: i].toLowerCase().indexOf(substring.toLowerCase()) == 0)
-                r.push([_itemArray objectAtIndex: i]);
-
-	if([substring length]) return r;
-	return [];
-}
--(void) itemArray
-{
-	return _itemArray;
-}
--(void) setItemArray: myArr
-{	_itemArray=[myArr copy];
-	return [[self _autocompleteMenu] setContentArray: _itemArray];
-}
-@end
-
-
 @implementation GSMarkupTagTokenField : GSMarkupTagTextField
 + (CPString) tagName
 {
@@ -515,7 +490,7 @@
 }
 
 + (Class) platformObjectClass
-{	return [FSTokenField class];
+{	return [CPTokenField class];
 }
 
 - (id) initPlatformObject: (id)platformObject
