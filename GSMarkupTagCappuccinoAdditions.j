@@ -386,4 +386,25 @@
 }
 @end
 
+@implementation GSMarkupTagDatePicker: GSMarkupTagControl
++ (CPString) tagName
+{
+  return @"datePicker";
+}
+
++ (Class) platformObjectClass
+{	return [CPDatePicker class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+
+    var styleString = [_attributes objectForKey: @"style"];
+	if(styleString === 'textual') [platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
+	else if(styleString === 'graphical') [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
+
+	return platformObject;
+}
+
+@end
 
