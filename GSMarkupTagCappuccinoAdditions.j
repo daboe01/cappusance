@@ -386,6 +386,13 @@
 }
 @end
 
+@import <AppKit/CPDatePicker.j>
+
+@implementation CPDatePicker(SizeToFit)
+-(void) sizeToFit
+{}
+@end
+
 @implementation GSMarkupTagDatePicker: GSMarkupTagControl
 + (CPString) tagName
 {
@@ -400,9 +407,20 @@
 {	platformObject = [super initPlatformObject: platformObject];
 
     var styleString = [_attributes objectForKey: @"style"];
-	if(styleString === 'textual') [platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
+	if(styleString === 'textual')
+	{	[platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
+		[_attributes setObject: @"129" forKey: @"width"];
+		[_attributes setObject: @"29" forKey: @"height"];
+    	[platformObject setDatePickerElements: CPYearMonthDayDatePickerElementFlag];
+	}
 	else if(styleString === 'graphical') [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
 
+	return platformObject;
+}
+
+- (id) postInitPlatformObject: (id)platformObject
+{	platformObject=[super postInitPlatformObject: platformObject];
+	[platformObject _init];
 	return platformObject;
 }
 
