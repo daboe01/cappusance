@@ -72,7 +72,7 @@
 
 - (void) sizeToFitContent
 {
-  [self sizeToFit];
+  if([self respondsToSelector:@selector(sizeToFit) ]) [self sizeToFit];
 }
 
 @end
