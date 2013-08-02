@@ -109,12 +109,18 @@
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [super initPlatformObject: platformObject];
 	var current;
-
-	[platformObject setDisplayedWhenStopped:NO];
-	[platformObject setStyle:CPProgressIndicatorSpinningStyle];
-	[platformObject setControlSize:CPMiniControlSize];
-	[_attributes setObject: @"16" forKey: @"height"];
-	[_attributes setObject: @"16" forKey: @"width"];
+	if([_attributes objectForKey:"style"] == 'Bar')
+	{	[platformObject setDisplayedWhenStopped: YES];
+		[platformObject setStyle: CPProgressIndicatorBarStyle];
+		[_attributes setObject: @"20" forKey: @"height"];
+	}
+	else
+	{	[platformObject setDisplayedWhenStopped:NO];
+		[platformObject setStyle:CPProgressIndicatorSpinningStyle];
+		[platformObject setControlSize:CPMiniControlSize];
+		[_attributes setObject: @"16" forKey: @"height"];
+		[_attributes setObject: @"16" forKey: @"width"];
+	}
 	return platformObject;
 }
 @end
@@ -384,13 +390,6 @@
 {	platformObject=[CPPredicate predicateWithFormat: [_attributes objectForKey:"format"] argumentArray: nil ];
 	return platformObject;
 }
-@end
-
-@import <AppKit/CPDatePicker.j>
-
-@implementation CPDatePicker(SizeToFit)
--(void) sizeToFit
-{}
 @end
 
 

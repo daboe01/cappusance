@@ -320,14 +320,12 @@
 					}
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
 				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
-				} else if([oPO isKindOfClass: [CPTokenField class] ])
-				{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 				}
-
 			}
 		}
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
+
 			if ([oPO isKindOfClass: [CPTableView class] ])	// "unspecific" bindings for tableViews, where you do not want to connect the columns individually but through "identifier" property
 			{	var target=[self _getObjectForIdString: peek];
 
@@ -349,30 +347,24 @@
 
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
 
-				if( [oPO isKindOfClass: [CPPredicateEditor class]])
-				{	[oPO setObjectValue: [self _getObjectForIdString: peek] ];
-					[target bind: "filterPredicate" toObject: oPO withKeyPath: "objectValue" options:nil];
+				var binding=CPValueBinding;
+				if([oPO  isKindOfClass: [FSArrayController class]])
+				{	binding="contentArray";
+				} else if([oPO isKindOfClass: [CPPopUpButton class]])
+				{	binding="integerValue";
+				}
 
-				} else
-				{	var binding=CPValueBinding;
-					if([oPO  isKindOfClass: [FSArrayController class]])
-					{	binding="contentArray";
-					} else if([oPO isKindOfClass: [CPPopUpButton class]])
-					{	binding="integerValue";
-					}
-			//		var options=[CPDictionary dictionaryWithObject: [CPNumber numberWithBool: YES] forKey:CPHandlesContentAsCompoundValueBindingOption ];
-					[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options
-					if([oPO isKindOfClass: [CPCollectionView class]])
-					{
-						if (r.location != CPNotFound)
-						{	var pathComponents=[peek componentsSeparatedByString:"."];
-							if(pathComponents.length>2)
-							{	var subPathArray=[pathComponents subarrayWithRange: CPMakeRange(1, pathComponents.length-2)];
-								keyValuePath =subPathArray.join(".")+".selectionIndexes";
-							} else keyValuePath="selectionIndexes";
-						} else keyValuePath="selectionIndexes"
-						[oPO bind: "selectionIndexes" toObject: target withKeyPath: keyValuePath options: nil ];
-					}
+				[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options
+				if([oPO isKindOfClass: [CPCollectionView class]])
+				{
+					if (r.location != CPNotFound)
+					{	var pathComponents=[peek componentsSeparatedByString:"."];
+						if(pathComponents.length>2)
+						{	var subPathArray=[pathComponents subarrayWithRange: CPMakeRange(1, pathComponents.length-2)];
+							keyValuePath =subPathArray.join(".")+".selectionIndexes";
+						} else keyValuePath="selectionIndexes";
+					} else keyValuePath="selectionIndexes"
+					[oPO bind: "selectionIndexes" toObject: target withKeyPath: keyValuePath options: nil ];
 				}
 			}
 		}

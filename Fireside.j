@@ -336,6 +336,7 @@ FSRelationshipTypeFuzzy=2;
 - (void)setValue: someval forKey:(CPString)aKey
 {	var type= [self typeOfKey: aKey];
 	var oldval=[self valueForKey: aKey];
+
 	if(oldval === someval) return;	// we are not interested in side effects, so ignore identity-updates
 	if(type == 0)
 	{	if(!_changes) _changes = [CPMutableDictionary dictionary];
@@ -384,7 +385,9 @@ FSRelationshipTypeFuzzy=2;
 	return request;
 }
 -(CPURLRequest) requestForAddressingAllObjectsInEntity:(FSEntity) someEntity
-{	return [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name] ];
+{
+// alert([self baseURL]+"/"+[someEntity name])
+	return [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name] ];
 }
 
 -(id) initWithBaseURL:(CPString) someURL
