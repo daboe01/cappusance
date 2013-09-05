@@ -99,7 +99,17 @@
 	[platformObject setImportsGraphics: NO];
       }
   }
-  
+
+  /* placeholder */
+  {
+    var c = [self stringValueForAttribute: @"placeholder"];
+    
+    if (c != nil)
+      {
+	[platformObject setPlaceholderString: c];
+      }
+  }
+
   /* textColor */
   {
     var c = [self colorValueForAttribute: @"textColor"];

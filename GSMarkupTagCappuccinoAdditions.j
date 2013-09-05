@@ -353,10 +353,6 @@
 {	platformObject = [super initPlatformObject: platformObject];
 	[_attributes setObject: @"29" forKey: @"height"];
 
-	var peek;
-	if (peek=[self stringValueForAttribute:"placeholder"] )
-  	  [platformObject setPlaceholderString: peek];
-
 	peek=[self stringValueForAttribute:"tokenSeparators"];
 	if (!peek) peek=" ";
 	[platformObject setTokenizingCharacterSet:[CPCharacterSet characterSetWithCharactersInString: peek]];
