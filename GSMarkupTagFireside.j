@@ -102,6 +102,12 @@
 {	return [_entity pk];
 
 }
+
+-(void) selectObjectWithPK: myPk
+{	var o= [_entity objectWithPK: myPk];
+	[self setSelectedObjects: [o] ];
+}
+
 - (id)selectedObject
 {	var s=[self selectedObjects];
 	return [s count]? [s objectAtIndex:0]:nil;
