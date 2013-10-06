@@ -133,6 +133,11 @@
 
 	[super addObject: anObject];
 }
+//<!> fixes an issue when adding to an empty arraycontroller
+- (void)insertObject:(id)anObject atArrangedObjectIndex:(int)anIndex
+{	[super insertObject: anObject atArrangedObjectIndex:MAX(0,anIndex)];
+}
+
 @end
 
 @implementation GSMarkupArrayController: GSMarkupTagObject
