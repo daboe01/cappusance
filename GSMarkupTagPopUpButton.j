@@ -137,20 +137,6 @@
 	}
 
 }
--(void) setIntegerValue:(int) someValue
-{
-	[self selectItemWithTag: someValue];
-}
--(int) integerValue
-{	return [[self selectedItem] tag];
-}
-
-- (void)_reverseSetBinding
-{	var binderClass = [[self class] _binderClassForBinding: "integerValue"],
-        theBinding = [binderClass getBinding:"integerValue" forObject:self];
-    [theBinding reverseSetValueFor:@"integerValue"];
-}
-
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
 {
@@ -164,7 +150,7 @@
 }
 
 -(CPArray)tagArray
-{	return [];
+{	return [];	//<!> fixme
 }
 -(void)setTagArray:(CPArray) someArray
 {
@@ -174,9 +160,15 @@
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTag: someArray[j]];
 	}
-
 }
 
+-(void) setSelectedTag:(int) someValue
+{
+	[self selectItemWithTag: someValue];
+}
+-(int) selectedTag
+{	return [[self selectedItem] tag];
+}
 
 @end
 

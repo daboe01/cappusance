@@ -331,13 +331,13 @@
 
 				var _content=[o content];
 				var j, l1 = _content? _content.length:0;
-				for (j = 0; j < l1; j++)
+				for(j = 0; j < l1; j++)
 				{	var column =_content[j];
 					if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]])
-					{    [[column platformObject]	bind: CPValueBinding
+					{	[[column platformObject]	bind: CPValueBinding
 												toObject: target
-											 withKeyPath: @"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
-												 options: nil];
+											 withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
+											 	 options: nil];
 					}
 				}
 			}
@@ -351,7 +351,7 @@
 				if([oPO  isKindOfClass: [FSArrayController class]])
 				{	binding="contentArray";
 				} else if([oPO isKindOfClass: [CPPopUpButton class]])
-				{	binding="integerValue";
+				{	binding="selectedTag";
 				}
 
 				[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options

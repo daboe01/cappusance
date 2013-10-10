@@ -34,7 +34,7 @@
 
 + (Class) platformObjectClass
 {
-  return [CPTableColumn class];
+  return [FSTableColumn class];
 }
 
 - (id) initPlatformObject: (id)platformObject
@@ -120,7 +120,6 @@
 	[platformObject setResizable: NO];
       }
   }
-  
   return platformObject;
 }
 
@@ -128,5 +127,93 @@
 {
   return [CPArray arrayWithObject: @"title"];
 }
+
+@end
+
+@implementation FSTableColumn:CPTableColumn
+
+- (void)_prepareDataView:(CPView)aDataView forRow:(unsigned)aRow
+{
+    var bindingsDictionary = [CPBinder allBindingsForObject:self],
+        keys = [bindingsDictionary allKeys];
+
+    for (var i = 0, count = [keys count]; i < count; i++)
+    {
+        var bindingName = keys[i],
+            bindingPath = [aDataView _replacementKeyPathForBinding:bindingName],
+            binding = [bindingsDictionary objectForKey:bindingName],
+            bindingInfo = binding._info,
+            destination = [bindingInfo objectForKey:CPObservedObjectKey],
+            keyPath = [bindingInfo objectForKey:CPObservedKeyPathKey],
+            dotIndex = keyPath.lastIndexOf("."),
+            value;
+
+        if (dotIndex === CPNotFound)
+            value = [[destination valueForKeyPath:keyPath] objectAtIndex:aRow];
+        else
+        {
+            /*
+                Optimize the prototypical use case where the key path describes a value
+                in an array. Without this optimization, we call CPArray's valueForKey
+                which generates as many values as objects in the array, of which we then
+                pick one and throw away the rest.
+
+                The optimization is to get the array and access the value directly. This
+                turns the operation into a single access regardless of how long the model
+                array is.
+            */
+
+            var firstPart = keyPath.substring(0, dotIndex),
+                secondPart = keyPath.substring(dotIndex + 1),
+                firstValue = [destination valueForKeyPath:firstPart];
+
+            if ([firstValue isKindOfClass:CPArray])
+                value = [[firstValue objectAtIndex:aRow] valueForKeyPath:secondPart];
+            else
+                value = [[firstValue valueForKeyPath:secondPart] objectAtIndex:aRow];
+        }
+
+        value = [binding transformValue:value withOptions:[bindingInfo objectForKey:CPOptionsKey]];
+       [aDataView setValue:value forKey: [aDataView isKindOfClass: [CPPopUpButton class] ]? @"selectedTag":@"objectValue"];
+    }
+}
+
+/*!
+    @ignore
+*/
+- (void)_reverseSetDataView:(CPView)aDataView forRow:(unsigned)aRow
+{
+    var bindingsDictionary = [CPBinder allBindingsForObject:self],
+        keys = [bindingsDictionary allKeys],
+        newValue = [aDataView valueForKey: [aDataView isKindOfClass: [CPPopUpButton class] ] ? @"selectedTag":@"objectValue"];
+
+    for (var i = 0, count = [keys count]; i < count; i++)
+    {
+        var bindingName = keys[i],
+            bindingPath = [aDataView _replacementKeyPathForBinding:bindingName],
+            binding = [bindingsDictionary objectForKey:bindingName],
+            bindingInfo = binding._info,
+            destination = [bindingInfo objectForKey:CPObservedObjectKey],
+            keyPath = [bindingInfo objectForKey:CPObservedKeyPathKey],
+            options = [bindingInfo objectForKey:CPOptionsKey],
+            dotIndex = keyPath.lastIndexOf(".");
+        newValue = [binding reverseTransformValue:newValue withOptions:options];
+
+        if (dotIndex === CPNotFound)
+            [[destination valueForKeyPath:keyPath] replaceObjectAtIndex:aRow withObject:newValue];
+        else
+        {
+            var firstPart = keyPath.substring(0, dotIndex),
+                secondPart = keyPath.substring(dotIndex + 1),
+                firstValue = [destination valueForKeyPath:firstPart];
+
+            if ([firstValue isKindOfClass:CPArray])
+                 [[firstValue objectAtIndex:aRow] setValue:newValue forKeyPath:secondPart];
+            else
+                 [[firstValue valueForKeyPath:secondPart] replaceObjectAtIndex:aRow withObject:newValue];
+        }
+    }
+}
+
 
 @end
