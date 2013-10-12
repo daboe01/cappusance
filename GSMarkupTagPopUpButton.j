@@ -162,6 +162,7 @@
 	}
 }
 
+// i have no idea, why we need this in case of selectedTag bindings
 -(void) setSelectedTag:(int) someValue
 {
 	[self selectItemWithTag: someValue];
