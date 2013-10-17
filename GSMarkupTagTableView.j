@@ -221,6 +221,13 @@
 
 @end
 
+@implementation CPObject(FSSortDescriptorAddition)
+- (CPComparisonResult)compareNumericallyTo: rhsObject 
+{	if (parseInt(self) < parseInt(rhsObject)) return CPOrderedAscending;
+	if (parseInt(self) > parseInt(rhsObject)) return CPOrderedDescending;
+	return CPOrderedSame;
+}
+@end
 
 @implementation GSMarkupTagSortDescriptor : GSMarkupTagObject
 + (CPString) tagName
@@ -233,6 +240,7 @@
 
 - (id) initPlatformObject: (id)platformObject
 {	platformObject=[CPSortDescriptor sortDescriptorWithKey: [self stringValueForAttribute:"key"] ascending: [self boolValueForAttribute:"ascending"]!=0 ];
+	if([self boolValueForAttribute:"numeric"]==1) platformObject._selector= @selector(compareNumericallyTo:);
 	return platformObject;
 }
 @end
