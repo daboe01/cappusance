@@ -140,6 +140,8 @@
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
 {
+// alert([[[CPBinder infoForBinding: "itemArray" forObject: self] objectForKey:CPOptionsKey] objectForKey: "Test"]);
+
 	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
@@ -153,8 +155,7 @@
 {	return [];	//<!> fixme
 }
 -(void)setTagArray:(CPArray) someArray
-{
-	var myCurrentArr=[self itemArray];
+{	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
 	for (j = 0; j < l1; j++)

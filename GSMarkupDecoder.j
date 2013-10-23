@@ -315,8 +315,16 @@
 
 				if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	if(itemsFace && valItemsFace)
-					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
-						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options:nil];
+					{	var myOptions=@{};
+						if(peek=[[o attributes] objectForKey:  "itemsPredicateLHS"])
+						{	[myOptions setObject: peek forKey: "itemsPredicateLHS"];
+						}
+						if(peek=[[o attributes] objectForKey:  "itemsPredicateRHS"])
+						{	[myOptions setObject: peek forKey: "itemsPredicateRHS"];
+						}
+					
+						[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options:  myOptions];
+						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options: myOptions];
 					}
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
 				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
@@ -333,7 +341,7 @@
 				var j, l1 = _content? _content.length:0;
 				for(j = 0; j < l1; j++)
 				{	var column = _content[j];
-					if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]])
+					if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]] && [column boolValueForAttribute: @"noAutobinding"] !== 1 )
 					{	[[column platformObject]	bind: CPValueBinding
 												toObject: target
 											 withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
