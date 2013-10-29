@@ -315,16 +315,8 @@
 
 				if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	if(itemsFace && valItemsFace)
-					{	var myOptions=@{};
-						if(peek=[[o attributes] objectForKey:  "itemsPredicateLHS"])
-						{	[myOptions setObject: peek forKey: "itemsPredicateLHS"];
-						}
-						if(peek=[[o attributes] objectForKey:  "itemsPredicateRHS"])
-						{	[myOptions setObject: peek forKey: "itemsPredicateRHS"];
-						}
-					
-						[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options:  myOptions];
-						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options: myOptions];
+					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options:  nil];
+						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options: nil];
 					}
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
 				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
