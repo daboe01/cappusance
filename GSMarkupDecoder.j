@@ -326,18 +326,21 @@
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
 
-			if ([oPO isKindOfClass: [CPTableView class] ])	// "unspecific" bindings for tableViews, where you do not want to connect the columns individually but through "identifier" property
+			if ([oPO isKindOfClass: [CPTableView class] ])
 			{	var target=[self _getObjectForIdString: peek];
-
-				var _content=[o content];
-				var j, l1 = _content? _content.length:0;
-				for(j = 0; j < l1; j++)
-				{	var column = _content[j];
-					if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]] && [column boolValueForAttribute: @"noAutobinding"] !== 1 )
-					{	[[column platformObject]	bind: CPValueBinding
-												toObject: target
-											 withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
-											 	 options: nil];
+				if([o boolValueForAttribute: "noColumnBinding"] == 1)
+				{	[oPO bind: "content" toObject: target withKeyPath: "arrangedObjects" options: nil ];
+				} else		// "explicit" bindings for tableView columns, where you do not want to connect the columns individually but through "identifier" property
+				{	var _content=[o content];
+					var j, l1 = _content? _content.length:0;
+					for(j = 0; j < l1; j++)
+					{	var column = _content[j];
+						if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]])
+						{	[[column platformObject]	bind: CPValueBinding
+													toObject: target
+												 withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
+													 options: nil];
+						}
 					}
 				}
 			}
