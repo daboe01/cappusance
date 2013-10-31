@@ -125,27 +125,6 @@
 
 
 @implementation FSPopUpButton:CPPopUpButton
-{	id _itemsPredicateTemplate @accessors(property=itemsPredicateTemplate);
-	id _itemsFilterKeyPath @accessors(property= itemsFilterKeyPath);
-}
-- (id)initWithCoder:(id)aCoder
-{
-    self=[super initWithCoder:aCoder];
-    if (self != nil)
-    {
-        [self setItemsPredicateTemplate:[aCoder decodeObjectForKey:"ItemsPredicateTemplate"]];
-        [self setItemsFilterKeyPath:[aCoder decodeObjectForKey:"ItemsFilterKeyPath"]];
-    }
-
-    return self;
-}
-
-- (void)encodeWithCoder:(id)aCoder
-{
-    [super encodeWithCoder:aCoder];
-    [aCoder encodeObject: _itemsPredicateTemplate forKey: "ItemsPredicateTemplate"];
-    [aCoder encodeObject: _itemsFilterKeyPath forKey: "ItemsFilterKeyPath"];
-}
 
 -(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
 {	var myCurrentArr=[self itemArray];
@@ -167,11 +146,48 @@
 }
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
-{	var myCurrentArr=[self itemArray];
+{	var info=[CPBinder infoForBinding: "itemArray" forObject: self];
+	var tagArray;
+	if(info)	// this stuff is to allow row-wise filtered popup-lists in table-views
+	{	var options= [info objectForKey: CPOptionsKey];
+		var predf=[options objectForKey: "PredicateFormat"];
+		var owner=[options objectForKey: "Owner"];
+		var ov=   owner;
+		var ac=   [info objectForKey: CPObservedObjectKey];
+		if (ov && predf)
+		{	var mykey=[info objectForKey: CPObservedKeyPathKey];
+			var dotIndex = mykey.lastIndexOf("."),
+			mykey=[mykey substringFromIndex: dotIndex+1];
+			var myvalkey=[options objectForKey: "valueFace"];
+			dotIndex = myvalkey.lastIndexOf("."),
+			myvalkey=[myvalkey substringFromIndex: dotIndex+1];
+			var rhkey;
+			var re = new RegExp("\\$([a-zA-Z0-9_]+)");
+			var m = re.exec(predf);
+			if(m) rhkey =m[1];
+			var filterValue=[ov valueForKeyPath: rhkey];
+			if(filterValue)
+			{	var sourceArray=[ac arrangedObjects];
+				var mypred  =[CPPredicate predicateWithFormat: predf ];
+				var substi  =[mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
+				sourceArray =[sourceArray filteredArrayUsingPredicate: substi];
+				someArray=[];
+				tagArray=[];
+	
+				var  i, l = [sourceArray count];
+				for (i = 0; i < l; i++)
+				{	someArray.push([[sourceArray objectAtIndex:i] valueForKey: mykey]);
+					tagArray.push([[sourceArray objectAtIndex:i] valueForKey: myvalkey]);
+				}
+			}
+		}
+	}
+	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
+		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
 	}
 	[self synchronizeTitleAndSelectedItem];
 }
