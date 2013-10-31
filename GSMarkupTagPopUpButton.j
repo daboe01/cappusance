@@ -168,13 +168,6 @@
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
 {
-	var binding= [CPBinder getBinding:"itemArray" forObject: self];
-	if(binding)
-	{	var bindingInfo = binding._info;
-		var destination = [bindingInfo objectForKey:CPObservedObjectKey];
-//alert(destination)
-	}
-
 	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
