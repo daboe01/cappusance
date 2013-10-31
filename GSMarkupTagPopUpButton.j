@@ -167,13 +167,11 @@
 }
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
-{
-	var myCurrentArr=[self itemArray];
+{	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
-//setRepresentedObject:
 	}
 	[self synchronizeTitleAndSelectedItem];
 }
