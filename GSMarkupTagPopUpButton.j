@@ -154,31 +154,32 @@
 		var owner=[options objectForKey: "Owner"];
 		var ov=   owner;
 		var ac=   [info objectForKey: CPObservedObjectKey];
-		if (ov && predf)
+		if (ov)
 		{	var mykey=[info objectForKey: CPObservedKeyPathKey];
 			var dotIndex = mykey.lastIndexOf("."),
 			mykey=[mykey substringFromIndex: dotIndex+1];
 			var myvalkey=[options objectForKey: "valueFace"];
 			dotIndex = myvalkey.lastIndexOf("."),
 			myvalkey=[myvalkey substringFromIndex: dotIndex+1];
-			var rhkey;
-			var re = new RegExp("\\$([a-zA-Z0-9_]+)");
-			var m = re.exec(predf);
-			if(m) rhkey =m[1];
-			var filterValue=[ov valueForKeyPath: rhkey];
-			if(filterValue)
-			{	var sourceArray=[ac arrangedObjects];
-				var mypred  =[CPPredicate predicateWithFormat: predf ];
-				var substi  =[mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
-				sourceArray =[sourceArray filteredArrayUsingPredicate: substi];
-				someArray=[];
-				tagArray=[];
-	
-				var  i, l = [sourceArray count];
-				for (i = 0; i < l; i++)
-				{	someArray.push([[sourceArray objectAtIndex:i] valueForKey: mykey]);
-					tagArray.push([[sourceArray objectAtIndex:i] valueForKey: myvalkey]);
-				}
+			var sourceArray=[ac arrangedObjects];
+			if(predf)
+			{	var rhkey;
+				var re = new RegExp("\\$([a-zA-Z0-9_]+)");
+				var m = re.exec(predf);
+				if(m) rhkey =m[1];
+				var filterValue;
+				if(rhkey) filterValue=[ov valueForKeyPath: rhkey];
+				var mypred = [CPPredicate predicateWithFormat: predf ];
+				if(filterValue) mypred = [mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
+				sourceArray =[sourceArray filteredArrayUsingPredicate: mypred];
+			}
+			someArray=[];
+			tagArray=[];
+
+			var  i, l = [sourceArray count];
+			for (i = 0; i < l; i++)
+			{	someArray.push([[sourceArray objectAtIndex:i] valueForKey: mykey]);
+				tagArray.push([[sourceArray objectAtIndex:i] valueForKey: myvalkey]);
 			}
 		}
 	}
