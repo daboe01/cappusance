@@ -115,7 +115,7 @@
 
 @end
 
-@implementation FSPopUpButton:CPPopUpButton
+@implementation CPPopUpButton(CappusanceAdditions)
 
 -(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
 {	var myCurrentArr=[self itemArray];
