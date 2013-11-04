@@ -75,7 +75,18 @@
 	[platformObject setAllowsColumnReordering: NO];
       }
   }
-  
+
+  /* hide selection */
+  {
+    var value = [self boolValueForAttribute: @"hideSelection"];
+
+    if (value == 1)
+      {
+	[platformObject setSelectionHighlightStyle: CPTableViewSelectionHighlightStyleNone];
+      }
+  }
+
+
   /* allowsColumnResizing */
   {
     var value = [self boolValueForAttribute: @"allowsColumnResizing"];
