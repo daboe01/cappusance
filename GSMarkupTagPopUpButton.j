@@ -81,7 +81,14 @@
 	}
       }
   }
-  
+  	var peek;
+	if(peek=[self stringValueForAttribute:  "itemsPredicate"])
+	{	[platformObject setItemsPredicateTemplate: peek];
+	}
+	if(peek=[self stringValueForAttribute:  "filterKeyPath"])
+	{	[platformObject setItemsFilterKeyPath: peek];
+	}
+
   /* pullsDown */
   {
     var pullsDown = [self boolValueForAttribute: @"pullsDown"];
