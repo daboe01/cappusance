@@ -174,17 +174,7 @@
         }
 
         value = [binding transformValue:value withOptions:[bindingInfo objectForKey:CPOptionsKey]];
-		[aDataView setValue:value forKey: [aDataView isKindOfClass: [CPPopUpButton class] ]? @"selectedTag":@"objectValue"];
-		if([aDataView isKindOfClass: [FSPopUpButton class]])
-		{
-			var predFormat = [aDataView itemsPredicateTemplate];
-			if(predFormat)
-			{	var rawValue= [[firstValue objectAtIndex:aRow] valueForKeyPath: [aDataView itemsFilterKeyPath] ];
-//alert([[aDataView itemArray][0] tag])
-				var someArray=[[aDataView itemArray] filteredArrayUsingPredicate: [CPPredicate predicateWithFormat: predFormat argumentArray: [rawValue] ]];
-				[aDataView setItemArray: someArray];
-			}
-		}
+       [aDataView setValue:value forKey: [aDataView isKindOfClass: [CPPopUpButton class] ]? @"selectedTag":@"objectValue"];
     }
 }
 

@@ -35,7 +35,7 @@
 
 + (Class) platformObjectClass
 {
-  return [FSPopUpButton class];
+  return [CPPopUpButton class];
 }
 
 - (id) initPlatformObject: (id)platformObject
@@ -81,14 +81,6 @@
 	}
       }
   }
-	var peek;
-	if(peek=[self stringValueForAttribute:  "itemsPredicate"])
-	{	[platformObject setItemsPredicateTemplate: peek];
-	}
-	if(peek=[self stringValueForAttribute:  "filterKeyPath"])
-	{	[platformObject setItemsFilterKeyPath: peek];
-	}
-
   
   /* pullsDown */
   {
@@ -124,28 +116,8 @@
 @end
 
 
-@implementation FSPopUpButton:CPPopUpButton
-{	id _itemsPredicateTemplate @accessors(property=itemsPredicateTemplate);
-	id _itemsFilterKeyPath @accessors(property= itemsFilterKeyPath);
-}
-- (id)initWithCoder:(id)aCoder
-{
-    self=[super initWithCoder:aCoder];
-    if (self != nil)
-    {
-        [self setItemsPredicateTemplate:[aCoder decodeObjectForKey:"ItemsPredicateTemplate"]];
-        [self setItemsFilterKeyPath:[aCoder decodeObjectForKey:"ItemsFilterKeyPath"]];
-    }
+@implementation CPPopUpButton(KVK4Items)
 
-    return self;
-}
-
-- (void)encodeWithCoder:(id)aCoder
-{
-    [super encodeWithCoder:aCoder];
-    [aCoder encodeObject: _itemsPredicateTemplate forKey: "ItemsPredicateTemplate"];
-    [aCoder encodeObject: _itemsFilterKeyPath forKey: "ItemsFilterKeyPath"];
-}
 
 -(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
 {	var myCurrentArr=[self itemArray];
@@ -168,19 +140,11 @@
 // itemArray part of standard API
 -(void)setItemArray:(CPArray) someArray
 {
-	var binding= [CPBinder getBinding:"itemArray" forObject: self];
-	if(binding)
-	{	var bindingInfo = binding._info;
-		var destination = [bindingInfo objectForKey:CPObservedObjectKey];
-//alert(destination)
-	}
-
 	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
-//setRepresentedObject:
 	}
 	[self synchronizeTitleAndSelectedItem];
 }
@@ -189,7 +153,8 @@
 {	return [];	//<!> fixme
 }
 -(void)setTagArray:(CPArray) someArray
-{	var myCurrentArr=[self itemArray];
+{
+	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
 	var  j, l1 = someArray.length;
 	for (j = 0; j < l1; j++)
