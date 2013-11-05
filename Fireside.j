@@ -36,16 +36,27 @@ var _allRelationships;
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
 }
-+(CPArray) relationshipsAffectedByProperty: aKey
++(CPArray) relationshipsWithTargetProperty: aKey
 {	var ret=[];
 	if(!_allRelationships) return ret;
 	var i,l=_allRelationships.length;
 	for(i=0;i<l;i++)
 	{	var r=_allRelationships[i];
-		if([r targetColumn] == aKey || [r bindingColumn] == aKey) [ret addObject: r];
+		if([r targetColumn] === aKey) [ret addObject: r];
 	}
 	return ret;
 }
++(CPArray) relationshipsWithSourceProperty: aKey
+{	var ret=[];
+	if(!_allRelationships) return ret;
+	var i,l=_allRelationships.length;
+	for(i=0;i<l;i++)
+	{	var r=_allRelationships[i];
+		if([r bindingColumn] === aKey) [ret addObject: r];
+	}
+	return ret;
+}
+
 +(void) _registerRelationship:(FSRelationship) someRel
 {	if(!_allRelationships) _allRelationships=[CPMutableArray new];
 	return [_allRelationships addObject: someRel];
@@ -348,7 +359,7 @@ FSRelationshipTypeFuzzy=2;
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
 		[[_entity store] writeChangesInObject: self];
-		var peekRels=[FSEntity relationshipsAffectedByProperty: aKey];
+		var peekRels=[FSEntity relationshipsWithTargetProperty: aKey];
 		if (peekRels) //if we write to a relationship key: update the target array forcing an update of the arraycontrollers
 		{	var i,l=peekRels.length;
 			for(i=0; i<l; i++)
@@ -357,12 +368,20 @@ FSRelationshipTypeFuzzy=2;
 				{	[rel _invalidateCache];
 					var affectedObject=[[rel source] objectWithPK: oldval];	// force updating the current selection in the arraycontrollers
 					var newValOfAffectedObject= [rel fetchObjectsForKey: oldval]
-					[self willChangeValueForKey: [rel name]];
 					[affectedObject willChangeValueForKey: [rel name]];
 					[affectedObject setValue: newValOfAffectedObject forKey: [rel name] ];
 					[affectedObject didChangeValueForKey: [rel name]];
-					[self didChangeValueForKey: [rel name]];
 				}
+			}
+		}
+		var peekRels=[FSEntity relationshipsWithSourceProperty: aKey];
+		if (peekRels)
+		{	var i,l=peekRels.length;
+			for(i=0; i<l; i++)
+			{	var rel = peekRels[i];
+				[rel _invalidateCache];
+				[self willChangeValueForKey: [rel name]];
+				[self didChangeValueForKey: [rel name]];
 			}
 		}
 	} else if(type == 1)
@@ -483,7 +502,7 @@ FSRelationshipTypeFuzzy=2;
 @end
 
 
-// does not (yet) work as espected for unknown reasons
+// does not (yet) work as expected (for unknown reasons)
 @implementation FSInMemoryStore : FSStore 
 {	var _store;
 }
@@ -506,7 +525,7 @@ FSRelationshipTypeFuzzy=2;
 	var ret=[];
 	var l=[arr count];
 	for(var i=0;i<l;i++)
-	{	if([arr[i] valueForKey: aKey]===someval) [ret addObject: arr[i]];
+	{	if([arr[i] valueForKey: aKey] === someval) [ret addObject: arr[i]];
 	}
 	return ret;
 }
