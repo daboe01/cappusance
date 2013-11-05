@@ -36,13 +36,13 @@ var _allRelationships;
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
 }
-+(CPArray) relationshipsWithTargetProperty: aKey
++(CPArray) relationshipsAffectedByProperty: aKey
 {	var ret=[];
 	if(!_allRelationships) return ret;
 	var i,l=_allRelationships.length;
 	for(i=0;i<l;i++)
 	{	var r=_allRelationships[i];
-		if([r targetColumn] == aKey) [ret addObject: r];
+		if([r targetColumn] == aKey || [r bindingColumn] == aKey) [ret addObject: r];
 	}
 	return ret;
 }
@@ -348,7 +348,7 @@ FSRelationshipTypeFuzzy=2;
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
 		[[_entity store] writeChangesInObject: self];
-		var peekRels=[FSEntity relationshipsWithTargetProperty: aKey];
+		var peekRels=[FSEntity relationshipsAffectedByProperty: aKey];
 		if (peekRels) //if we write to a relationship key: update the target array forcing an update of the arraycontrollers
 		{	var i,l=peekRels.length;
 			for(i=0; i<l; i++)
@@ -357,9 +357,11 @@ FSRelationshipTypeFuzzy=2;
 				{	[rel _invalidateCache];
 					var affectedObject=[[rel source] objectWithPK: oldval];	// force updating the current selection in the arraycontrollers
 					var newValOfAffectedObject= [rel fetchObjectsForKey: oldval]
+					[self willChangeValueForKey: [rel name]];
 					[affectedObject willChangeValueForKey: [rel name]];
 					[affectedObject setValue: newValOfAffectedObject forKey: [rel name] ];
 					[affectedObject didChangeValueForKey: [rel name]];
+					[self didChangeValueForKey: [rel name]];
 				}
 			}
 		}
