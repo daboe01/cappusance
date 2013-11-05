@@ -27,6 +27,9 @@
 {
   return @"relationship";
 }
+- (BOOL) runSynced
+{	return [self boolValueForAttribute:"runSynced"]==1;
+}
 -(CPString) name
 {	return [_attributes objectForKey: @"name"];
 }
@@ -41,10 +44,6 @@
 }
 -(BOOL) isToMany
 {	return [_attributes objectForKey: @"type"] === "toMany";
-}
-
-+ (Class) platformObjectClass
-{	return [FSRelationship class];
 }
 @end
 
@@ -84,6 +83,7 @@
 			if([v targetColumn]) [rel setTargetColumn: [v targetColumn] ];
 			if([v isToMany]) [rel  setType: FSRelationshipTypeToMany];
 			else [rel setType: FSRelationshipTypeToOne];
+			if([v runSynced]) [rel setRunSynced:YES];
 			[platformObject addRelationship: rel];
 		}
 	}

@@ -194,6 +194,7 @@ FSRelationshipTypeFuzzy=2;
 	CPString _targetColumn @accessors(setter=setTargetColumn:);
 	CPString _type @accessors(property=type);
 	var		 _target_cache;
+	var		 _runSynced @accessors(property=runSynced);
 }
 -(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
 {	self = [super init];
@@ -325,7 +326,7 @@ FSRelationshipTypeFuzzy=2;
 		{	isToMany=YES;
 			[myoptions setObject:"1" forKey:"FSFuzzySearch"];
 		}
-		if(!isToMany || runSynced) [myoptions setObject:"1" forKey:"FSSynchronous"];
+		if(!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
 		var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
 		if(isToMany)
 		{	var defaults=[CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn];
