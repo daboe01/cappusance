@@ -390,6 +390,19 @@ FSRelationshipTypeFuzzy=2;
 	}
 	else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
 }
+- (id)valueForKeyPath:(CPString)aKeyPath
+{
+    var firstDotIndex = aKeyPath.indexOf(".");
+
+    if (firstDotIndex === CPNotFound)
+        return [self valueForKey:aKeyPath];
+
+    var firstKeyComponent = aKeyPath.substring(0, firstDotIndex),
+        remainingKeyPath = aKeyPath.substring(firstDotIndex + 1),
+        value = [self valueForKey:firstKeyComponent synchronous: YES];
+
+    return [value valueForKeyPath:remainingKeyPath];
+}
 
 @end
 
