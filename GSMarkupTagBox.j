@@ -143,16 +143,11 @@
       if ([subview isKindOfClass: [CPView class]])
 	{
 	  var v= [GSMarkupBoxContentView new];
-	  [platformObject setAutoresizingMask: [subview autoresizingMask]];	//CPViewMinXMargin | CPViewMaxXMargin | CPViewMinYMargin | CPViewMaxYMargin  
-//<!> use boxEnclosingView:aView instead
-	  [v setAutoresizingMask: CPViewWidthSizable| CPViewHeightSizable];	// [subview autoresizingMask];
-	  [v addSubview: subview];
-      [platformObject setAutoresizesSubviews: NO];
-	  [platformObject setContentView: v];
-      [v sizeToFit];
-      [platformObject sizeToFit];
 
-      [platformObject setAutoresizesSubviews: YES];
+      [v setAutoresizesSubviews: YES];
+	  [platformObject setContentView: v];
+	  [v addSubview: subview];
+
 	}
     }
 
