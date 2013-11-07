@@ -34,5 +34,15 @@
 {
   return GSAutoLayoutAlignCenter;
 }
+@end
+
+@implementation GSAutoLayoutVSpace : GSAutoLayoutSpace
+
+/* An <hspace /> is a standard <space /> which does not expand
+ * in the vertical direction.  */
+- (GSAutoLayoutAlignment) autolayoutDefaultHorizontalAlignment
+{
+  return GSAutoLayoutAlignCenter;
+}
 
 @end
