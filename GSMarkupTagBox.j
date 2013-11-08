@@ -142,12 +142,10 @@
 					  platformObject];
       if ([subview isKindOfClass: [CPView class]])
 	{
-	  var v= [GSMarkupBoxContentView new];
-
-      [v setAutoresizesSubviews: YES];
-	  [platformObject setContentView: v];
-	  [v addSubview: subview];
-
+		var v= [GSMarkupBoxContentView new];
+		[v addSubview: subview];
+		[v sizeToFit];
+		[platformObject setContentView: v];
 	}
     }
 
