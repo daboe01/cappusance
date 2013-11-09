@@ -162,7 +162,7 @@
 			var sourceArray=[ac arrangedObjects];
 			if(predf)
 			{	var rhkey;
-				var re = new RegExp("\\$([a-zA-Z0-9_]+)");
+				var re = new RegExp("\\$([a-zA-Z0-9_\.]+)");
 				var m = re.exec(predf);
 				if(m) rhkey =m[1];
 				var filterValue;
