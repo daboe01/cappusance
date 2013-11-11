@@ -422,3 +422,37 @@
 
 @end
 
+@implementation GSMarkupTagSegmentedControl: GSMarkupTagControl
++ (CPString) tagName
+{
+  return @"segmentedControl";
+}
+
++ (Class) platformObjectClass
+{	return [CPSegmentedControl class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	[_attributes setObject: @"25" forKey: @"height"];
+	platformObject = [super initPlatformObject: platformObject];
+	var i, peek, count = [_content count];
+    [platformObject setSegmentCount: count];
+	for (i = 0; i < count; i++)
+	{	var item = [_content objectAtIndex: i];
+		var title = [item localizedStringValueForAttribute: @"title"];
+		if (title == nil) title = @"";
+    	[platformObject setLabel: title forSegment: i];
+		if(peek=[self intValueForAttribute:"width"]) [platformObject setWidth: peek forSegment:i];
+		if([item boolValueForAttribute:"selected"] == 1) [platformObject setSelected:YES forSegment:i];
+	}
+	return platformObject;
+}
+@end
+@implementation GSMarkupTagSegmentedControlItem: GSMarkupTagObject
++ (CPString) tagName
+{
+  return @"segmentedControlItem";
+}
+
+@end
+
