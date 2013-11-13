@@ -36,22 +36,22 @@ var _allRelationships;
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
 }
-+(CPArray) relationshipsWithTargetProperty: aKey
+-(CPArray) relationshipsWithTargetProperty: aKey
 {	var ret=[];
-	if(!_allRelationships) return ret;
-	var i,l=_allRelationships.length;
+	var rels=[_relations allObjects]
+	var i,l= rels.length;
 	for(i=0;i<l;i++)
-	{	var r=_allRelationships[i];
+	{	var r= rels[i];
 		if([r targetColumn] === aKey) [ret addObject: r];
 	}
 	return ret;
 }
-+(CPArray) relationshipsWithSourceProperty: aKey
+-(CPArray) relationshipsWithSourceProperty: aKey
 {	var ret=[];
-	if(!_allRelationships) return ret;
-	var i,l=_allRelationships.length;
+	var rels=[_relations allObjects]
+	var i,l= rels.length;
 	for(i=0;i<l;i++)
-	{	var r=_allRelationships[i];
+	{	var r= rels[i];
 		if([r bindingColumn] === aKey) [ret addObject: r];
 	}
 	return ret;
@@ -361,7 +361,7 @@ FSRelationshipTypeFuzzy=2;
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
 		[[_entity store] writeChangesInObject: self];
-		var peekRels=[FSEntity relationshipsWithTargetProperty: aKey];
+		var peekRels=[_entity relationshipsWithTargetProperty: aKey];
 		if (peekRels) //if we write to a relationship key: update the target array forcing an update of the arraycontrollers
 		{	var i,l=peekRels.length;
 			for(i=0; i<l; i++)
@@ -376,7 +376,7 @@ FSRelationshipTypeFuzzy=2;
 				}
 			}
 		}
-		var peekRels=[FSEntity relationshipsWithSourceProperty: aKey];
+		var peekRels=[_entity relationshipsWithSourceProperty: aKey];
 		if (peekRels)
 		{	var i,l=peekRels.length;
 			for(i=0; i<l; i++)
