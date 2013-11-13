@@ -162,7 +162,7 @@
 			var sourceArray=[ac arrangedObjects];
 			if(predf)
 			{	var rhkey;
-				var re = new RegExp("\\$([a-zA-Z0-9_\.]+)");
+				var re = new RegExp("\\$([a-zA-Z0-9_]+)");
 				var m = re.exec(predf);
 				if(m) rhkey =m[1];
 				var filterValue;
@@ -187,6 +187,9 @@
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
 		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
+	}
+	if(_value && _value>-1)
+	{	[self setSelectedTag:_value];
 	}
 	[self synchronizeTitleAndSelectedItem];
 }

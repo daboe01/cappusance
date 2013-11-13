@@ -259,7 +259,7 @@ FSRelationshipTypeFuzzy=2;
 	var i,l=[cols count];
 	for(i=0; i<l; i++)
     {	var aKey = [cols objectAtIndex:i];
-		if([_data objectForKey: aKey] != [tmpbj._data objectForKey: aKey])
+		if([_data objectForKey: aKey] !== [tmpbj._data objectForKey: aKey])
 		{	[self willChangeValueForKey:aKey];
 			[_data setObject: [tmpbj._data objectForKey: aKey] forKey: aKey];
 			[self didChangeValueForKey:aKey];
@@ -274,8 +274,9 @@ FSRelationshipTypeFuzzy=2;
     for(i=0; i<l; i++)
     {	var propName = cols[i];
 		[_data setObject: o[propName] forKey:propName];
-    }
+   }
 }
+
 -(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
 {	if(!_formatters) _formatters=[CPMutableDictionary new];
 	[_formatters setObject:aFormatter forKey: aName];
@@ -447,10 +448,11 @@ FSRelationshipTypeFuzzy=2;
 		{	var pk=j[i][[someEntity pk]];
 			var peek;
 			if (peek=[someEntity _registeredObjectForPK: pk])	// enforce singleton pattern
-			{	[a addObject:peek]; 
+			{	[a addObject:peek];
+
 			} else
 			{	var t=[[FSObject alloc] initWithEntity: someEntity];
-				[t _setDataFromJSONObject: j[i]];
+				[t _setDataFromJSONObject: j[i] ];
 				[someEntity _registerObjectInPKCache: t];
 				[a addObject:t];
 			}
@@ -484,13 +486,14 @@ FSRelationshipTypeFuzzy=2;
 }
 
 -(void) writeChangesInObject: (id) obj
-{	if([[obj entity] pk] === undefined) return;
+{	var mypk=[obj valueForKey: [[obj entity] pk]];
+	if([[obj entity] pk] === undefined) return;
 	if(!obj._changes) return;
-	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
+	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: mypk inEntity:[obj entity]];
     [request setHTTPMethod:"PUT"];
 	[request setHTTPBody: [obj._changes toJSON] ];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
-	// <!> fixme refetch+ clear _changes
+	[obj reload];
 }
 
 -(void) insertObject: someObj 
