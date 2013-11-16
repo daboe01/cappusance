@@ -26,10 +26,10 @@
 @import <AppKit/CPTableView.j>
 @import "GSMarkupTagControl.j"
 
-@implementation CPTableView(MarkupCompat)
--(void) sizeToFit
-{
-}
+@implementation FSTableView: CPTableView
+
+-(void) sizeToFit{}
+
 @end
 
 @implementation GSMarkupTagTableView: GSMarkupTagControl
@@ -42,7 +42,7 @@
 
 + (Class) platformObjectClass
 {
-  return [CPTableView class];
+  return [FSTableView class];
 }
 
 - (id) initPlatformObject: (id)platformObject

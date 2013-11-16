@@ -2,6 +2,16 @@
 @import <Foundation/CPObject.j>
 @import <Foundation/CPMutableArray.j>
 
+@implementation CPArray (KeyValueObservingFix)
+- (void)addObserver:(id)anObserver forKeyPath:(CPString)aKeyPath options:(CPKeyValueObservingOptions)anOptions context:(id)aContext
+{	// do not raise because we know...
+}
+- (void)removeObserver:(id)anObserver forKeyPath:(CPString)aKeyPath
+{	// do not raise because we know...
+}
+
+@end
+
 @implementation FSMutableArray : CPMutableArray
 {	id _entity @accessors(property=entity);
     id _proxyObject;
