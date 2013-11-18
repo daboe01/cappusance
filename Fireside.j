@@ -9,6 +9,9 @@
 @import <Foundation/CPDictionary.j>
 @import "FSMutableArray.j"
 
+@implementation CPNull(FSFix)
+-stringValue{return "null"}
+@end
 @implementation CPArray(AllObjects)
 -(CPArray) allObjects {return self;}
 @end
