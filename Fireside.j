@@ -255,6 +255,7 @@ FSRelationshipTypeFuzzy=2;
 {	var mypk=[self valueForKey: [[self entity] pk] synchronous:YES];
 	if([self entity]._pkcache)   [self entity]._pkcache[mypk]=undefined;
 	var tmpbj= [[self entity] objectWithPK: mypk];
+	if(!tmpbj) return;
 	var cols=[tmpbj._data allKeys];
 	var i,l=[cols count];
 	for(i=0; i<l; i++)
