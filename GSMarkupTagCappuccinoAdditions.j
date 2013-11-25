@@ -442,6 +442,7 @@
 		var title = [item localizedStringValueForAttribute: @"title"];
 		if (title == nil) title = @"";
     	[platformObject setLabel: title forSegment: i];
+    	[platformObject setTag: [item intValueForAttribute: @"tag"] forSegment: i];
 		if(peek=[self intValueForAttribute:"width"]) [platformObject setWidth: peek forSegment:i];
 		if([item boolValueForAttribute:"selected"] == 1) [platformObject setSelected:YES forSegment:i];
 	}
