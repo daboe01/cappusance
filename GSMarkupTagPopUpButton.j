@@ -188,8 +188,10 @@
 	{	[myCurrentArr[j] setTitle: someArray[j]];
 		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
 	}
-	if(_value && _value>-1)
-	{	[self setSelectedTag:_value];
+	if(_value)
+	{	[self setSelectedTag: parseInt(_value)];
+	} else
+	{	[self setSelectedTag:-1];
 	}
 	[self synchronizeTitleAndSelectedItem];
 }
