@@ -150,35 +150,34 @@
 	{	var options= [info objectForKey: CPOptionsKey];
 		var predf=[options objectForKey: "PredicateFormat"];
 		var owner=[options objectForKey: "Owner"];
-		var ov=   owner;
 		var ac=   [info objectForKey: CPObservedObjectKey];
-		if (ov)
-		{	var mykey=[info objectForKey: CPObservedKeyPathKey];
-			var dotIndex = mykey.lastIndexOf("."),
-			mykey=[mykey substringFromIndex: dotIndex+1];
-			var myvalkey=[options objectForKey: "valueFace"];
-			dotIndex = myvalkey.lastIndexOf("."),
+		var mykey=[info objectForKey: CPObservedKeyPathKey];
+		var dotIndex = mykey.lastIndexOf("."),
+		mykey=[mykey substringFromIndex: dotIndex+1];
+		var myvalkey=[options objectForKey: "valueFace"];
+		if(myvalkey)
+		{	dotIndex = myvalkey.lastIndexOf("."),
 			myvalkey=[myvalkey substringFromIndex: dotIndex+1];
-			var sourceArray=[ac arrangedObjects];
-			if(predf)
-			{	var rhkey;
-				var re = new RegExp("\\$([a-zA-Z0-9_]+)");
-				var m = re.exec(predf);
-				if(m) rhkey =m[1];
-				var filterValue;
-				if(rhkey) filterValue=[ov valueForKeyPath: rhkey];
-				var mypred = [CPPredicate predicateWithFormat: predf ];
-				if(filterValue) mypred = [mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
-				sourceArray =[sourceArray filteredArrayUsingPredicate: mypred];
-			}
-			someArray=[];
-			tagArray=[];
+		}
+		var sourceArray=[ac arrangedObjects];
+		if(predf)
+		{	var rhkey;
+			var re = new RegExp("\\$([a-zA-Z0-9_]+)");
+			var m = re.exec(predf);
+			if(m) rhkey =m[1];
+			var filterValue;
+			if(rhkey) filterValue=[owner valueForKeyPath: rhkey];
+			var mypred = [CPPredicate predicateWithFormat: predf ];
+			if(filterValue) mypred = [mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
+			sourceArray =[sourceArray filteredArrayUsingPredicate: mypred];
+		}
+		someArray=[];
+		tagArray=[];
 
-			var  i, l = [sourceArray count];
-			for (i = 0; i < l; i++)
-			{	someArray.push([[sourceArray objectAtIndex:i] valueForKey: mykey]);
-				tagArray.push([[sourceArray objectAtIndex:i] valueForKey: myvalkey]);
-			}
+		var  i, l = [sourceArray count];
+		for (i = 0; i < l; i++)
+		{	someArray.push([[sourceArray objectAtIndex:i] valueForKey: mykey]);
+			if(myvalkey) tagArray.push([[sourceArray objectAtIndex:i] valueForKey: myvalkey]);
 		}
 	}
 	var myCurrentArr=[self itemArray];
