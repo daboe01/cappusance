@@ -35,7 +35,7 @@
 
 + (Class) platformObjectClass
 {
-  return [CPPopUpButton class];
+  return [FSPopUpButton class];
 }
 
 - (id) initPlatformObject: (id)platformObject
@@ -122,7 +122,7 @@
 
 @end
 
-@implementation CPPopUpButton(CappusanceAdditions)
+@implementation FSPopUpButton:CPPopUpButton
 
 -(void) _consolidateItemArrayLengthToArray:(CPArray) someArray
 {	var myCurrentArr=[self itemArray];
@@ -176,46 +176,30 @@
 
 		var  i, l = [sourceArray count];
 		for (i = 0; i < l; i++)
-		{	someArray.push([[sourceArray objectAtIndex:i] valueForKey: mykey]);
-			if(myvalkey) tagArray.push([[sourceArray objectAtIndex:i] valueForKey: myvalkey]);
+		{	var curr_obj= [sourceArray objectAtIndex:i];
+			someArray.push([curr_obj valueForKey: mykey]);
+			if(myvalkey) tagArray.push([curr_obj valueForKey: myvalkey]);
 		}
 	}
-	var myCurrentArr=[self itemArray];
 	[self _consolidateItemArrayLengthToArray: someArray];
+	var myCurrentArr=[self itemArray];
 	var  j, l1 = someArray.length;
+
 	for (j = 0; j < l1; j++)
 	{	[myCurrentArr[j] setTitle: someArray[j]];
 		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
 	}
 	if(_value)
-	{	[self setSelectedTag: parseInt(_value)];
+	{	[self selectItemWithTag: parseInt(+_value, 10)];
 	} else
-	{	[self setSelectedTag:-1];
+	{	[self selectItemWithTag:-1];
 	}
 	[self synchronizeTitleAndSelectedItem];
 }
 
--(CPArray)tagArray
-{	return [];	//<!> fixme
+-(void) selectItemWithTag:(int) someValue
+{	_value= parseInt(+someValue, 10);
+	[super selectItemWithTag: _value];
 }
--(void)setTagArray:(CPArray) someArray
-{
-	var myCurrentArr=[self itemArray];
-	[self _consolidateItemArrayLengthToArray: someArray];
-	var  j, l1 = someArray.length;
-	for (j = 0; j < l1; j++)
-	{	[myCurrentArr[j] setTag: someArray[j]];
-	}
-}
-
-// i have no idea, why we need this in case of selectedTag bindings
--(void) setSelectedTag:(int) someValue
-{
-	[self selectItemWithTag: someValue];
-}
--(int) selectedTag
-{	return [[self selectedItem] tag];
-}
-
 @end
 

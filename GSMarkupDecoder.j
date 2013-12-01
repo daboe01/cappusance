@@ -315,8 +315,7 @@
 
 				if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	if(itemsFace && valItemsFace)
-					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options:  nil];
-						[oPO bind:"tagArray"  toObject: arrCtrl withKeyPath: "arrangedObjects."+valItemsFace options: nil];
+					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options: @{"valueFace": valItemsFace}];
 					}
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
 				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
