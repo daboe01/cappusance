@@ -190,7 +190,7 @@
 		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
 	}
 	if(_value)
-	{	[self selectItemWithTag: parseInt(+_value, 10)];
+	{	[self selectItemWithTag: _value];
 	} else
 	{	[self selectItemWithTag:-1];
 	}
@@ -198,7 +198,7 @@
 }
 
 -(void) selectItemWithTag:(int) someValue
-{	_value= parseInt(+someValue, 10);
+{	_value=someValue;
 	[super selectItemWithTag: _value];
 }
 
