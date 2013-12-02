@@ -201,5 +201,13 @@
 {	_value= parseInt(+someValue, 10);
 	[super selectItemWithTag: _value];
 }
+
+-(int) selectedTag
+{	return [[self selectedItem] tag];
+}
+-(int) setSelectedTag: aTag
+{	[self selectItemWithTag: aTag];
+}
+
 @end
 
