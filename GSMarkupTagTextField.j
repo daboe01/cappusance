@@ -175,6 +175,9 @@
 - (id) initPlatformObject: (id)platformObject
 {
 	platformObject = [super initPlatformObject: platformObject];
+	if([self boolValueForAttribute: @"completes"]===1)
+	{	[platformObject setCompletes:YES];
+	}
 
 	return platformObject;
 }

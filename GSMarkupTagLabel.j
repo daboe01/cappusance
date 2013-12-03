@@ -25,6 +25,11 @@
 */
 @import "GSMarkupTagView.j"
 
+@implementation FSLabel:CPTextField
+-(BOOL)acceptsFirstResponder
+{	return NO;
+}
+@end
 
 
 @implementation GSMarkupTagLabel:GSMarkupTagView
@@ -35,7 +40,7 @@
 
 + (Class) platformObjectClass
 {
-  return [CPTextField class];
+  return [FSLabel class];
 }
 
 - (id) initPlatformObject: (id)platformObject
