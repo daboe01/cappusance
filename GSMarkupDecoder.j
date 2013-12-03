@@ -356,8 +356,9 @@
 				} else if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	binding="selectedTag";
 				}
-
-				[oPO bind: binding toObject: target withKeyPath: keyValuePath options: nil ];	// options
+				var options=nil;
+				if([[o attributes] objectForKey: "continuousBinding"]==="YES") options=@{CPContinuouslyUpdatesValueBindingOption:YES};
+				[oPO bind: binding toObject: target withKeyPath: keyValuePath options: options ];
 				if([oPO isKindOfClass: [CPCollectionView class]])
 				{
 					if (r.location != CPNotFound)
