@@ -41,7 +41,8 @@ var _allRelationships;
 }
 -(CPArray) relationshipsWithTargetProperty: aKey
 {	var ret=[];
-	var rels=[_relations allObjects]
+	var rels=[_relations allObjects];
+	if(!rels) return [];
 	var i,l= rels.length;
 	for(i=0;i<l;i++)
 	{	var r= rels[i];
@@ -52,6 +53,7 @@ var _allRelationships;
 -(CPArray) relationshipsWithSourceProperty: aKey
 {	var ret=[];
 	var rels=[_relations allObjects]
+	if(!rels) return [];
 	var i,l= rels.length;
 	for(i=0;i<l;i++)
 	{	var r= rels[i];
@@ -163,7 +165,7 @@ var _allRelationships;
 
 -(void) _registerObjectInPKCache:(id) someObj
 {	if(!_pkcache) _pkcache=[CPMutableArray new];
-	_pkcache[[someObj valueForKey:_pk]]=someObj;
+	if(_pk) _pkcache[[someObj valueForKey:_pk]]=someObj;
 }
 -(void) _registeredObjectForPK:(id) somePK
 {	if(!_pkcache) return nil;

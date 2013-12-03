@@ -198,7 +198,7 @@
 }
 
 -(void) selectItemWithTag:(int) someValue
-{	_value=someValue;
+{	_value= someValue;
 	[super selectItemWithTag: _value];
 }
 

@@ -318,7 +318,7 @@
 					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options: @{"valueFace": valItemsFace}];
 					}
 				} else if([oPO isKindOfClass: [CPComboBox class] ])
-				{	[oPO bind:CPContentBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
+				{	[oPO bind: CPContentValuesBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
 				}
 			}
 		}
