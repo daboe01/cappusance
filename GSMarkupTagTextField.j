@@ -184,4 +184,32 @@
 
 @end
 
+@implementation GSMarkupTagSearchField: GSMarkupTagTextField
++ (CPString) tagName
+{
+	return @"searchField";
+}
+
++ (Class) platformObjectClass
+{
+	return [CPSearchField class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{
+	platformObject = [super initPlatformObject: platformObject];
+  /* autosaveName */
+    var autosaveName = [_attributes objectForKey: @"autosaveName"];
+    if (autosaveName != nil) [platformObject setRecentsAutosaveName: autosaveName];
+
+	return platformObject;
+}
+- (id) postInitPlatformObject: (id)platformObject
+{
+	platformObject = [super postInitPlatformObject: platformObject];
+	[platformObject _init];
+	return platformObject;
+}
+
+@end
 
