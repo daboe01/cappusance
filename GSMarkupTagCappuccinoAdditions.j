@@ -210,6 +210,7 @@
 @import <AppKit/CPCollectionView.j>
 
 @implementation CPCollectionView(KVB)
+
 -(void) setObjectValue: someArray
 {	[self setContent: someArray];
 }
