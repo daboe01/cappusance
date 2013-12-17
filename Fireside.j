@@ -2,7 +2,6 @@
  * Fireside: yet another restful ORM mapper for cappuccino
  * ToDo:
  *  catch write conflicts as in original EOF.
- *	make FSEntity return asynchronous FSMutableArrays
  */
 
 @import <Foundation/CPObject.j>
