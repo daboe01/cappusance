@@ -30,6 +30,22 @@
 
 -(void) sizeToFit{}
 
+-(void) reloadData{
+	var progres=[CPProgressIndicator new];
+	[progres setStyle:CPProgressIndicatorSpinningStyle];
+	var frame=[self frame];
+	frame.origin.x=frame.size.width/2-32;
+	frame.origin.y=frame.size.height/2;
+	frame.size.width=64;
+	frame.size.height=64;
+	[progres setFrame: frame];
+	[self addSubview: progres];
+	[progres startAnimation:self];
+	[super reloadData];
+	[progres stopAnimation:self];
+	[progres removeFromSuperview];
+}
+
 @end
 
 @implementation GSMarkupTagTableView: GSMarkupTagControl
