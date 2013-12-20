@@ -210,7 +210,6 @@
 @import <AppKit/CPCollectionView.j>
 
 @implementation CPCollectionView(KVB)
-
 -(void) setObjectValue: someArray
 {	[self setContent: someArray];
 }
@@ -268,7 +267,7 @@
 	var protoClass=CPClassFromString([self stringValueForAttribute:"itemsClassName"]);
 	if(!protoClass) protoClass=[CPCollectionViewItem class];
 	var proto=[protoClass new];
-	[platformObject setItemPrototype: proto];
+	[platformObject setItemPrototype: proto];
 	return platformObject;
 }
 

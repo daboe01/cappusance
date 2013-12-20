@@ -486,7 +486,10 @@ FSRelationshipTypeFuzzy=2;
 	else request=[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	var a=nil;
 	if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"])))
-		a=[[FSMutableArray alloc] initWithArray: [] ofEntity: someEntity];
+	{	a=[[FSMutableArray alloc] initWithArray: [] ofEntity: someEntity];
+		if(someEntity.__ACForSpinner && someEntity.__ACForSpinner.__tableViewForSpinner)
+			[someEntity.__ACForSpinner.__tableViewForSpinner _startAnimation: self];
+	}
 	return [self fetchObjectsForURLRequest: request inEntity: someEntity requestDelegate: a];
 }
 

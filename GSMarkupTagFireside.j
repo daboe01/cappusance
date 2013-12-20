@@ -94,6 +94,7 @@
 
 @end
 
+
 @implementation FSArrayController: CPArrayController
 {	id _entity @accessors(property=entity);
 	id _defaultDict;
@@ -102,7 +103,10 @@
 {	return [_entity pk];
 
 }
-
+-(void) setEntity: anEntity
+{	_entity=anEntity;
+	_entity.__ACForSpinner=self;
+}
 -(void) selectObjectWithPK: myPk
 {	var o= [_entity objectWithPK: myPk];
 	[self setSelectedObjects: [o] ];
@@ -116,8 +120,7 @@
 {	return [_entity createObjectWithDictionary: _defaultDict];
 }
 - (void)setContent:(id)value
-{
-	if(!value || (value.hasOwnProperty('_proxyObject') && ![value._proxyObject isKindOfClass:[CPArray class]]))
+{	if(!value || (value.hasOwnProperty('_proxyObject') && ![value._proxyObject isKindOfClass:[CPArray class]]))
 	{	value= [_entity _arrayForArray: [] withDefaults: _defaultDict ];
 	}
 

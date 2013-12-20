@@ -26,25 +26,34 @@
 @import <AppKit/CPTableView.j>
 @import "GSMarkupTagControl.j"
 
+
 @implementation FSTableView: CPTableView
 
--(void) sizeToFit{}
-
--(void) reloadData{
-	var progres=[CPProgressIndicator new];
-	[progres setStyle:CPProgressIndicatorSpinningStyle];
-	var frame=[self frame];
-	frame.origin.x=frame.size.width/2-32;
-	frame.origin.y=frame.size.height/2;
-	frame.size.width=64;
-	frame.size.height=64;
-	[progres setFrame: frame];
-	[self addSubview: progres];
-	[progres startAnimation:self];
-	[super reloadData];
-	[progres stopAnimation:self];
-	[progres removeFromSuperview];
+-(void) _startAnimation:sender
+{	if(!self._spinner)
+	{	var progres=[CPProgressIndicator new];
+		[progres setStyle:CPProgressIndicatorSpinningStyle];
+		var frame=[_superview frame];
+		frame.origin.x=frame.size.width/2-32;
+		frame.origin.y=frame.size.height/2;
+		frame.size.width=64;
+		frame.size.height=64;
+		[progres setFrame: frame];
+		[self addSubview: progres];
+		self._spinner=progres;
+		[progres startAnimation:self];
+	}
 }
+-(void) _stopAnimation:sender
+{	var progres=self._spinner;
+	if(progres)
+	{	[progres stopAnimation:self];
+		[progres removeFromSuperview];
+		self._spinner=nil;
+	}
+}
+
+-(void) sizeToFit{}
 
 @end
 
