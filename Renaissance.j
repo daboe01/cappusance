@@ -32,6 +32,7 @@
 @import <Renaissance/GSMarkupTagVbox.j>
 @import <Renaissance/GSMarkupTagControl.j>
 @import <Renaissance/GSMarkupTagTextField.j>
+@import <Renaissance/GSMarkupTagTextView.j>
 @import <Renaissance/GSMarkupTagScrollView.j>
 @import <Renaissance/GSMarkupTagSlider.j>
 @import <Renaissance/GSMarkupTagImage.j>
