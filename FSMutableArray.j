@@ -252,7 +252,8 @@
 	if(_kvoKey&& _kvoOwner) [_kvoOwner willChangeValueForKey: _kvoKey];
 	[self _setRepresentedObject: a];
 	if(_kvoKey&& _kvoOwner) [_kvoOwner didChangeValueForKey: _kvoKey];
-	if(_entity.__ACForSpinner && _kvoOwner._entity.__ACForSpinner.__tableViewForSpinner)
+
+	if(_entity.__ACForSpinner && _entity.__ACForSpinner.__tableViewForSpinner)
 		[_entity.__ACForSpinner.__tableViewForSpinner _stopAnimation: self];
 }
 
