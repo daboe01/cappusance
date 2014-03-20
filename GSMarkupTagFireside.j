@@ -141,19 +141,19 @@
 - (void)insertObject:(id)anObject atArrangedObjectIndex:(int)anIndex
 {	[super insertObject: anObject atArrangedObjectIndex:MAX(0,anIndex)];
 }
+
 -(void) reload
 {
-	[self willChangeValueForKey:"content"];
 	[_entity._relations makeObjectsPerformSelector:@selector(_invalidateCache)];
-	[self didChangeValueForKey:"content"];
+    	[[binderClass getBinding:@"arrangedObjects" forObject:self] setValueFor:@"arrangedObjects"];
 }
-
+/*
 -(void) reloadAndSelectPK: aPK
 {
 	[self reload];
 	[self selectObjectWithPK: aPK];
 }
-
+*/
 @end
 
 @implementation GSMarkupArrayController: GSMarkupTagObject
