@@ -136,9 +136,22 @@
 
 	[super addObject: anObject];
 }
+
 //<!> fixes an issue when adding to an empty arraycontroller
 - (void)insertObject:(id)anObject atArrangedObjectIndex:(int)anIndex
 {	[super insertObject: anObject atArrangedObjectIndex:MAX(0,anIndex)];
+}
+-(void) reload
+{
+	[self willChangeValueForKey:"content"];
+	[_entity._relations makeObjectsPerformSelector:@selector(_invalidateCache)];
+	[self didChangeValueForKey:"content"];
+}
+
+-(void) reloadAndSelectPK: aPK
+{
+	[self reload];
+	[self selectObjectWithPK: aPK];
 }
 
 @end
