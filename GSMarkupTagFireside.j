@@ -144,8 +144,8 @@
 
 -(void) reload
 {
-	[_entity._relations makeObjectsPerformSelector:@selector(_invalidateCache)];
-    	[[binderClass getBinding:@"arrangedObjects" forObject:self] setValueFor:@"arrangedObjects"];
+	[[FSRelationship relationshipsWithTargetEntity:_entity] makeObjectsPerformSelector:@selector(_invalidateCache)];
+    [[[[self class] _binderClassForBinding:@"contentArray"] getBinding:@"contentArray" forObject:self] setValueFor:@"contentArray"];
 }
 /*
 -(void) reloadAndSelectPK: aPK

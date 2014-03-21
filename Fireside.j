@@ -9,7 +9,7 @@
 @import "FSMutableArray.j"
 
 @implementation CPNull(FSFix)
--stringValue{return "null"}
+-stringValue{return "NULL"}
 @end
 @implementation CPArray(AllObjects)
 -(CPArray) allObjects {return self;}
@@ -20,15 +20,16 @@
 {	var keys=[self allKeys];
 	var i,l=keys.length;
 	var o={};
+	var nullobj=[CPNull null]
 	for(i=0;i<l;i++)
 	{	var key=keys[i];
-		o[key]=[self objectForKey:key];
+		var peek=[self objectForKey:key];
+		o[key]=peek === nullobj? 'NULL': peek;
 	}
 	return JSON.stringify(o);
 }
 @end
 
-var _allRelationships;
 @implementation FSEntity : CPObject 
 {	CPString	_name @accessors(property=name);
 	CPString	_pk @accessors(property=pk);
@@ -61,10 +62,6 @@ var _allRelationships;
 	return ret;
 }
 
-+(void) _registerRelationship:(FSRelationship) someRel
-{	if(!_allRelationships) _allRelationships=[CPMutableArray new];
-	return [_allRelationships addObject: someRel];
-}
 - _arrayForArray: results withDefaults: someDefaults
 {	var r=[[FSMutableArray alloc] initWithArray: results ofEntity: self];
 	[r setDefaults: someDefaults];
@@ -190,6 +187,8 @@ FSRelationshipTypeToOne=0;
 FSRelationshipTypeToMany=1;
 FSRelationshipTypeFuzzy=2;
 
+var _allRelationships;
+
 @implementation FSRelationship : CPObject 
 {	CPString _name @accessors(property=name);
 	FSEntity _source @accessors(property=source);
@@ -208,7 +207,9 @@ FSRelationshipTypeFuzzy=2;
 		_source = someSource;
 		_type	= FSRelationshipTypeToOne;
     }
-	[FSEntity _registerRelationship:self];
+
+	if(!_allRelationships) _allRelationships=[];
+	_allRelationships.push(self);
     return self;
 
 }
@@ -237,6 +238,17 @@ FSRelationshipTypeFuzzy=2;
 {	_target_cache=[];
 	[_target _invalidatePKCache];
 }
+
++(CPArray) relationshipsWithTargetEntity:(FSEntity) anEntity
+{	var ret=[];
+	var i,l= _allRelationships.length;
+	for(i=0;i<l;i++)
+	{	var r= _allRelationships[i];
+		if(r._target === anEntity) ret.push(r);
+	}
+	return ret;
+}
+
 @end
 
 
