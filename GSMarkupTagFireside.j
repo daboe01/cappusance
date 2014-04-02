@@ -129,6 +129,15 @@
 	}
 	[super setContent: value];
 }
+-(BOOL)hasSelection
+{   return [[self selectedObjects] count] > 0;
+}
+-(BOOL)hasSingleRowSelection
+{   return [[self selectedObjects] count] == 1;
+}
+-(BOOL)hasTwoRowsSelected
+{   return [[self selectedObjects] count] == 2;
+}
 
 -(void) addObject: anObject
 {	if(![anObject isKindOfClass: [FSObject class] ] )
@@ -147,13 +156,6 @@
 	[[FSRelationship relationshipsWithTargetEntity:_entity] makeObjectsPerformSelector:@selector(_invalidateCache)];
     [[[[self class] _binderClassForBinding:@"contentArray"] getBinding:@"contentArray" forObject:self] setValueFor:@"contentArray"];
 }
-/*
--(void) reloadAndSelectPK: aPK
-{
-	[self reload];
-	[self selectObjectWithPK: aPK];
-}
-*/
 @end
 
 @implementation GSMarkupArrayController: GSMarkupTagObject

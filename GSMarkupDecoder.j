@@ -190,7 +190,7 @@
 			if (container !== _connectors && (  key === 'delegate' || [value hasPrefix: @"#"]) )
 			{	if(container === _entites)
 				{	[attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
-				} else if(key !== 'itemsBinding' && key !== 'valueBinding')	// bindings will be processed elsewhere
+				} else if(key !== 'itemsBinding' && key !== 'valueBinding' && key !== 'enabledBinding')	// bindings will be processed elsewhere
 				{	var outlet;	// GSMarkupOutletConnector
 
 					/* We pass the value unchanged to the outlet.  If
@@ -373,6 +373,16 @@
 				}
 			}
 		}
+        if (peek=[[o attributes] objectForKey: "enabledBinding"])
+		{	var r = [peek rangeOfString: @"."];
+            var objectName = [peek substringToIndex: r.location];
+            var target = [self _getObjectForIdString: objectName];
+            var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
+            var binding=CPEnabledBinding;
+			var options=nil;
+			[oPO bind: binding toObject: target withKeyPath: keyValuePath options: options ];
+
+        }
 		if (peek=[[o attributes] objectForKey: "filterPredicate"])
 		{	if( [oPO isKindOfClass: [FSArrayController class]])
 			{	[oPO setClearsFilterPredicateOnInsertion:NO];
