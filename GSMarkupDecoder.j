@@ -340,7 +340,7 @@
 													toObject: target
 												 withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
 													 options: nil];
-							target.__tableViewForSpinner=[[column platformObject] tableView];
+							if(target) target.__tableViewForSpinner=[[column platformObject] tableView];
 						}
 					}
 				}
