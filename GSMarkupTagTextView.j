@@ -1,4 +1,31 @@
+@import <CPTextView/CPTextView.j>
 
+
+@implementation KVOCPText:CPTextView
+- (CPString)objectValue
+{
+    return [self string];
+}
+- (void)setObjectValue:(CPString)aString
+{	[self setString:aString];
+}
+
+- (void) didChangeText
+{
+    [self _continuouslyReverseSetBinding];
+	[super didChangeText];
+}
+- (void) didChangeText
+{
+    [self _continuouslyReverseSetBinding];
+	[super didChangeText];
+}
+- (BOOL) resignFirstResponder
+{
+    [self _reverseSetBinding];
+	return [super resignFirstResponder];
+}
+@end
 
 @implementation GSMarkupTagTextView: GSMarkupTagView
 + (CPString) tagName
@@ -8,7 +35,7 @@
 
 + (Class) platformObjectClass
 {
-  return [CPTextView class];
+  return [KVOCPText class];
 }
 
 - (id) initPlatformObject: (id)platformObject
@@ -146,3 +173,4 @@
 }
 
 @end
+
