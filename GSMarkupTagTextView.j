@@ -60,6 +60,15 @@
 
       }
   }
+  /* backgroundColor */
+  {
+    var c = [self colorValueForAttribute: @"backgroundColor"];
+    
+    if (c != nil)
+      {
+	[platformObject setBackgroundColor: c];
+      }
+  }
   /* editable */
   {
     var editable = [self boolValueForAttribute: @"editable"];
