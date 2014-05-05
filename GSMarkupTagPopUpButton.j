@@ -166,7 +166,8 @@
 			var m = re.exec(predf);
 			if(m) rhkey =m[1];
 			var filterValue;
-			if(rhkey) filterValue=[owner valueForKeyPath: rhkey];
+
+			if(rhkey) filterValue= [owner isKindOfClass:[CPString class]]? owner: [owner valueForKeyPath: rhkey];
 			var mypred = [CPPredicate predicateWithFormat: predf ];
 			if(filterValue) mypred = [mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
 			sourceArray =[sourceArray filteredArrayUsingPredicate: mypred];

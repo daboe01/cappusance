@@ -1,30 +1,26 @@
-/* -*-objc-*-
+@import <CPTextView/CPTextView.j>
 
 
-   Author: Nicola Pero <n.pero@mi.flashnet.it>
-   Date: January 2003
-   Author of Cappuccino port: Daniel Boehringer (2012)
+@implementation KVOCPText:CPTextView
+- (CPString)objectValue
+{
+    return [self string];
+}
+- (void)setObjectValue:(CPString)aString
+{	[self setString:aString];
+}
 
-   This file is part of GNUstep Renaissance
-
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public
-   License as published by the Free Software Foundation; either
-   version 2 of the License, or (at your option) any later version.
-   
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
-
-   You should have received a copy of the GNU Library General Public
-   License along with this library; see the file COPYING.LIB.
-   If not, write to the Free Software Foundation,
-   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/ 
-
-@import "../../Frameworks/TextView/CPTextView.j"
-
+- (void) didChangeText
+{
+    [self _continuouslyReverseSetBinding];
+	[super didChangeText];
+}
+- (BOOL) resignFirstResponder
+{
+    [self _reverseSetBinding];
+	return [super resignFirstResponder];
+}
+@end
 
 @implementation GSMarkupTagTextView: GSMarkupTagView
 + (CPString) tagName
@@ -34,14 +30,14 @@
 
 + (Class) platformObjectClass
 {
-  return [CPTextView class];
+  return [KVOCPText class];
 }
 
 - (id) initPlatformObject: (id)platformObject
 {
   /* Create the textview.  */
   platformObject = [super initPlatformObject: platformObject];
-  
+
   /* Set attributes of the textview.  */
 
   /* eventual text is in the content.  */
@@ -51,7 +47,7 @@
     if (count > 0)
       {
 	var s = [_content objectAtIndex: 0];
-	
+
 	if (s != nil  &&  [s isKindOfClass: [CPString class]])
 	  {
 	    [platformObject setString: s];
@@ -59,10 +55,19 @@
 
       }
   }
+  /* backgroundColor */
+  {
+    var c = [self colorValueForAttribute: @"backgroundColor"];
+
+    if (c != nil)
+      {
+	[platformObject setBackgroundColor: c];
+      }
+  }
   /* editable */
   {
     var editable = [self boolValueForAttribute: @"editable"];
-    
+
     if (editable == 1)
       {
 	[platformObject setEditable: YES];
@@ -76,7 +81,7 @@
   /* selectable */
   {
     var selectable = [self boolValueForAttribute: @"selectable"];
-    
+
     if (selectable == 1)
       {
 	[platformObject setSelectable: YES];
@@ -86,13 +91,13 @@
 	[platformObject setSelectable: NO];
       }
   }
- 
+
   {
     var param;
 
     /* richText (richtext or textonly?) */
     param = [self boolValueForAttribute: @"richText"];
-    
+
     if (param == 1)
       {
 	[platformObject setRichText: YES];
@@ -104,7 +109,7 @@
 
     /* usesFontPanel (uses the default font panel?) */
     param =  [self boolValueForAttribute: @"usesFontPanel"];
-    
+
     if (param == 1)
       {
 	[platformObject setUsesFontPanel: YES];
@@ -125,10 +130,10 @@
       {
 	[platformObject setAllowsUndo: NO];
       }
-    
+
     /* usesRuler (can use the ruler?) */
     param = [self boolValueForAttribute: @"usesRuler"];
-    
+
     if (param == 1)
       {
 	[platformObject setUsesRuler: YES];
@@ -140,7 +145,7 @@
 
     /* importsGraphics (does it accept graphics or only text?) */
     param = [self boolValueForAttribute: @"importGraphics"];
-    
+
     if (param == 1)
       {
 	[platformObject setImportsGraphics: YES];
@@ -149,7 +154,7 @@
       {
 	[platformObject setImportsGraphics: NO];
       }
-  }  
+  }
 
   /* TODO: font (big/medium/small, or bold etc)
    *       alignment (left/right/center/natural) */
