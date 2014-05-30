@@ -512,7 +512,15 @@ var _allRelationships;
 	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: mypk inEntity:[obj entity]];
     [request setHTTPMethod:"PUT"];
 	[request setHTTPBody: [obj._changes toJSON] ];
-	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+	var ret=[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+    try{
+	var err = JSON.parse( [ret rawString] );
+	} catch(e)
+	{
+    }
+	if(err && err['err'])
+        alert(err['err']);
+
 	[obj reload];
 }
 
