@@ -16,6 +16,9 @@
 -(BOOL) isPK
 {	return [self boolValueForAttribute: @"primaryKey"]==1;
 }
+-(BOOL) isNumeric
+{	return [self boolValueForAttribute: @"numeric"]==1;
+}
 /* Will never be called.  */
 - (id) allocPlatformObject
 {	return nil;
@@ -76,6 +79,7 @@
 			{	if(myPK) [CPException raise:CPInvalidArgumentException reason:@"Duplicate PK "+[v name]+"! "+ myPK+" already is PK!"];
 				else myPK=[v name];
 			}
+			if([v isNumeric]) [platformObject addNumericColumn: [v name]];
 			[myCols addObject: [v name]];
 		} else if([v isKindOfClass: [GSMarkupRelationship class] ])
 		{	var rel=[[FSRelationship alloc] initWithName: [v name] source: platformObject andTargetEntity: [v target]];	//set name as a temorary symbolic link. will be resolved in decoder later on.

@@ -15,6 +15,11 @@
     [self _continuouslyReverseSetBinding];
 	[super didChangeText];
 }
+- (void) didChangeText
+{
+    [self _continuouslyReverseSetBinding];
+	[super didChangeText];
+}
 - (BOOL) resignFirstResponder
 {
     [self _reverseSetBinding];

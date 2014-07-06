@@ -35,6 +35,7 @@
 	CPString	_pk @accessors(property=pk);
 	CPSet		_columns @accessors(property=columns);
 	CPSet		_relations;
+	CPSet		_numerics;
 	FSStore		_store @accessors(property=store);
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
@@ -152,6 +153,13 @@
 -(void) addRelationship:(FSRelationship) someRel
 {	if(!_relations) _relations=[CPSet setWithObject:someRel];
 	else [_relations addObject: someRel];
+}
+-(void) addNumericColumn:(CPString) aCol
+{	if(!_numerics) _numerics =[CPSet setWithObject:aCol];
+	else [_numerics addObject: aCol];
+}
+-(BOOL) isNumericColumn:(CPString) aCol
+{	return [_numerics containsObject: aCol];
 }
 
 -(CPArray) allObjects
@@ -331,8 +339,10 @@ var _allRelationships;
 		}
 		var peek=[self formatterForColumnName:aKey];
 		if(peek || (peek=[_entity formatterForColumnName:aKey]))
-		{	return [peek stringForObjectValue: o];
-		} else return o;
+		{
+			return [peek stringForObjectValue: o];
+		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o)];
+		else return o;
 	} else if(type == 1)	// a relationship is accessed
 	{	var rel=[_entity relationOfName: aKey];
 		var bindingColumn=[rel bindingColumn];
