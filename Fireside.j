@@ -529,7 +529,9 @@ var _allRelationships;
 	{
     }
 	if(err && err['err'])
-        alert(err['err']);
+    {   alert(err['err']);
+        obj._changes=nil;  // discard changes that weren't accepted by the backend
+    }
 
 	[obj reload];
 }
