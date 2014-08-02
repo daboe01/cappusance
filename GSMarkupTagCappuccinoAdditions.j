@@ -422,42 +422,8 @@
 
 @end
 
-@implementation GSMarkupTagSegmentedControl: GSMarkupTagControl
-+ (CPString) tagName
-{
-  return @"segmentedControl";
-}
 
-+ (Class) platformObjectClass
-{	return [CPSegmentedControl class];
-}
-
-- (id) initPlatformObject: (id)platformObject
-{	[_attributes setObject: @"25" forKey: @"height"];
-	platformObject = [super initPlatformObject: platformObject];
-	var i, peek, count = [_content count];
-    [platformObject setSegmentCount: count];
-	for (i = 0; i < count; i++)
-	{	var item = [_content objectAtIndex: i];
-		var title = [item localizedStringValueForAttribute: @"title"];
-		if (title == nil) title = @"";
-    	[platformObject setLabel: title forSegment: i];
-    	[platformObject setTag: [item intValueForAttribute: @"tag"] forSegment: i];
-		if(peek=[self intValueForAttribute:"width"]) [platformObject setWidth: peek forSegment:i];
-		if([item boolValueForAttribute:"selected"] == 1) [platformObject setSelected:YES forSegment:i];
-	}
-	return platformObject;
-}
-@end
-@implementation GSMarkupTagSegmentedControlItem: GSMarkupTagObject
-+ (CPString) tagName
-{
-  return @"segmentedControlItem";
-}
-
-@end
-
-@implementation CPSegmentedControl (ItemsBindings)
+@implementation FSObservableSegmentedControl:CPSegmentedControl
 -(void) setSegments:(CPArray) anArray
 {   var info=[CPBinder infoForBinding: "segments" forObject: self];
 	var tagArray;
@@ -493,4 +459,47 @@
 	}
     [self setSelectedSegment:0]; // FIXME
 }
+- (void)setSelected:(BOOL)isSelected forSegment:(unsigned)aSegment
+{
+	[self willChangeValueForKey:"selectedSegment"];
+    [super setSelected:isSelected forSegment:aSegment];
+	[self didChangeValueForKey:"selectedSegment"];
+}
+@end
+
+@implementation GSMarkupTagSegmentedControl: GSMarkupTagControl
++ (CPString) tagName
+{
+  return @"segmentedControl";
+}
+
++ (Class) platformObjectClass
+{	return [FSObservableSegmentedControl class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	[_attributes setObject: @"25" forKey: @"height"];
+	platformObject = [super initPlatformObject: platformObject];
+	var i, peek, count = [_content count];
+    [platformObject setSegmentCount: count];
+	for (i = 0; i < count; i++)
+	{	var item = [_content objectAtIndex: i];
+		var title = [item localizedStringValueForAttribute: @"title"];
+		if (title == nil) title = @"";
+    	[platformObject setLabel: title forSegment: i];
+    	[platformObject setTag: [item intValueForAttribute: @"tag"] forSegment: i];
+		if(peek=[self intValueForAttribute:"width"]) [platformObject setWidth: peek forSegment:i];
+		if([item boolValueForAttribute:"selected"] == 1) [platformObject setSelected:YES forSegment:i];
+	}
+	return platformObject;
+}
+
+
+@end
+@implementation GSMarkupTagSegmentedControlItem: GSMarkupTagObject
++ (CPString) tagName
+{
+  return @"segmentedControlItem";
+}
+
 @end
