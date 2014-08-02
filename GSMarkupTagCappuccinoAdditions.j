@@ -457,3 +457,40 @@
 
 @end
 
+@implementation CPSegmentedControl (ItemsBindings)
+-(void) setSegments:(CPArray) anArray
+{   var info=[CPBinder infoForBinding: "segments" forObject: self];
+	var tagArray;
+
+	if(info)	// this stuff is to allow row-wise filtered popup-lists in table-views
+	{	var options= [info objectForKey: CPOptionsKey];
+		var ac=   [info objectForKey: CPObservedObjectKey];
+		var mykey=[info objectForKey: CPObservedKeyPathKey];
+		var dotIndex = mykey.lastIndexOf("."),
+		mykey=[mykey substringFromIndex: dotIndex+1];
+		var myvalkey=[options objectForKey: "valueFace"];
+		if(myvalkey)
+		{	dotIndex = myvalkey.lastIndexOf("."),
+			myvalkey=[myvalkey substringFromIndex: dotIndex+1];
+		}
+		var sourceArray=[ac arrangedObjects];
+		someArray=[];
+		tagArray=[];
+
+		var  i, l = [sourceArray count];
+		for (i = 0; i < l; i++)
+		{	var curr_obj= [sourceArray objectAtIndex:i];
+			someArray.push([curr_obj valueForKey: mykey]);
+			if(myvalkey) tagArray.push([curr_obj valueForKey: myvalkey]);
+		}
+	}
+	var  j, l1 = someArray.length;
+
+    [self setSegmentCount: l1];
+	for (j = 0; j < l1; j++)
+	{   [self setLabel:someArray[j]  forSegment: j];
+		if(tagArray)  [self setTag: tagArray[j] forSegment: j];
+	}
+    [self setSelectedSegment:0]; // FIXME
+}
+@end
