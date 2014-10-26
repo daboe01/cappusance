@@ -404,12 +404,17 @@
 	[platformObject setLocale: [[CPLocale alloc] initWithLocaleIdentifier:@"de_DE"]];	//<!> fixme
     var styleString = [_attributes objectForKey: @"style"];
 	if(styleString === 'textual')
-	{	[platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
-		[_attributes setObject: @"120" forKey: @"width"];
-		[_attributes setObject: @"29" forKey: @"height"];
-    	[platformObject setDatePickerElements: CPYearMonthDayDatePickerElementFlag];
+	{   [platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
+	    [_attributes setObject: @"120" forKey: @"width"];
+	    [_attributes setObject: @"29" forKey: @"height"];
+    	    [platformObject setDatePickerElements: CPYearMonthDayDatePickerElementFlag];
 	}
-	else if(styleString === 'graphical') [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
+	else if(styleString === 'graphical')
+        {   [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
+            [platformObject setDatePickerElements: CPYearMonthDatePickerElementFlag]
+	    [_attributes setObject: @"100" forKey: @"width"];
+	    [_attributes setObject: @"100" forKey: @"height"];
+        }
 
 	return platformObject;
 }
