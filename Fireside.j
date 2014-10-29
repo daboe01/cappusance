@@ -334,16 +334,15 @@ var _allRelationships;
 		}
 	
 		var  o= [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
-		if  (o)
+		var peek=[self formatterForColumnName:aKey];
+		if(peek || (peek=[_entity formatterForColumnName:aKey]))
+		{   return [peek objectValueForString: o error: nil];	//<!> fixme handle errors somehow
+		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o)];
+        else if (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
 				 o=[o stringValue];
 		}
-		var peek=[self formatterForColumnName:aKey];
-		if(peek || (peek=[_entity formatterForColumnName:aKey]))
-		{
-			return [peek stringForObjectValue: o];
-		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o)];
-		else return o;
+		return o;
 	} else if(type == 1)	// a relationship is accessed
 	{	var rel=[_entity relationOfName: aKey];
 		var bindingColumn=[rel bindingColumn];
@@ -369,7 +368,6 @@ var _allRelationships;
 		if (propSEL && [self respondsToSelector: propSEL ]) return [self performSelector:propSEL];
 		else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column in entity "+[_entity name]];
 	}
-	
 }
 - (id)valueForKey:(CPString)aKey
 {	return [self valueForKey: aKey synchronous: NO];
@@ -384,7 +382,7 @@ var _allRelationships;
 		[self willChangeValueForKey:aKey];
 		var peek=[self formatterForColumnName: aKey];
 		if(peek || (peek=[_entity formatterForColumnName: aKey]))
-		{	someval= [peek objectValueForString: someval error: nil];	//<!> fixme handle errors somehow
+		{   someval= [peek stringForObjectValue:someval];
 		}
 		[_changes setObject: someval forKey: aKey];
 		[self didChangeValueForKey:aKey];
