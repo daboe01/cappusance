@@ -24,13 +24,10 @@ Example usage with backend:
 
 Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
 This modern perl framework comes with a powerful rest router and a builtin static server for serving the Cappuccino framework.
-The REST dialect of Cappusance can be easily adapted to any backend. Ideally, you only need to subclass FSStore and override two simple methods:
-- requestForAddressingObjectsWithKey: aKey equallingValue: inEntity:
-- requestForAddressingAllObjectsInEntity:
+The REST dialect of Cappusance can be easily adapted to any backend. Ideally, you only need to subclass FSStore and override a few simple methods.
 
-
-Unfortunately, i did not yet have the time to write documentation for the ORM-part. However, a comprehensive use case is here:
-<https://github.com/daboe01/Cellfinder>
+Unfortunately, i did not yet have the time to write documentation for the ORM-part (i.e. Fireside.j) and how everything fits together. However, a comprehensive use case is here:
+<https://github.com/daboe01/Clinical>
 
 
 LICENCE:
