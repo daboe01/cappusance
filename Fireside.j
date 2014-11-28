@@ -30,6 +30,8 @@
 }
 @end
 
+var _sharedUndoManager;
+
 @implementation FSEntity : CPObject 
 {	CPString	_name @accessors(property=name);
 	CPString	_pk @accessors(property=pk);
@@ -39,7 +41,17 @@
 	FSStore		_store @accessors(property=store);
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
+    id          _undoManager @accessors(property=undoManager);
 }
++(id) sharedUndoManager
+{
+    if(!_sharedUndoManager)
+    {
+        _sharedUndoManager=[CPUndoManager new];
+    }
+    return _sharedUndoManager;
+}
+
 -(CPArray) relationshipsWithTargetProperty: aKey
 {	var ret=[];
 	var rels=[_relations allObjects];
@@ -76,6 +88,7 @@
 	{	_store = someStore;
 		_name = aName;
     }
+    _undoManager=[FSEntity sharedUndoManager];
     return self;
 }
 -(id) init
@@ -377,6 +390,11 @@ var _allRelationships;
 	var oldval=[self valueForKey: aKey];
 
 	if(oldval === someval) return;	// we are not interested in side effects, so ignore identity-updates
+
+    if(_entity._undoManager)
+        [[_entity._undoManager prepareWithInvocationTarget:self]
+            setValue:oldval forKey:aKey];
+
 	if(type == 0)
 	{	if(!_changes) _changes = [CPMutableDictionary dictionary];
 		[self willChangeValueForKey:aKey];
