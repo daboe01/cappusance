@@ -122,7 +122,7 @@ var _sharedUndoManager;
 {	if([someObj isKindOfClass: [CPDictionary class]])
 	{	someObj=[self createObjectWithDictionary: someObj];
         if(_undoManager)
-            [[_entity._undoManager prepareWithInvocationTarget:self]
+            [[_undoManager prepareWithInvocationTarget:self]
                 deleteObject:someObj];
 
 	} else if(![someObj isKindOfClass: [FSObject class]])
@@ -135,7 +135,7 @@ var _sharedUndoManager;
 -(void) deleteObject:  someObj
 {	[[self store] deleteObject: someObj];
     if(_undoManager)
-        [[_entity._undoManager prepareWithInvocationTarget:self]
+        [[_undoManager prepareWithInvocationTarget:self]
                 insertObject:someObj];
 }
 
