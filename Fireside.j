@@ -121,6 +121,10 @@ var _sharedUndoManager;
 -(FSObject) insertObject:  someObj
 {	if([someObj isKindOfClass: [CPDictionary class]])
 	{	someObj=[self createObjectWithDictionary: someObj];
+        if(_undoManager)
+            [[_entity._undoManager prepareWithInvocationTarget:self]
+                deleteObject:someObj];
+
 	} else if(![someObj isKindOfClass: [FSObject class]])
 	{	//<!> fixme warn or raise...
 	}
@@ -130,6 +134,9 @@ var _sharedUndoManager;
 }
 -(void) deleteObject:  someObj
 {	[[self store] deleteObject: someObj];
+    if(_undoManager)
+        [[_entity._undoManager prepareWithInvocationTarget:self]
+                insertObject:someObj];
 }
 
 -(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
@@ -568,7 +575,8 @@ var _allRelationships;
 }
 
 -(id) deleteObject: obj
-{	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
+{
+	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
     [request setHTTPMethod:"DELETE"];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
 }
