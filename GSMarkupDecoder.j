@@ -333,8 +333,8 @@
 			if ([oPO isKindOfClass: [CPTableView class] ])
 			{	var target=[self _getObjectForIdString: peek];
 				if([o boolValueForAttribute: "viewBasedBindings"] == 1)
-				{	[oPO bind: "content"          toObject: target withKeyPath: "arrangedObjects" options: nil ];
-					[oPO bind: "selectionIndexes" toObject: target withKeyPath: "selectionIndexes" options: nil ];
+				{	[oPO bind: "content"          toObject: target withKeyPath:"arrangedObjects" options: nil];
+					[oPO bind: "selectionIndexes" toObject: target withKeyPath:"selectionIndexes" options:nil];
 				} else		// "explicit" bindings for tableView columns, where you do not want to connect the columns individually but through "identifier" property
 				{	var _content=[o content];
 					var j, l1 = _content? _content.length:0;

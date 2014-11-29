@@ -208,9 +208,15 @@
                 firstValue = [destination valueForKeyPath:firstPart];
 
             if ([firstValue isKindOfClass:CPArray])
-                 [[firstValue objectAtIndex:aRow] setValue:newValue forKeyPath:secondPart];
-            else
-                 [[firstValue valueForKeyPath:secondPart] replaceObjectAtIndex:aRow withObject:newValue];
+            {   var target = [firstValue objectAtIndex:aRow];
+                var oldValue = [target valueForKeyPath:secondPart];
+                if(oldValue !== newValue)
+                {
+                     var ac = [binding._info objectForKey:CPObservedObjectKey];
+                     [ac setValue:newValue target:target forKeyPath:secondPart oldValue:oldValue];
+                }
+           }
+           else [[firstValue valueForKeyPath:secondPart] replaceObjectAtIndex:aRow withObject:newValue];
         }
     }
 }

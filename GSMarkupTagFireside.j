@@ -98,11 +98,22 @@
 
 @end
 
+var _sharedUndoManager;
 
 @implementation FSArrayController: CPArrayController
 {	id _entity @accessors(property=entity);
 	id _defaultDict;
 }
+
++(id) sharedUndoManager
+{
+    if(!_sharedUndoManager)
+    {
+        _sharedUndoManager=[CPUndoManager new];
+    }
+    return _sharedUndoManager;
+}
+
 -(CPString) pk
 {	return [_entity pk];
 
@@ -152,13 +163,62 @@
 
 //<!> fixes an issue when adding to an empty arraycontroller
 - (void)insertObject:(id)anObject atArrangedObjectIndex:(int)anIndex
-{	[super insertObject: anObject atArrangedObjectIndex:MAX(0,anIndex)];
+{	[super insertObject:anObject atArrangedObjectIndex:MAX(0,anIndex)];
+}
+
+- (void)setValue:(id)newValue target:(id)target forKeyPath:(CPString)secondPart oldValue:(id)oldValue
+{
+    [target setValue:newValue forKeyPath:secondPart];
+
+    [[[[self class] sharedUndoManager] prepareWithInvocationTarget:self]
+         setValue:oldValue target:target forKeyPath:secondPart oldValue:newValue];
+}
+
+- (void)_insertObjects:(CPArray) objArr undoManager:(CPUndoManager) aMngr
+{
+    var l = [objArr count];
+    var arrForUndo=[];
+    for(var i = 0; i < l; i++)
+    {   var newDict= [[objArr objectAtIndex:i] dictionary];
+        var newObject= [_entity createObjectWithDictionary:newDict];
+        arrForUndo.push(newObject)
+        [self addObject:newObject]
+    }
+    [[aMngr prepareWithInvocationTarget:self] _removeObjects: arrForUndo undoManager:aMngr];
+}
+- (void) _removeObjects:(CPArray) objArr undoManager:(CPUndoManager) aMngr
+{
+    [[aMngr prepareWithInvocationTarget:self] _insertObjects:objArr undoManager:aMngr];
+    [self removeObjects:objArr];
+}
+
+- (void)remove:(id)sender
+{
+    var undoManager=[[self class] sharedUndoManager];
+    var sel,l;
+    if (undoManager && (sel=[self selectedObjects]) && (l = [sel count]) )
+    {   var arr=[];
+        for(var i = 0; i < l; i++)
+        {   arr.push([sel objectAtIndex:i]);
+        }
+        [[undoManager prepareWithInvocationTarget:self] _insertObjects:arr undoManager:undoManager];
+    }
+    [super remove:sender];
 }
 
 -(void) reload
 {
 	[[FSRelationship relationshipsWithTargetEntity:_entity] makeObjectsPerformSelector:@selector(_invalidateCache)];
     [[[[self class] _binderClassForBinding:@"contentArray"] getBinding:@"contentArray" forObject:self] setValueFor:@"contentArray"];
+}
+-(void) undo
+{
+    [_sharedUndoManager undo];
+}
+
+-(void) redo
+{
+    [_sharedUndoManager redo];
 }
 @end
 

@@ -30,8 +30,6 @@
 }
 @end
 
-var _sharedUndoManager;
-
 @implementation FSEntity : CPObject 
 {	CPString	_name @accessors(property=name);
 	CPString	_pk @accessors(property=pk);
@@ -41,15 +39,6 @@ var _sharedUndoManager;
 	FSStore		_store @accessors(property=store);
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
-    id          _undoManager @accessors(property=undoManager);
-}
-+(id) sharedUndoManager
-{
-    if(!_sharedUndoManager)
-    {
-        _sharedUndoManager=[CPUndoManager new];
-    }
-    return _sharedUndoManager;
 }
 
 -(CPArray) relationshipsWithTargetProperty: aKey
@@ -88,7 +77,6 @@ var _sharedUndoManager;
 	{	_store = someStore;
 		_name = aName;
     }
-    _undoManager=[FSEntity sharedUndoManager];
     return self;
 }
 -(id) init
@@ -118,25 +106,18 @@ var _sharedUndoManager;
 	return r;
 }
 
--(FSObject) insertObject:  someObj
+-(FSObject) insertObject:(id)someObj
 {	if([someObj isKindOfClass: [CPDictionary class]])
 	{	someObj=[self createObjectWithDictionary: someObj];
-        if(_undoManager)
-            [[_undoManager prepareWithInvocationTarget:self]
-                deleteObject:someObj];
-
 	} else if(![someObj isKindOfClass: [FSObject class]])
 	{	//<!> fixme warn or raise...
 	}
-	
-	[[self store] insertObject: someObj];
+	[_store insertObject: someObj];
 	return someObj;
 }
--(void) deleteObject:  someObj
-{	[[self store] deleteObject: someObj];
-    if(_undoManager)
-        [[_undoManager prepareWithInvocationTarget:self]
-                insertObject:someObj];
+-(void) deleteObject:(id)someObj
+{
+	[_store deleteObject: someObj];
 }
 
 -(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
@@ -332,11 +313,15 @@ var _allRelationships;
 	return [_formatters objectForKey: aName];
 }
 
-- (id)description
+- (id)dictionary
 {	var o=[_data copy];
 	if(!o) o=[CPMutableDictionary new];
 	if(_changes) [o addEntriesFromDictionary: _changes];
-	return [o description];
+	return o;
+}
+- (id)description
+{
+	return [[self dictionary] description];
 }
 
 -(int) typeOfKey:(CPString)aKey
@@ -397,10 +382,6 @@ var _allRelationships;
 	var oldval=[self valueForKey: aKey];
 
 	if(oldval === someval) return;	// we are not interested in side effects, so ignore identity-updates
-
-    if(_entity._undoManager)
-        [[_entity._undoManager prepareWithInvocationTarget:self]
-            setValue:oldval forKey:aKey];
 
 	if(type == 0)
 	{	if(!_changes) _changes = [CPMutableDictionary dictionary];
@@ -564,7 +545,7 @@ var _allRelationships;
 {	var entity=[someObj entity];
 	var request= [CPURLRequest requestWithURL: [self baseURL]+"/"+[entity name]+"/"+[entity pk] ];	// pk is necessary to get id after inserting
     [request setHTTPMethod:"POST"];
-	[request setHTTPBody: [someObj._changes toJSON] ];
+	[request setHTTPBody:[someObj._changes toJSON] ];
 	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
 	var j = JSON.parse( [data rawString]);	// this is necessary for retrieving the PK
 	var pk=j["pk"];
