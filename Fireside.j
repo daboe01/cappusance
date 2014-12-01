@@ -40,6 +40,7 @@
 	CPMutableArray _pkcache;
 	CPMutableDictionary _formatters;
 }
+
 -(CPArray) relationshipsWithTargetProperty: aKey
 {	var ret=[];
 	var rels=[_relations allObjects];
@@ -105,18 +106,18 @@
 	return r;
 }
 
--(FSObject) insertObject:  someObj
+-(FSObject) insertObject:(id)someObj
 {	if([someObj isKindOfClass: [CPDictionary class]])
 	{	someObj=[self createObjectWithDictionary: someObj];
 	} else if(![someObj isKindOfClass: [FSObject class]])
 	{	//<!> fixme warn or raise...
 	}
-	
-	[[self store] insertObject: someObj];
+	[_store insertObject: someObj];
 	return someObj;
 }
--(void) deleteObject:  someObj
-{	[[self store] deleteObject: someObj];
+-(void) deleteObject:(id)someObj
+{
+	[_store deleteObject: someObj];
 }
 
 -(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
@@ -312,11 +313,15 @@ var _allRelationships;
 	return [_formatters objectForKey: aName];
 }
 
-- (id)description
+- (id)dictionary
 {	var o=[_data copy];
 	if(!o) o=[CPMutableDictionary new];
 	if(_changes) [o addEntriesFromDictionary: _changes];
-	return [o description];
+	return o;
+}
+- (id)description
+{
+	return [[self dictionary] description];
 }
 
 -(int) typeOfKey:(CPString)aKey
@@ -377,6 +382,7 @@ var _allRelationships;
 	var oldval=[self valueForKey: aKey];
 
 	if(oldval === someval) return;	// we are not interested in side effects, so ignore identity-updates
+
 	if(type == 0)
 	{	if(!_changes) _changes = [CPMutableDictionary dictionary];
 		[self willChangeValueForKey:aKey];
@@ -539,7 +545,7 @@ var _allRelationships;
 {	var entity=[someObj entity];
 	var request= [CPURLRequest requestWithURL: [self baseURL]+"/"+[entity name]+"/"+[entity pk] ];	// pk is necessary to get id after inserting
     [request setHTTPMethod:"POST"];
-	[request setHTTPBody: [someObj._changes toJSON] ];
+	[request setHTTPBody:[someObj._changes toJSON] ];
 	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
 	var j = JSON.parse( [data rawString]);	// this is necessary for retrieving the PK
 	var pk=j["pk"];
@@ -550,7 +556,8 @@ var _allRelationships;
 }
 
 -(id) deleteObject: obj
-{	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
+{
+	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
     [request setHTTPMethod:"DELETE"];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
 }

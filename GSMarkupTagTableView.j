@@ -53,8 +53,23 @@
 	}
 }
 
--(void) sizeToFit{}
+-(void) sizeToFit
+{
+}
 
+-(void) undo:sender
+{
+   var binder=[CPBinder getBinding:"content" forObject:self];
+   var ac=[binder._info objectForKey:CPObservedObjectKey]
+   [ac undo];
+}
+
+-(void) redo:sender
+{
+   var binder=[CPBinder getBinding:"content" forObject:self];
+   var ac=[binder._info objectForKey:CPObservedObjectKey]
+   [ac redo];
+}
 @end
 
 @implementation GSMarkupTagTableView: GSMarkupTagControl

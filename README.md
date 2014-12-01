@@ -2,9 +2,10 @@ Cappusance is a powerful GUI builder for Cappuccino.
 Cappusance i.e. features strong autolayout capabilities. Cappusance is actually a port of GNUstep Renaissance.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. However, Cappusance adds support for the more recent Cocoa controls and Cocoa bindings.
 
-As a big plus, Cappusance comes with a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application in XML -- without writing code in Objective-J! The Cappusance ORM conveys automatic database-to-GUI mapping in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. Additionally, data manipulations from Objective-J are transparently forwarded to the backend.
+As a big plus, Cappusance comes with a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application in XML -- without writing code in Objective-J! The Cappusance ORM conveys automatic database-to-GUI mapping in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. Additionally, data manipulations from Objective-J are transparently forwarded to the backend. ArrayControllers are extended to support CPUndoManager's undo/redo out of the box.
 
 Example usage with backend:
+```Objective-J
 @import <Renaissance/Renaissance.j>
 [...]
 - (void) applicationDidFinishLaunching:(CPNotification)aNotification
@@ -21,16 +22,13 @@ Example usage with backend:
 // From here on, manipulations at ArrayController and even at Objective-J level
 // (e.g. insertion into Arrays) are magically mapped to the backend.
 }
-
+```
 Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
 This modern perl framework comes with a powerful rest router and a builtin static server for serving the Cappuccino framework.
-The REST dialect of Cappusance can be easily adapted to any backend. Ideally, you only need to subclass FSStore and override two simple methods:
-- requestForAddressingObjectsWithKey: aKey equallingValue: inEntity:
-- requestForAddressingAllObjectsInEntity:
+The REST dialect of Cappusance can be easily adapted to any backend. Ideally, you only need to subclass FSStore and override a few simple methods.
 
-
-Unfortunately, i did not yet have the time to write documentation for the ORM-part. However, a comprehensive use case is here:
-<https://github.com/daboe01/Cellfinder>
+Unfortunately, i did not yet have the time to write documentation for the ORM-part (i.e. Fireside.j) and how everything fits together. However, a comprehensive use case is here:
+<https://github.com/daboe01/Clinical>
 
 
 LICENCE:
