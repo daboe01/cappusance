@@ -337,7 +337,7 @@ var _allRelationships;
 		var peek=[self formatterForColumnName:aKey];
 		if(peek || (peek=[_entity formatterForColumnName:aKey]))
 		{   return [peek objectValueForString: o error: nil];	//<!> fixme handle errors somehow
-		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o)];
+		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o, 10)];
         else if (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
 				 o=[o stringValue];
@@ -502,11 +502,11 @@ var _allRelationships;
 		if(peek=[someEntity _registeredObjectForPK: someval]) return [CPArray arrayWithObject: peek];
 	}
 	var request;
-	if(myOptions && parseInt([myOptions objectForKey: "FSFuzzySearch"]))
+	if(myOptions && parseInt([myOptions objectForKey: "FSFuzzySearch"], 10))
 		 request=[self requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	else request=[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	var a=nil;
-	if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"])))
+	if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"], 10)))
 	{	a=[[FSMutableArray alloc] initWithArray: [] ofEntity: someEntity];
 		if(someEntity.__ACForSpinner && someEntity.__ACForSpinner.__tableViewForSpinner)
 			[someEntity.__ACForSpinner.__tableViewForSpinner _startAnimation: self];
