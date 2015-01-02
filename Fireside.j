@@ -444,7 +444,8 @@ var _allRelationships;
 	unsigned _fetchLimit @accessors(property=fetchLimit);
 }
 -(CPURLRequest) requestForInsertingObjectInEntity:(FSEntity) someEntity
-{    var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+ [someEntity pk]];
+{   var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+ [someEntity pk]];
+    [request setHTTPMethod:"POST"];
     return request;
 }
 -(CPURLRequest) requestForAddressingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
@@ -547,7 +548,6 @@ var _allRelationships;
 -(void) insertObject: someObj 
 {	var entity=[someObj entity];
 	var request=[self requestForInsertingObjectInEntity:entity];
-    [request setHTTPMethod:"POST"];
 	[request setHTTPBody:[someObj._changes toJSON] ];
 	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
 	var j = JSON.parse( [data rawString]);	// this is necessary for retrieving the PK
