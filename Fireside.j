@@ -342,7 +342,7 @@ var _allRelationships;
 		var peek=[self formatterForColumnName:aKey];
 		if(peek || (peek=[_entity formatterForColumnName:aKey]))
 		{   return [peek objectValueForString: o error: nil];	//<!> fixme handle errors somehow
-		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o)];
+		} else if([_entity  isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o, 10)];
         else if (o)
 		{	if(![o isKindOfClass:[CPString class]])	// cast numbers to strings in order to make predicate filtering work
 				 o=[o stringValue];
@@ -443,7 +443,10 @@ var _allRelationships;
 {	CPString _baseURL @accessors(property=baseURL);
 	unsigned _fetchLimit @accessors(property=fetchLimit);
 }
-
+-(CPURLRequest) requestForInsertingObjectInEntity:(FSEntity) someEntity
+{    var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+ [someEntity pk]];
+    return request;
+}
 -(CPURLRequest) requestForAddressingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
 {	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+someval];
 	return request;
@@ -508,11 +511,11 @@ var _allRelationships;
 		if(peek=[someEntity _registeredObjectForPK: someval]) return [CPArray arrayWithObject: peek];
 	}
 	var request;
-	if(myOptions && parseInt([myOptions objectForKey: "FSFuzzySearch"]))
+	if(myOptions && parseInt([myOptions objectForKey: "FSFuzzySearch"], 10))
 		 request=[self requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	else request=[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
 	var a=nil;
-	if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"])))
+	if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"], 10)))
 	{	a=[[FSMutableArray alloc] initWithArray: [] ofEntity: someEntity];
 		if(someEntity.__ACForSpinner && someEntity.__ACForSpinner.__tableViewForSpinner)
 			[someEntity.__ACForSpinner.__tableViewForSpinner _startAnimation: self];
@@ -543,7 +546,7 @@ var _allRelationships;
 
 -(void) insertObject: someObj 
 {	var entity=[someObj entity];
-	var request= [CPURLRequest requestWithURL: [self baseURL]+"/"+[entity name]+"/"+[entity pk] ];	// pk is necessary to get id after inserting
+	var request=[self requestForInsertingObjectInEntity:entity];
     [request setHTTPMethod:"POST"];
 	[request setHTTPBody:[someObj._changes toJSON] ];
 	var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
@@ -557,7 +560,7 @@ var _allRelationships;
 
 -(id) deleteObject: obj
 {
-	var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
+	var request=[self requestForAddressingObjectsWithKey:[[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
     [request setHTTPMethod:"DELETE"];
 	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
 }
