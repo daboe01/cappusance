@@ -444,12 +444,12 @@ var _allRelationships;
 	unsigned _fetchLimit @accessors(property=fetchLimit);
 }
 
--(CPURLRequest) requestForAddressingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
-{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+someval];
+-(CPURLRequest) requestForAddressingObjectsWithKey:(CPString)aKey equallingValue:(id) someval inEntity:(FSEntity) someEntity
+{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+encodeURIComponent(someval)];
 	return request;
 }
--(CPURLRequest) requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
-{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/like/"+someval];
+-(CPURLRequest) requestForFuzzilyAddressingObjectsWithKey:(CPString)aKey equallingValue:(id) someval inEntity:(FSEntity)someEntity
+{	var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/like/"+encodeURIComponent(someval)];
 	return request;
 }
 -(CPURLRequest) requestForAddressingAllObjectsInEntity:(FSEntity) someEntity
