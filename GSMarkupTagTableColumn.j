@@ -149,7 +149,9 @@
             value;
 
         if (dotIndex === CPNotFound)
+        {
             value = [[destination valueForKeyPath:keyPath] objectAtIndex:aRow];
+        }
         else
         {
             /*
@@ -168,9 +170,14 @@
                 firstValue = [destination valueForKeyPath:firstPart];
 
             if ([firstValue isKindOfClass:CPArray])
-                value = [[firstValue objectAtIndex:aRow] valueForKeyPath:secondPart];
+            {
+                if (aRow < [firstValue count])
+                    value = [[firstValue objectAtIndex:aRow] valueForKeyPath:secondPart];
+            }
             else
+            {
                 value = [[firstValue valueForKeyPath:secondPart] objectAtIndex:aRow];
+            }  
         }
 
         value = [binding transformValue:value withOptions:[bindingInfo objectForKey:CPOptionsKey]];
