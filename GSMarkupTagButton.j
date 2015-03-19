@@ -76,7 +76,7 @@
 
     if (image != nil)
       {
-	[platformObject setImage: [CPImage imageNamed: image]];
+	[platformObject setImage: [[CPImage alloc] initWithContentsOfFile: [CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], image]]];
       }
   }
 
