@@ -546,7 +546,7 @@ var _allRelationships;
 	[obj reload];
 }
 
--(void) insertObject: someObj 
+-(void) insertObject:(id)someObj 
 {	var entity=[someObj entity];
 	var request=[self requestForInsertingObjectInEntity:entity];
 	[request setHTTPBody:[someObj._changes toJSON] ];
@@ -556,6 +556,7 @@ var _allRelationships;
 	[someObj willChangeValueForKey: [entity pk]];
 	if(!someObj._data) someObj._data=[CPMutableDictionary new];
 	[someObj._data setObject: pk forKey: [entity pk]];
+    [entity _registerObjectInPKCache:someObj];
 	[someObj didChangeValueForKey: [entity pk]];
 }
 
