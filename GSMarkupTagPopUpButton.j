@@ -179,7 +179,7 @@
 		for (i = 0; i < l; i++)
 		{	var curr_obj= [sourceArray objectAtIndex:i];
 			someArray.push([curr_obj valueForKey: mykey]);
-			if(myvalkey) tagArray.push([curr_obj valueForKey: myvalkey]);
+			if(myvalkey) tagArray.push([curr_obj valueForKey:myvalkey]);
 		}
 	}
 	[self _consolidateItemArrayLengthToArray: someArray];
@@ -190,24 +190,7 @@
 	{	[myCurrentArr[j] setTitle: someArray[j]];
 		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
 	}
-	if(_value)
-	{	[self selectItemWithTag: _value];
-	} else
-	{	[self selectItemWithTag:-1];
-	}
-	[self synchronizeTitleAndSelectedItem];
-}
-
--(void) selectItemWithTag:(int) someValue
-{	_value= someValue;
-	[super selectItemWithTag: _value];
-}
-
--(int) selectedTag
-{	return [[self selectedItem] tag];
-}
--(int) setSelectedTag: aTag
-{	[self selectItemWithTag: aTag];
+    [self synchronizeTitleAndSelectedItem]
 }
 
 @end
