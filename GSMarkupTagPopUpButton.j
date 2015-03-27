@@ -193,5 +193,12 @@
     [self synchronizeTitleAndSelectedItem]
 }
 
+-(int) selectedTag
+{	return [[self selectedItem] tag];
+}
+-(int) setSelectedTag:(id)aTag
+{	[self selectItemWithTag:aTag];
+}
+
 @end
 
