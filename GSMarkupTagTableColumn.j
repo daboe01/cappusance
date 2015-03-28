@@ -188,6 +188,7 @@
 /*!
     @ignore
 */
+
 - (void)_reverseSetDataView:(CPView)aDataView forRow:(unsigned)aRow
 {
     var bindingsDictionary = [CPBinder allBindingsForObject:self],
@@ -204,6 +205,7 @@
             keyPath = [bindingInfo objectForKey:CPObservedKeyPathKey],
             options = [bindingInfo objectForKey:CPOptionsKey],
             dotIndex = keyPath.lastIndexOf(".");
+
         newValue = [binding reverseTransformValue:newValue withOptions:options];
 
         if (dotIndex === CPNotFound)
@@ -217,9 +219,10 @@
             if ([firstValue isKindOfClass:CPArray])
             {   var target = [firstValue objectAtIndex:aRow];
                 var oldValue = [target valueForKeyPath:secondPart];
+
                 if(oldValue !== newValue)
                 {
-                     var ac = [binding._info objectForKey:CPObservedObjectKey];
+                     var ac = [binding._info objectForKey:CPObservedObjectKey]; // important for undo support
                      [ac setValue:newValue target:target forKeyPath:secondPart oldValue:oldValue];
                 }
            }
@@ -227,6 +230,4 @@
         }
     }
 }
-
-
 @end

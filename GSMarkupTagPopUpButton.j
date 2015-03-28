@@ -196,7 +196,7 @@
 -(int) selectedTag
 {	return [[self selectedItem] tag];
 }
--(int) setSelectedTag:(id)aTag
+-(void) setSelectedTag:(id)aTag
 {	[self selectItemWithTag:aTag];
 }
 
