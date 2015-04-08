@@ -560,11 +560,12 @@ var _allRelationships;
 	[someObj didChangeValueForKey: [entity pk]];
 }
 
--(id) deleteObject: obj
+- (void)deleteObject:(id)obj
 {
 	var request=[self requestForAddressingObjectsWithKey:[[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
     [request setHTTPMethod:"DELETE"];
-	[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+	//[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+	[CPURLConnection connectionWithRequest:request delegate:nil];
 }
 
 @end
