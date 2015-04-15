@@ -190,7 +190,13 @@
 	{	[myCurrentArr[j] setTitle: someArray[j]];
 		if(tagArray) [myCurrentArr[j] setTag: tagArray[j]];
 	}
-    [self synchronizeTitleAndSelectedItem]
+
+	[self selectItemWithTag:_value];
+}
+
+-(void) selectItemWithTag:(int) someValue
+{	_value = someValue;
+	[super selectItemWithTag:_value];
 }
 
 -(int) selectedTag
