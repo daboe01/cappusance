@@ -300,7 +300,8 @@ var _allRelationships;
     var i,l=cols.length;
     for(i=0; i<l; i++)
     {   var propName = cols[i];
-        [_data setObject: o[propName] forKey:propName];
+		[_data setObject: o[propName]===nil?'': o[propName] forKey:propName];
+//      [_data setObject: o[propName] forKey:propName];
    }
 }
 
