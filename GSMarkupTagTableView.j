@@ -70,6 +70,46 @@
    var ac=[binder._info objectForKey:CPObservedObjectKey]
    [ac redo];
 }
+
+-(unsigned) findColumnWithTitle:(CPString) aTitle
+{   var l=[_tableColumns count];
+    for(var i=0;i<l;i++)
+    {   if(_tableColumns[i]._identifier === aTitle)
+            return i;
+    }
+    return -1;
+}
+- (BOOL)performKeyEquivalent:(CPEvent)anEvent
+{
+    var character = [anEvent charactersIgnoringModifiers],
+        modifierFlags = [anEvent modifierFlags];
+
+    if ( [anEvent keyCode] == CPTabKeyCode && self._currentFirstResponder)
+    {
+        var selectedColumn=[self columnForView:self._currentFirstResponder] + 1;
+        if (selectedColumn > 0 && selectedColumn < [self numberOfColumns] && [[_tableColumns objectAtIndex:selectedColumn] isEditable] && (!_delegate || [_delegate tableView:self shouldEditTableColumn:selectedColumn row:[self selectedRow]]))
+        {   [self editColumn:selectedColumn row:[self selectedRow] withEvent:anEvent select:YES]
+        }
+        return YES;
+    }
+    return [super performKeyEquivalent:anEvent];
+}
+
+- (void)_init
+{
+    [super _init];
+
+    var handlekeydown=function(e){
+        if (e.keyCode == 9)
+        {
+            self._currentFirstResponder=[_window firstResponder];
+           [_window makeFirstResponder:self];
+        }
+    }
+
+    self._DOMElement.addEventListener('keydown',handlekeydown,NO);
+}
+
 @end
 
 @implementation GSMarkupTagTableView: GSMarkupTagControl
