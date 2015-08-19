@@ -213,3 +213,16 @@
 
 @end
 
+
+@implementation GSMarkupTagSecureTextField: GSMarkupTagTextField
++ (CPString) tagName
+{
+	return @"secureField";
+}
+
++ (Class) platformObjectClass
+{
+	return [CPSecureTextField class];
+}
+
+@end
