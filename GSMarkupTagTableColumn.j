@@ -131,6 +131,11 @@
 @end
 
 @implementation FSTableColumn:CPTableColumn
+-(void) setDataView:(CPView) aView
+{
+    [super setDataView:aView];
+    [_tableView _reloadDataViews];
+}
 
 - (void)_prepareDataView:(CPView)aDataView forRow:(unsigned)aRow
 {
