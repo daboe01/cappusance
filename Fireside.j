@@ -364,7 +364,8 @@ var _allRelationships;
         if(!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
         var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
         if(isToMany)
-        {   var defaults=[CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn];
+        {
+            var defaults = rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey: bindingColumn] forKey: rel._targetColumn] : @{};
             [results setDefaults: defaults];
             [results setKvoKey: aKey];
             [results setKvoOwner: self];
