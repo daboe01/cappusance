@@ -33,6 +33,7 @@
 {	if(!self._spinner)
 	{	var progres=[CPProgressIndicator new];
 		[progres setStyle:CPProgressIndicatorSpinningStyle];
+		[progres setIndeterminate:YES];
 		var frame=[_superview frame];
 		frame.origin.x=frame.size.width/2-32;
 		frame.origin.y=frame.size.height/2;
