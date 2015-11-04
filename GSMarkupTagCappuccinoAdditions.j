@@ -117,6 +117,7 @@
 	else
 	{	[platformObject setDisplayedWhenStopped:NO];
 		[platformObject setStyle:CPProgressIndicatorSpinningStyle];
+        [platformObject setIndeterminate:YES];
 		[platformObject setControlSize:CPMiniControlSize];
 		[_attributes setObject: @"16" forKey: @"height"];
 		[_attributes setObject: @"16" forKey: @"width"];
