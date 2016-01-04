@@ -194,8 +194,8 @@ var _allRelationships;
     CPString _bindingColumn @accessors(property=bindingColumn);
     CPString _targetColumn @accessors(setter=setTargetColumn:);
     CPString _type @accessors(property=type);
-    var         _target_cache;
-    var         _runSynced @accessors(property=runSynced);
+    var      _target_cache;
+    var      _runSynced @accessors(property=runSynced);
 }
 -(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
 {   self = [super init];
@@ -380,9 +380,10 @@ var _allRelationships;
     {   if(!_changes) _changes = [CPMutableDictionary dictionary];
         [self willChangeValueForKey:aKey];
         var peek=[self formatterForColumnName: aKey];
+
         if(peek || (peek=[_entity formatterForColumnName: aKey]))
-        {   someval= [peek stringForObjectValue:someval];
-        }
+            someval= [peek stringForObjectValue:someval];
+
         [_changes setObject: someval forKey: aKey];
         [self didChangeValueForKey:aKey];
         [[_entity store] writeChangesInObject:self];
@@ -392,9 +393,9 @@ var _allRelationships;
         {   var i,l=peekRels.length;
             for(i=0; i<l; i++)
             {   var rel = peekRels[i];
-                [rel _invalidateCache];
-                [self willChangeValueForKey: [rel name]];
-                [self didChangeValueForKey: [rel name]];
+                rel._target_cache=[];
+                [self willChangeValueForKey:[rel name]];
+                [self didChangeValueForKey:[rel name]];
             }
         }
     } else if(type == 1)
