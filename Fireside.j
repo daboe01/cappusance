@@ -41,25 +41,14 @@
     CPMutableDictionary _formatters;
 }
 
--(CPArray) relationshipsWithTargetProperty: aKey
-{   var ret=[];
-    var rels=[_relations allObjects];
-    if(!rels) return [];
-    var i,l= rels.length;
-    for(i=0;i<l;i++)
-    {   var r= rels[i];
-        if([r targetColumn] === aKey) [ret addObject: r];
-    }
-    return ret;
-}
--(CPArray) relationshipsWithSourceProperty: aKey
+-(CPArray) relationshipsWithProperty: aKey
 {   var ret=[];
     var rels=[_relations allObjects]
     if(!rels) return [];
     var i,l= rels.length;
     for(i=0;i<l;i++)
     {   var r= rels[i];
-        if([r bindingColumn] === aKey) [ret addObject: r];
+        if([r bindingColumn] === aKey || [r targetColumn] === aKey) [ret addObject: r];
     }
     return ret;
 }
@@ -365,7 +354,7 @@ var _allRelationships;
         var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
         if(isToMany)
         {
-            var defaults = rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey: bindingColumn] forKey: rel._targetColumn] : @{};
+            var defaults=rel._targetColumn? [CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn]:@{};
             [results setDefaults: defaults];
             [results setKvoKey: aKey];
             [results setKvoOwner: self];
@@ -381,8 +370,8 @@ var _allRelationships;
 {   return [self valueForKey: aKey synchronous: NO];
 }
 - (void)setValue: someval forKey:(CPString)aKey
-{   var type= [self typeOfKey: aKey];
-    var oldval=[self valueForKey: aKey];
+{   var type= [self typeOfKey:aKey];
+    var oldval=[self valueForKey:aKey];
 
     if(oldval === someval) return;    // we are not interested in side effects, so ignore identity-updates
 
@@ -395,23 +384,9 @@ var _allRelationships;
         }
         [_changes setObject: someval forKey: aKey];
         [self didChangeValueForKey:aKey];
-        [[_entity store] writeChangesInObject: self];
-        var peekRels=[_entity relationshipsWithTargetProperty: aKey];
-        if (peekRels) //if we write to a relationship key: update the target array forcing an update of the arraycontrollers
-        {   var i,l=peekRels.length;
-            for(i=0; i<l; i++)
-            {   var rel = peekRels[i];
-                if([rel type] == FSRelationshipTypeToMany)
-                {   [rel _invalidateCache];
-                    var affectedObject=[[rel source] objectWithPK: oldval];    // force updating the current selection in the arraycontrollers
-                    var newValOfAffectedObject= [rel fetchObjectsForKey: oldval]
-                    [affectedObject willChangeValueForKey: [rel name]];
-                    [affectedObject setValue: newValOfAffectedObject forKey: [rel name] ];
-                    [affectedObject didChangeValueForKey: [rel name]];
-                }
-            }
-        }
-        var peekRels=[_entity relationshipsWithSourceProperty: aKey];
+        [[_entity store] writeChangesInObject:self];
+
+        var peekRels=[_entity relationshipsWithProperty:aKey];
         if (peekRels)
         {   var i,l=peekRels.length;
             for(i=0; i<l; i++)
