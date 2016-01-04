@@ -354,7 +354,8 @@ var _allRelationships;
         var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
         if(isToMany)
         {
-            var defaults=rel._targetColumn? [CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn]:@{};
+            var defaults=rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey:bindingColumn] forKey: rel._targetColumn]:@{};
+ 
             [results setDefaults: defaults];
             [results setKvoKey: aKey];
             [results setKvoOwner: self];
