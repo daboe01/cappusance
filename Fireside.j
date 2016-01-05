@@ -48,7 +48,7 @@
     var i,l= rels.length;
     for(i=0;i<l;i++)
     {   var r= rels[i];
-        if([r bindingColumn] === aKey || [r targetColumn] === aKey) [ret addObject: r];
+        if([r bindingColumn] === aKey) [ret addObject: r];
     }
     return ret;
 }
