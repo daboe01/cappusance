@@ -41,19 +41,7 @@
     CPMutableDictionary _formatters;
 }
 
--(CPArray) relationshipsWithProperty: aKey
-{   var ret=[];
-    var rels=[_relations allObjects]
-    if(!rels) return [];
-    var i,l= rels.length;
-    for(i=0;i<l;i++)
-    {   var r= rels[i];
-        if([r bindingColumn] === aKey) [ret addObject: r];
-    }
-    return ret;
-}
-
-- _arrayForArray: results withDefaults: someDefaults
+-(CPArray)_arrayForArray: results withDefaults: someDefaults
 {   var r=[[FSMutableArray alloc] initWithArray: results ofEntity: self];
     [r setDefaults: someDefaults];
     return r;
@@ -194,8 +182,8 @@ var _allRelationships;
     CPString _bindingColumn @accessors(property=bindingColumn);
     CPString _targetColumn @accessors(setter=setTargetColumn:);
     CPString _type @accessors(property=type);
-    var      _target_cache;
-    var      _runSynced @accessors(property=runSynced);
+    var         _target_cache;
+    var         _runSynced @accessors(property=runSynced);
 }
 -(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
 {   self = [super init];
@@ -354,8 +342,7 @@ var _allRelationships;
         var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
         if(isToMany)
         {
-            var defaults=rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey:bindingColumn] forKey: rel._targetColumn]:@{};
- 
+            var defaults=rel._targetColumn? [CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn]:@{};
             [results setDefaults: defaults];
             [results setKvoKey: aKey];
             [results setKvoOwner: self];
@@ -388,14 +375,15 @@ var _allRelationships;
         [self didChangeValueForKey:aKey];
         [[_entity store] writeChangesInObject:self];
 
-        var peekRels=[_entity relationshipsWithProperty:aKey];
-        if (peekRels)
-        {   var i,l=peekRels.length;
+        var allRels=[_entity._relations allObjects];
+        if (allRels)
+        {   var i,l= allRels.length;
             for(i=0; i<l; i++)
-            {   var rel = peekRels[i];
+            {   var rel = allRels[i];
                 rel._target_cache=[];
-                [self willChangeValueForKey:[rel name]];
-                [self didChangeValueForKey:[rel name]];
+                var name = [rel name];
+                [self willChangeValueForKey:name];
+                [self didChangeValueForKey:name];
             }
         }
     } else if(type == 1)
