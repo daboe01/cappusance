@@ -117,7 +117,7 @@
 	else
 	{	[platformObject setDisplayedWhenStopped:NO];
 		[platformObject setStyle:CPProgressIndicatorSpinningStyle];
-        [platformObject setIndeterminate:YES];
+		[platformObject setIndeterminate:YES];
 		[platformObject setControlSize:CPMiniControlSize];
 		[_attributes setObject: @"16" forKey: @"height"];
 		[_attributes setObject: @"16" forKey: @"width"];
@@ -508,4 +508,35 @@
   return @"segmentedControlItem";
 }
 
+@end
+
+
+@implementation GSMarkupTagWebView: GSMarkupTagView
++ (CPString) tagName
+{
+  return @"webView";
+}
+
++ (Class) platformObjectClass
+{	return [CPWebView class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{
+	platformObject = [super initPlatformObject: platformObject];
+
+    var count = [_content count];
+
+    if (count > 0)
+    {
+	    var s = [_content objectAtIndex: 0];
+
+        if (s != nil  &&  [s isKindOfClass: [CPString class]])
+        {
+	        [platformObject loadHTMLString:s];
+        }
+
+    }
+	return platformObject;
+}
 @end
