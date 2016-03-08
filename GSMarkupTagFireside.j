@@ -19,6 +19,9 @@
 -(BOOL) isNumeric
 {	return [self boolValueForAttribute: @"numeric"]==1;
 }
+-(BOOL) isOptimistic
+{	return [self boolValueForAttribute: @"optimistic"]==1;
+}
 /* Will never be called.  */
 - (id) allocPlatformObject
 {	return nil;
@@ -79,8 +82,10 @@
 			{	if(myPK) [CPException raise:CPInvalidArgumentException reason:@"Duplicate PK "+[v name]+"! "+ myPK+" already is PK!"];
 				else myPK=[v name];
 			}
-			if([v isNumeric]) [platformObject addNumericColumn: [v name]];
-			[myCols addObject: [v name]];
+			if([v isNumeric])     [platformObject addNumericColumn: [v name]];
+            if([v isOptimistic])  [platformObject addOptimisticColumn:[v name]];
+
+			[myCols addObject:[v name]];
 		} else if([v isKindOfClass: [GSMarkupRelationship class] ])
 		{	var rel=[[FSRelationship alloc] initWithName: [v name] source: platformObject andTargetEntity: [v target]];	//set name as a temorary symbolic link. will be resolved in decoder later on.
 			if([v bindingColumn]) [rel setBindingColumn: [v bindingColumn] ];

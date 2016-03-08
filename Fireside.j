@@ -36,6 +36,7 @@
     CPSet        _columns @accessors(property=columns);
     CPSet        _relations;
     CPSet        _numerics;
+    CPSet        _optimistics;
     FSStore        _store @accessors(property=store);
     CPMutableArray _pkcache;
     CPMutableDictionary _formatters;
@@ -138,6 +139,14 @@
 }
 -(BOOL) isNumericColumn:(CPString) aCol
 {   return [_numerics containsObject: aCol];
+}
+
+-(void) addOptimisticColumn:(CPString)aCol
+{   if(!_optimistics) _optimistics =[CPSet setWithObject:aCol];
+    else [_optimistics addObject: aCol];
+}
+-(BOOL) isOptimisticColumn:(CPString) aCol
+{   return [_optimistics containsObject:aCol];
 }
 
 -(CPArray) allObjects
@@ -376,7 +385,7 @@ var _allRelationships;
         [[_entity store] writeChangesInObject:self];
 
         var allRels=[_entity._relations allObjects];
-        if (allRels)
+        if (allRels && ![_entity isOptimisticColumn:aKey])
         {   var i,l= allRels.length;
             for(i=0; i<l; i++)
             {   var rel = allRels[i];
