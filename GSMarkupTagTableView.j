@@ -29,6 +29,18 @@
 
 @implementation FSTableView: CPTableView
 
+- (id)_hitTest:(CPView)aView
+{
+   if (_editingColumn >=0 && ![aView acceptsFirstResponder] && !_isViewBased && [aView isKindOfClass:[CPControl class]] && ![aView isKindOfClass:[CPTextField class]])
+   {
+       var fr = [[CPApp keyWindow] firstResponder];
+       [self _commitDataViewObjectValue:fr]
+       [[CPRunLoop currentRunLoop] performSelector:@selector(sendEvent:) target:CPApp argument:[CPApp currentEvent] order:0 modes:[CPDefaultRunLoopMode]];
+       return fr;
+   }
+   return [super _hitTest:aView];
+}
+
 -(void) _startAnimation:sender
 {	if(!self._spinner)
 	{	var progres=[CPProgressIndicator new];
