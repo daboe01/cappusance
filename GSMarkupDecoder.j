@@ -67,7 +67,8 @@
 
 @implementation GSMarkupDecoder: CPObject
 {	var					_uniqueID;
-	CPMutableDictionary _nameTable;
+    CPMutableDictionary _nameTable;
+    CPMutableDictionary _replicationNameTable;
 	CPDictionary		_externalNameTable;
 	CPMutableDictionary _tagNameToObjectClass;
 	CPString			_xmlStr;
@@ -421,7 +422,21 @@
 			{	[oPO setSortDescriptors: [  [self _getObjectForIdString: peek ]  ] ];
 			}
 			if (peek=[[o attributes] objectForKey:"entity"])
-			{	var entity=[[_nameTable objectForKey: peek] platformObject];
+			{
+                var entity=[_replicationNameTable objectForKey:peek];
+                if(!entity)
+                    entity=[[_nameTable objectForKey:peek] platformObject];
+                if(!entity)
+                {
+                    var re = new RegExp("(.+)@([0-9]+)");
+                    var m = re.exec(peek);
+                    if(m)
+                    {
+                        if(!_replicationNameTable) _replicationNameTable = @{};
+                        entity = [[[_nameTable objectForKey:m[1]] platformObject] copyOfEntity];
+                        [_replicationNameTable setObject:entity forKey:peek]
+                    }
+                }
 				[oPO setEntity: entity];
 			}
 			if( [o boolValueForAttribute: "autoFetch"] == 1 )

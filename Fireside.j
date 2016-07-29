@@ -42,6 +42,79 @@
     CPMutableDictionary _formatters;
 }
 
+-(FSEntity)copyOfEntity
+{   var other = [[FSEntity alloc] init];
+    other._name = _name;
+    other._pk = _pk;
+    other._columns = _columns;
+    other._relations = _relations;
+    if(_numerics) other._numerics = _numerics;
+    other._store = _store;
+    other._pkcache = _pkcache;
+    if(_formatters) other._formatters = _formatters;
+    if(_optimistics) other._optimistics = _optimistics;
+
+    return other;
+}
+
+-(CPArray) relationshipWithTarget:(CPString)aTarget
+{   var ret=[];
+    var rels=[_relations allObjects];
+    if(!rels) return [];
+    var i,l= rels.length;
+    for(i=0;i<l;i++)
+    {   var r= rels[i];
+        if(r._target && r._target._name === aTarget)
+        return r;
+    }
+    return nil;
+}
+-(CPArray) relationshipWithName:(CPString)aTarget
+{   var ret=[];
+    var rels=[_relations allObjects];
+    if(!rels) return [];
+    var i,l= rels.length;
+    for(i=0;i<l;i++)
+    {   var r= rels[i];
+        if(r._name === aTarget)
+        return r;
+    }
+    return nil;
+}
+
+- (void)setRelationship:(FSRelationship)aRel forTarget:(CPString)aTarget
+{   var o = [self relationshipWithTarget:aTarget];
+    
+    if (o)
+    {    _relations = [CPSet setWithSet:_relations];
+        [_relations removeObject:o];
+        [_relations addObject:aRel];
+    }
+}
+
+-(CPArray) relationshipsWithTargetProperty: aKey
+{   var ret=[];
+    var rels=[_relations allObjects];
+    if(!rels) return [];
+    var i,l= rels.length;
+    for(i=0;i<l;i++)
+    {   var r= rels[i];
+        if([r targetColumn] === aKey) [ret addObject: r];
+    }
+    return ret;
+}
+-(CPArray) relationshipsWithSourceProperty: aKey
+{   var ret=[];
+    var rels=[_relations allObjects]
+    if(!rels) return [];
+    var i,l= rels.length;
+    for(i=0;i<l;i++)
+    {   var r= rels[i];
+        if([r bindingColumn] === aKey) [ret addObject: r];
+    }
+    return ret;
+}
+
 -(CPArray)_arrayForArray: results withDefaults: someDefaults
 {   var r=[[FSMutableArray alloc] initWithArray: results ofEntity: self];
     [r setDefaults: someDefaults];
@@ -194,6 +267,20 @@ var _allRelationships;
     var         _target_cache;
     var         _runSynced @accessors(property=runSynced);
 }
+
+-(FSEntity)copyOfRelationship
+{   var other =[[FSRelationship alloc] init];
+    other._name = _name;
+    other._source = _source;
+    other._target = _target;
+    other._bindingColumn = _bindingColumn;
+    other._targetColumn = _targetColumn;
+    other._type = _type;
+    other._target_cache = _target_cache;
+    other._runSynced = _runSynced;
+    return other;
+}
+
 -(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
 {   self = [super init];
     if (self)
