@@ -402,22 +402,29 @@
 
 - (id) initPlatformObject: (id)platformObject
 {	platformObject = [super initPlatformObject: platformObject];
-	[platformObject setLocale: [[CPLocale alloc] initWithLocaleIdentifier:@"de_DE"]];	//<!> fixme
+    [platformObject setLocale: [[CPLocale alloc] initWithLocaleIdentifier:@"de_DE"]];	//<!> fixme
     var styleString = [_attributes objectForKey: @"style"];
-	if(styleString === 'textual')
-	{   [platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
-	    [_attributes setObject: @"120" forKey: @"width"];
-	    [_attributes setObject: @"29" forKey: @"height"];
-    	    [platformObject setDatePickerElements: CPYearMonthDayDatePickerElementFlag];
-	}
-	else if(styleString === 'graphical')
-        {   [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
-            [platformObject setDatePickerElements: CPYearMonthDatePickerElementFlag]
-	    [_attributes setObject: @"100" forKey: @"width"];
-	    [_attributes setObject: @"100" forKey: @"height"];
+    if(styleString === 'textual')
+    {   [platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
+        [_attributes setObject: @"120" forKey: @"width"];
+        [_attributes setObject: @"29" forKey: @"height"];
+        var elements = CPYearMonthDayDatePickerElementFlag;
+        
+        if ([self boolValueForAttribute: @"hm"] == 1)
+        {   elements |= CPHourMinuteDatePickerElementFlag;
+            [_attributes setObject: @"250" forKey: @"width"];
         }
-
-	return platformObject;
+        
+        [platformObject setDatePickerElements:elements];
+    }
+    else if(styleString === 'graphical')
+    {   [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
+        [platformObject setDatePickerElements: CPYearMonthDatePickerElementFlag]
+        [_attributes setObject: @"100" forKey: @"width"];
+        [_attributes setObject: @"100" forKey: @"height"];
+    }
+    
+    return platformObject;
 }
 
 - (id) postInitPlatformObject: (id)platformObject
