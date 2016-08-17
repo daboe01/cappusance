@@ -404,6 +404,7 @@
 {	platformObject = [super initPlatformObject: platformObject];
     [platformObject setLocale: [[CPLocale alloc] initWithLocaleIdentifier:@"de_DE"]];	//<!> fixme
     var styleString = [_attributes objectForKey: @"style"];
+
     if(styleString === 'textual')
     {   [platformObject setDatePickerStyle: CPTextFieldAndStepperDatePickerStyle];
         [_attributes setObject: @"120" forKey: @"width"];
