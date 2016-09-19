@@ -363,6 +363,11 @@
 @end
 
 @implementation GSMarkupTagSwitchButton: GSMarkupTagButton
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+    [platformObject setObjectValue:[self boolValueForAttribute:"selected"]==1 ];
+    return platformObject;
+}
 + (CPString) tagName
 {
   return @"switchButton";
