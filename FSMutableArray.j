@@ -19,6 +19,7 @@
 
 	id _kvoKey @accessors(property=kvoKey);
 	id _kvoOwner @accessors(property=kvoOwner);
+    id _kvoMethod;
 }
 
 + (id)alloc
@@ -231,13 +232,13 @@
 	[self _setRepresentedObject:target];
 }
 
--(void) connection: someConnection didReceiveData: data
+-(void) connection:(CPConnection)someConnection didReceiveData:(id)data
 {	var j = JSON.parse( data );
 	var a = [];
 	if(j)
 	{	var i,l=j.length;
 		for(i=0;i<l;i++)
-		{	var pk=j[i][[_entity pk]];
+		{	var pk=j[i][_entity._pk];
 			var peek;
 			if (peek=[_entity _registeredObjectForPK: pk])	// enforce singleton pattern
 			{	[a addObject:peek]; 
@@ -249,9 +250,16 @@
 			}
 		}
 	}
-	if(_kvoKey&& _kvoOwner) [_kvoOwner willChangeValueForKey: _kvoKey];
-	[self _setRepresentedObject: a];
-	if(_kvoKey && _kvoOwner) [_kvoOwner didChangeValueForKey: _kvoKey];
+	if(_kvoKey&& _kvoOwner)
+		[_kvoOwner willChangeValueForKey: _kvoKey];
+
+	[self _setRepresentedObject:a];
+
+	if(_kvoKey && _kvoOwner)
+        [_kvoOwner didChangeValueForKey: _kvoKey];
+
+    if(_kvoMethod && _kvoOwner)
+        [_kvoOwner performSelector:_kvoMethod withObject:self];
 
 	if(_entity.__ACForSpinner && _entity.__ACForSpinner.__tableViewForSpinner)
 		[_entity.__ACForSpinner.__tableViewForSpinner _stopAnimation: self];

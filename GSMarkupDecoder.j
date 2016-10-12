@@ -298,10 +298,10 @@
 
 - (void) _postprocessForBindings:(CPArray) someArr
 {	var i, l=someArr.length;
-	for(i=0;i<l;i++)
+	for(i=0; i < l; i++)
 	{	var o=someArr[i];
 		if(![o respondsToSelector:@selector(platformObject)]) continue;
-		var oPO=[o platformObject];
+		var oPO;
 		var peek;
 		if (peek=[[o attributes] objectForKey: "itemsBinding"])		// items such as in pull-down or combobox
 		{	var r = [peek rangeOfString: @"."];
@@ -314,6 +314,7 @@
 				var itemsFace = [peek substringFromIndex: CPMaxRange(r)];
 				var valItemsFace=[arrCtrl pk];
 
+				oPO=[o platformObject];
 				if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	if(itemsFace && valItemsFace)
 					{	[oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options: @{"valueFace": valItemsFace}];
@@ -331,6 +332,7 @@
 		if (peek=[[o attributes] objectForKey: "valueBinding"])
 		{	var r = [peek rangeOfString: @"."];
 
+			oPO=[o platformObject];
 			if ([oPO isKindOfClass: [CPTableView class] ])
 			{	var target=[self _getObjectForIdString: peek];
 				if([o boolValueForAttribute: "viewBasedBindings"] == 1)
@@ -357,8 +359,10 @@
 
 				var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
 
+                oPO=[o platformObject];
+
 				var binding=CPValueBinding;
-				if([oPO  isKindOfClass: [FSArrayController class]])
+				if([oPO  isKindOfClass:[FSArrayController class]])
 				{	binding="contentArray";
 				} else if([oPO isKindOfClass: [CPPopUpButton class]])
 				{	binding="selectedTag";
@@ -386,11 +390,14 @@
             var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
             var binding=CPEnabledBinding;
 			var options=nil;
+            oPO=[o platformObject];
 			[oPO bind: binding toObject: target withKeyPath: keyValuePath options: options ];
 
         }
 		if (peek=[[o attributes] objectForKey: "filterPredicate"])
-		{	if( [oPO isKindOfClass: [FSArrayController class]])
+		{
+            oPO=[o platformObject];
+            if( [oPO isKindOfClass: [FSArrayController class]])
 			{	[oPO setClearsFilterPredicateOnInsertion:NO];
 				[oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
 			}
@@ -399,6 +406,7 @@
 		{	var displayFormat=[[o attributes] objectForKey: "displayFormat"];
 			var editingFormat=[[o attributes] objectForKey: "editingFormat"];
 			var emptyIsValid=([o boolValueForAttribute: "editingFormat"]==1);
+            oPO=[o platformObject];
 			if(!displayFormat && !editingFormat)
 				 [oPO setFormatter: [CPClassFromString(peek) new]];
 			else [oPO setFormatter: [CPClassFromString(peek)
@@ -407,48 +415,58 @@
 					emptyIsValid: emptyIsValid]];
 
 		}
-		[self _postprocessForBindings:[o content]];
+        if ([[o content] count])
+            [self _postprocessForBindings:[o content]];
 	}
 }
+
 - (void) _postprocessForEntities:(CPArray) someArr
 {	var i, l=someArr.length;
 	for(i=0;i<l;i++)
 	{	var o=someArr[i];
-		if(![o respondsToSelector:@selector(platformObject)]) continue;
+
+        if(![o isKindOfClass:GSMarkupArrayController])
+            continue;
+
 		var oPO=[o platformObject];
-		if([oPO isKindOfClass: [FSArrayController class]])		// autofetching
-		{	var peek;
-			if(peek=[[o attributes] objectForKey: "sortDescriptor"])
-			{	[oPO setSortDescriptors: [  [self _getObjectForIdString: peek ]  ] ];
-			}
-			if (peek=[[o attributes] objectForKey:"entity"])
+		var peek;
+		if(peek=[[o attributes] objectForKey:"sortDescriptor"])
+		{	[oPO setSortDescriptors:[[self _getObjectForIdString:peek]]];
+		}
+		if (peek=[[o attributes] objectForKey:"entity"])
+		{
+			var entity=[_replicationNameTable objectForKey:peek];
+			if(!entity)
+				entity=[[_nameTable objectForKey:peek] platformObject];
+			if(!entity)
 			{
-                var entity=[_replicationNameTable objectForKey:peek];
-                if(!entity)
-                    entity=[[_nameTable objectForKey:peek] platformObject];
-                if(!entity)
-                {
-                    var re = new RegExp("(.+)@([0-9]+)");
-                    var m = re.exec(peek);
-                    if(m)
-                    {
-                        if(!_replicationNameTable) _replicationNameTable = @{};
-                        entity = [[[_nameTable objectForKey:m[1]] platformObject] copyOfEntity];
-                        [_replicationNameTable setObject:entity forKey:peek]
-                    }
-                }
-				[oPO setEntity: entity];
-			}
-			if( [o boolValueForAttribute: "autoFetch"] == 1 )
-			{	var entityName=[[o attributes] objectForKey: "entity"];
-				if (entityName)
-				{	var entity;
-					if (entity=[[_nameTable objectForKey: entityName ] platformObject])
-					{	[oPO setContent: [entity allObjects] ];
-					}
+				var re = new RegExp("(.+)@([0-9]+)");
+				var m = re.exec(peek);
+				if(m)
+				{
+					if(!_replicationNameTable) _replicationNameTable = @{};
+					entity = [[[_nameTable objectForKey:m[1]] platformObject] copyOfEntity];
+					[_replicationNameTable setObject:entity forKey:peek]
 				}
 			}
-		} [self _postprocessForEntities:[o content]];
+			[oPO setEntity: entity];
+		}
+		if( [o boolValueForAttribute: "autoFetch"] == 1 )
+		{	var entityName=[[o attributes] objectForKey: "entity"];
+			if (entityName)
+			{	var entity;
+				if (entity=[[_nameTable objectForKey: entityName ] platformObject])
+				{	var ao = [[FSMutableArray alloc] initWithArray:[] ofEntity:entity];
+					ao._kvoMethod=@selector(setContent:);
+					ao._kvoOwner=oPO
+					[oPO setContent:ao]
+					[entity._store fetchObjectsForURLRequest:[entity._store requestForAddressingAllObjectsInEntity:entity] inEntity:entity requestDelegate:ao];
+				}
+			}
+		}
+
+		if([[o content] count])
+            [self _postprocessForEntities:[o content]];
 	}
 }
 
