@@ -302,12 +302,12 @@ var _allRelationships;
 {   if(_targetColumn && _targetColumn.length) return _targetColumn;
     return [_target pk];
 }
--(CPArray) fetchObjectsForKey:(id) targetPK options: myOptions
+-(CPArray) fetchObjectsForKey:(id)targetPK options:(CPDictionary)myOptions
 {   if(!targetPK) return nil;
     var peek;
     if(!_target_cache) _target_cache=[];
     if(peek=_target_cache[targetPK]) return peek;
-    var res= [[_target store] fetchObjectsWithKey: [self targetColumn] equallingValue: targetPK inEntity: _target options: myOptions];
+    var res= [[_target store] fetchObjectsWithKey:[self targetColumn] equallingValue:targetPK inEntity:_target options: myOptions];
     _target_cache[targetPK]=res;
     return res;
 }
@@ -350,15 +350,21 @@ var _allRelationships;
 }
 
 -(void) reload
-{   var mypk=[self valueForKey: [[self entity] pk] synchronous:YES];
-    if([self entity]._pkcache)   [self entity]._pkcache[mypk]=undefined;
-    var tmpbj= [[self entity] objectWithPK: mypk];
-    if(!tmpbj) return;
-    var cols=[tmpbj._data allKeys];
-    var i,l=[cols count];
-    for(i=0; i<l; i++)
+{   var mypk = [_data objectForKey:_entity._pk];
+    
+    if([self entity]._pkcache)
+        [self entity]._pkcache[mypk] = undefined;
+    
+    var tmpbj= [[self entity] objectWithPK:mypk];
+    
+    if(!tmpbj)
+        return;
+    
+    var cols = [tmpbj._data allKeys];
+    var i,l = [cols count];
+    for(i=0; i < l; i++)
     {   var aKey = [cols objectAtIndex:i];
-        if([_data objectForKey: aKey] !== [tmpbj._data objectForKey: aKey])
+        if([self valueForKey:aKey] !== [tmpbj._data objectForKey: aKey])
         {   [self willChangeValueForKey:aKey];
             [_data setObject: [tmpbj._data objectForKey: aKey] forKey: aKey];
             if(_changes) [_changes removeObjectForKey: aKey];
@@ -409,10 +415,7 @@ var _allRelationships;
 {   var type= [self typeOfKey: aKey];
 
     if(type == 0)
-    {   if(!_data)        // <!>fixme: implement lazy (batch-) fetching here
-        {
-        }
-    
+    {
         var  o= [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
         var peek=[self formatterForColumnName:aKey];
         if(peek || (peek=[_entity formatterForColumnName:aKey]))
@@ -436,12 +439,16 @@ var _allRelationships;
         }
         if(!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
         var results=[rel fetchObjectsForKey: [self valueForKey: bindingColumn] options: myoptions];
+
         if(isToMany)
         {
-            var defaults=rel._targetColumn? [CPDictionary dictionaryWithObject: [self valueForKey: bindingColumn] forKey: rel._targetColumn]:@{};
-            [results setDefaults: defaults];
-            [results setKvoKey: aKey];
-            [results setKvoOwner: self];
+            var defaults = rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey:bindingColumn] forKey: rel._targetColumn]:@{};
+            if(![results respondsToSelector:@selector(setDefaults:)])
+                return results
+                
+            [results setDefaults:defaults];
+            [results setKvoKey:aKey];
+            [results setKvoOwner:self];
             return results;
         } else return (results && [results count])? [results objectAtIndex: 0] : nil;
     } else
@@ -590,27 +597,37 @@ var _allRelationships;
 }
 
 -(void) writeChangesInObject: (id) obj
-{   var mypk=[obj valueForKey: [[obj entity] pk]];
+{   var mypk = [obj valueForKey: [[obj entity] pk]];
+    
     if([[obj entity] pk] === undefined) return;
-    if(!obj._changes) return;
+    
+    if(!obj._changes)
+        return;
+    
     var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: mypk inEntity:[obj entity]];
     [request setHTTPMethod:"PUT"];
     [request setHTTPBody: [obj._changes toJSON] ];
-    var ret=[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+    // var ret=[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+    var myConn = [CPURLConnection connectionWithRequest:request delegate:self];
+    myConn._object = obj;
+}
+-(void)connection:(CPConnection)someConnection didReceiveData:(id)ret
+{
+    var err;
     try{
-    var err = JSON.parse( [ret rawString] );
+        err  = JSON.parse(ret);
     } catch(e)
     {
     }
+    [someConnection._object reload];
     if(err && err['err'])
     {   alert(err['err']);
-        obj._changes=nil;  // discard changes that weren't accepted by the backend
+        someConnection._object._changes=nil;  // make sure to discard all changes as they weren't accepted by the backend
     }
-
-    [obj reload];
+    someConnection._object = nil;
 }
 
--(void) insertObject:(id)someObj 
+-(void) insertObject:(id)someObj
 {   var entity=[someObj entity];
     var request=[self requestForInsertingObjectInEntity:entity];
     [request setHTTPBody:[someObj._changes toJSON] ];
