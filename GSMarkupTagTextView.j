@@ -12,7 +12,7 @@
 
 - (BOOL) resignFirstResponder
 {
-    setTimeout(function() {[self _reverseSetBinding]}, 400);
+	[self _reverseSetBinding];
 	return [super resignFirstResponder];
 }
 @end
