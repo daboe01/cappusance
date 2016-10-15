@@ -1,4 +1,4 @@
-@import <CPTextView/CPTextView.j>
+@import <AppKit/CPTextView.j>
 
 
 @implementation KVOCPText:CPTextView
