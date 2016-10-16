@@ -29,6 +29,10 @@
 
 @implementation FSTableView: CPTableView
 
+- (void)_commitDataViewObjectValue:(id)sender
+{	[self _commitDataViewObjectValue:sender forColumn:_editingColumn andRow:_editingRow];
+}
+
 -(void) _startAnimation:sender
 {	if(!self._spinner)
 	{	var progres=[CPProgressIndicator new];
