@@ -336,8 +336,8 @@
             if ([oPO isKindOfClass: [CPTableView class] ])
             {   var target=[self _getObjectForIdString: peek];
                 if([o boolValueForAttribute: "viewBasedBindings"] == 1)
-                {   [oPO bind: "content"          toObject: target withKeyPath:"arrangedObjects" options: nil];
-                    [oPO bind: "selectionIndexes" toObject: target withKeyPath:"selectionIndexes" options:nil];
+                {   [oPO bind:"content"          toObject: target withKeyPath:"arrangedObjects" options: nil];
+                    [oPO bind:"selectionIndexes" toObject: target withKeyPath:"selectionIndexes" options:nil];
                 } else        // "explicit" bindings for tableView columns, where you do not want to connect the columns individually but through "identifier" property
                 {   var _content=[o content];
                     var j, l1 = _content? _content.length:0;
@@ -359,18 +359,17 @@
 
                 var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
 
-                oPO=[o platformObject];
-
                 var binding=CPValueBinding;
                 if([oPO  isKindOfClass:[FSArrayController class]])
                 {   binding="contentArray";
-                } else if([oPO isKindOfClass: [CPPopUpButton class]])
+                } else if([oPO isKindOfClass:[CPPopUpButton class]])
                 {   binding="selectedTag";
                 }
                 var options=nil;
                 if([[o attributes] objectForKey: "continuousBinding"]==="YES") options=@{CPContinuouslyUpdatesValueBindingOption:YES};
-                [oPO bind: binding toObject: target withKeyPath: keyValuePath options: options ];
-                if([oPO isKindOfClass: [CPCollectionView class]])
+
+				[oPO bind:binding toObject:target withKeyPath: keyValuePath options:options ];
+                if([oPO isKindOfClass:[CPCollectionView class]])
                 {
                     if (r.location != CPNotFound)
                     {   var pathComponents=[peek componentsSeparatedByString:"."];
@@ -391,15 +390,15 @@
             var binding=CPEnabledBinding;
             var options=nil;
             oPO=[o platformObject];
-            [oPO bind: binding toObject: target withKeyPath: keyValuePath options: options ];
+            [oPO bind:binding toObject:target withKeyPath:keyValuePath options: options ];
 
         }
         if (peek=[[o attributes] objectForKey: "filterPredicate"])
         {
             oPO=[o platformObject];
-            if( [oPO isKindOfClass: [FSArrayController class]])
+            if( [oPO isKindOfClass:[FSArrayController class]])
             {   [oPO setClearsFilterPredicateOnInsertion:NO];
-                [oPO setFilterPredicate: [self _getObjectForIdString: peek] ];
+                [oPO setFilterPredicate: [self _getObjectForIdString:peek] ];
             }
         }
         if (peek=[[o attributes] objectForKey: "formatterClass"])
