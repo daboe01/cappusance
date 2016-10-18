@@ -227,10 +227,12 @@
     return [_store fetchAllObjectsInEntity: self];
 }
 
--(void) _registerObjectInPKCache:(id) someObj
-{   if(!_pkcache) _pkcache=[CPMutableArray new];
-    if(_pk) _pkcache[[someObj valueForKey:_pk]]=someObj;
+-(void) _registerObjectInPKCache:(id)someObj
+{   if(!_pkcache) _pkcache=[];
+    if(_pk)
+        _pkcache[someObj._data.valueForKey(_pk)] = someObj;
 }
+
 -(void) _registeredObjectForPK:(id) somePK
 {   if(!_pkcache) return nil;
     return _pkcache[somePK];
