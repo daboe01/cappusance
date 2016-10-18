@@ -233,20 +233,28 @@
 }
 
 -(void) connection:(CPConnection)someConnection didReceiveData:(id)data
-{	var j = JSON.parse( data );
+{	var j = JSON.parse(data);
 	var a = [];
 	if(j)
 	{	var i,l=j.length;
-		for(i=0;i<l;i++)
+		for(i=0;i < l;i++)
 		{	var pk=j[i][_entity._pk];
 			var peek;
-			if (peek=[_entity _registeredObjectForPK: pk])	// enforce singleton pattern
-			{	[a addObject:peek]; 
-			} else
-			{	var t=[[FSObject alloc] initWithEntity: _entity];
-				[t _setDataFromJSONObject: j[i]];
-				[_entity _registerObjectInPKCache: t];
-				[a addObject:t];
+			if (peek=[_entity _registeredObjectForPK:pk])	// enforce singleton pattern
+				a.push(peek);
+			else
+			{	var t=[[FSObject alloc] initWithEntity:_entity];
+                var o=j[i];
+                t._data = [CPMutableDictionary dictionary];
+                for (var propName in o) {
+                    if (o.hasOwnProperty(propName)) {
+                        pnv = o[propName];
+                        if(pnv)
+                            t._data.setValueForKey(propName, pnv);
+                    }
+                }
+				[_entity _registerObjectInPKCache:t];
+                a.push(t);
 			}
 		}
 	}
