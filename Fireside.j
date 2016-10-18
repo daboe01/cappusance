@@ -375,14 +375,13 @@ var _allRelationships;
 
 - (void)_setDataFromJSONObject:(id) o
 {   _data = [CPMutableDictionary dictionary];
-    var cols=[[_entity columns] allObjects];
-    var i,l=cols.length;
-    for(i=0; i<l; i++)
-    {   var propName = cols[i];
-
-        if(o[propName] !== nil)
-            [_data setObject: o[propName] forKey:propName];
-   }
+    for (var propName in o) {
+        if (o.hasOwnProperty(propName)) {
+            pnv = o[propName];
+            if(pnv)
+                _data.setValueForKey(propName, pnv);
+        }
+    }
 }
 
 -(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
