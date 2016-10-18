@@ -84,19 +84,23 @@ var staticNameTable;
 	var awaker = [GSMarkupAwaker new];
 	var decoder=[[GSMarkupDecoder alloc] initWithXMLString: [data rawString]];
 	[decoder setExternalNameTable:context];
+    console.log("Will parse");
 	[decoder parse];
+    console.log("Did parse");
+
 	var objects=[decoder objects];
 
+    console.log("Will postparse");
 	if (mapping != nil)
 	{	e = [mapping keyEnumerator];
 	    while ((key = [e nextObject]) != nil)
-		{	var value = [mapping objectForKey: key];
+		{	var value = [mapping objectForKey:key];
 	        [decoder setObjectClass: value  forTagName: key];
 		}
 	}
-	platformObjects = [CPMutableArray arrayWithCapacity: [objects count]];
-	var localizer = [[GSMarkupLocalizer alloc] initWithTable: table
-					       bundle: bundle];
+	platformObjects = [];
+	var localizer = [[GSMarkupLocalizer alloc] initWithTable:table
+					       bundle:bundle];
 	nameTable = [[decoder nameTable] mutableCopy];
 	connectors = [decoder connectors];
 
@@ -105,17 +109,15 @@ var staticNameTable;
 	{	var o;
 	    var platformObject;
 	    
-	    o = [objects objectAtIndex: i];
+	    o = objects[i];
 	    [o setLocalizer: localizer];
-	    [o setAwaker: awaker];
+	    [o setAwaker:awaker];
 
 	    /* platformObject is autoreleased.  */
 	    platformObject = [o platformObject];
 
-	    if (platformObject != nil)
-	      {
-		[platformObjects addObject: platformObject];
-	      }
+	    if (platformObject)
+            platformObjects.push(platformObject);
 	  }
       /* Now update the nameTable replacing each decoded object with
        * its platformObject in the nameTable.
@@ -129,13 +131,10 @@ var staticNameTable;
 	{
 		var object = [nameTable objectForKey: key];
 		var platformObject = [object platformObject];
-		if (platformObject != nil)
-	    {	[nameTable setObject: platformObject  forKey: key];
-	    }
+		if (platformObject)
+	    	[nameTable setObject:platformObject  forKey:key];
 		else
-	    {
 			[nameTable removeObjectForKey: key];
-	    }
 	}
 
       /* Now extend the nameTable by adding the externalNameTable
@@ -143,49 +142,36 @@ var staticNameTable;
        * file).  */
 	e = [context keyEnumerator];
 	while ((key = [e nextObject]) != nil)
-	{	var object = [context objectForKey: key];
+	{	var object = [context objectForKey:key];
 	  
 	  /* CPTopLevelObjects is special ... if it exists, it is a
 	   * key to a mutable array where we store the top-level
 	   * objects so that the caller can access them.  Inspired by
 	   * an undocumented feature of nib loading on other
 	   * platforms.  */
-		if ([key isEqualToString: @"CPTopLevelObjects"]
-	      && [object isKindOfClass: [CPMutableArray class]])
-	    {
+		if (key == "CPTopLevelObjects" && [object isKindOfClass:[CPMutableArray class]])
 			topLevelObjects = object;
-	    }
 		else
-	    {
-	      [nameTable setObject: object  forKey: key];
-	    }
+	      [nameTable setObject:object  forKey:key];
 	}
 
       /* Now extend the nameTable adding the static objects (for example,
        * NSApp if it's a gui application).
        */
 	if (staticNameTable != nil)
-	{	[nameTable addEntriesFromDictionary: staticNameTable];
-	}
+		[nameTable addEntriesFromDictionary: staticNameTable];
 
       /* Now establish the connectors.  Our connectors can manage
        * the nameTable automatically.  */
 	count = [connectors count];
 	for (i = 0; i < count; i++)
-	{	var connector = [connectors objectAtIndex: i];
-//alert([connector description]);
-		[connector establishConnectionUsingNameTable: nameTable];
-	}
+		[connectors[i] establishConnectionUsingNameTable:nameTable];
 
       /* Register the NSOwner, if any, in the list of objects to
        * awake.  */
-	{
-		var fileOwner = [nameTable objectForKey: @"CPOwner"];
-		if (fileOwner != nil)
-		{
-			[awaker registerObject: fileOwner];
-		}
-	}
+    var fileOwner = [nameTable objectForKey: @"CPOwner"];
+    if (fileOwner)
+        [awaker registerObject:fileOwner];
 
       /* Now awake the objects.  */
 	[awaker awakeObjects];
@@ -194,19 +180,16 @@ var staticNameTable;
        * file.  */
 
 
-	var fileOwner = [nameTable objectForKey: @"CPOwner"];
-	var objects = [CPMutableArray array];
+	var fileOwner = [nameTable objectForKey:@"CPOwner"];
+	var objects = [];
 	var n;
 
 	/* Build the array of top-level objects for the
 	 * notification.  */
 	count = [platformObjects count];
 	for (i = 0; i < count; i++)
-	  {
-	    var object = [platformObjects objectAtIndex: i];
-	    [objects addObject: object];
-	  }
-	
+	    objects.push(platformObjects[i]);
+
 	/* Create the notification.  */
 	n = [CPNotification 
 	      notificationWithName: GSMarkupBundleDidLoadGSMarkupNotification
@@ -215,33 +198,24 @@ var staticNameTable;
 				      forKey: @"CPTopLevelObjects"]];
 
 	/* Send the notification to the file owner manually.  */
-	if (fileOwner != nil)
-	  {
-	    if ([fileOwner respondsToSelector: 
-			     @selector (bundleDidLoadGSMarkup:)])	      
-	      {
+	if (fileOwner)
+	    if ([fileOwner respondsToSelector:@selector (bundleDidLoadGSMarkup:)])
 			[fileOwner bundleDidLoadGSMarkup: n];
-	      }
-	  }
-	
+
 	[[CPNotificationCenter defaultCenter] postNotification: n];
 
 	if (topLevelObjects != nil)
 	{
 	  count = [platformObjects count];
 	  for (i = 0; i < count; i++)
-	    {
-	      var object = [platformObjects objectAtIndex: i];
-	      [topLevelObjects addObject: object];
-	    }
+	      topLevelObjects.push(platformObjects[i]);
 	}
 
       /*
        * Finally, pass back name table contents in the context if possible.
        */
-      outputTable = [context objectForKey: @"GSMarkupNameTable"];
-      if (outputTable != nil
-		&& [outputTable isKindOfClass: [CPMutableDictionary class]] == YES)
+    outputTable = [context objectForKey: @"GSMarkupNameTable"];
+    if (outputTable && [outputTable isKindOfClass: [CPMutableDictionary class]])
 	{
 	  var k;
 
@@ -250,12 +224,10 @@ var staticNameTable;
 	  while ((k = [e nextObject]) != nil)
 	    {
 	      if ([context objectForKey: k] == nil)
-			{
-				[outputTable setObject: [nameTable objectForKey: k]
-				  forKey: k];
-			}
+				[outputTable setObject: [nameTable objectForKey: k] forKey: k];
 	    }
 	}
+    console.log("Did postparse");
 
 	success = YES;
 	return success? decoder:nil;
