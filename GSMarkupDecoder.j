@@ -463,6 +463,13 @@
                     [entity._store fetchObjectsForURLRequest:[entity._store requestForAddressingAllObjectsInEntity:entity] inEntity:entity requestDelegate:ao];
                 }
             }
+        } else if ([o boolValueForAttribute: "autoFetchSync"] == 1)
+        {	var entityName=[[o attributes] objectForKey:"entity"];
+            if (entityName)
+            {	var entity;
+                if (entity=[[_nameTable objectForKey:entityName] platformObject])
+                    [oPO setContent:[entity allObjects] ];
+            }
         }
 
         if([[o content] count])
