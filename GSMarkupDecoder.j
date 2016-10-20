@@ -317,7 +317,8 @@
                 oPO=[o platformObject];
                 if([oPO isKindOfClass: [CPPopUpButton class]])
                 {   if(itemsFace && valItemsFace)
-                    {   [oPO bind:"itemArray" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options: @{"valueFace": valItemsFace}];
+                    {
+                        [oPO bind:"itemArray" toObject:arrCtrl withKeyPath: "arrangedObjects."+itemsFace options: @{"valueFace": valItemsFace}];
                     }
                 } else if([oPO isKindOfClass: [CPSegmentedControl class]])
                 {
