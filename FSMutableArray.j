@@ -249,7 +249,7 @@
                 for (var propName in o) {
                     if (o.hasOwnProperty(propName)) {
                         pnv = o[propName];
-                        if(pnv)
+                        if(pnv !== nil)
                             t._data.setValueForKey(propName, pnv);
                     }
                 }

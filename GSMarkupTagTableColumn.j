@@ -186,7 +186,11 @@
         }
 
         value = [binding transformValue:value withOptions:[bindingInfo objectForKey:CPOptionsKey]];
-		[aDataView setValue:value forKey: [aDataView isKindOfClass: [CPPopUpButton class] ]? @"selectedTag":@"objectValue"];
+        if([aDataView isKindOfClass:CPPopUpButton])
+        {   [aDataView setSelectedTag:value];
+        }
+        else
+            [aDataView setObjectValue:value];
     }
 }
 

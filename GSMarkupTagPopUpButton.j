@@ -131,12 +131,12 @@
 	var j;
 	if(l==l1) return;	// length  is identical: nothing to do
 	else if(l<l1)	// new array is larger->append appropriate amount of items at the end
-	{	for(j=0;j<(l1-l);j++)
+	{	for(j=0;j < (l1 - l); j++)
 		{	[self addItemWithTitle:""];
 		}
 	} else			// new array is smaller->remove appropriate amount of items from the end
 	{	var removingIndex=l1;	// last item should be preserved
-		for(j=0;j<(l-l1);j++)
+		for(j = 0; j < (l - l1); j++)
 		{	[self removeItemAtIndex: removingIndex];
 		}
 	}
@@ -147,9 +147,9 @@
 {	var info=[CPBinder infoForBinding: "itemArray" forObject: self];
 	var tagArray;
 	if(info)	// this stuff is to allow row-wise filtered popup-lists in table-views
-	{	var options= [info objectForKey: CPOptionsKey];
-		var predf=[options objectForKey: "PredicateFormat"];
-		var owner=[options objectForKey: "Owner"];
+	{	var options= [info objectForKey:CPOptionsKey];
+		var predf=[options objectForKey:"PredicateFormat"];
+		var owner=[options objectForKey:"Owner"];
 		var ac=   [info objectForKey: CPObservedObjectKey];
 		var mykey=[info objectForKey: CPObservedKeyPathKey];
 		var dotIndex = mykey.lastIndexOf("."),
@@ -167,13 +167,13 @@
 			if(m) rhkey =m[1];
 			var filterValue;
 
-			if(rhkey) filterValue= [owner isKindOfClass:[CPString class]]? owner: [owner valueForKeyPath: rhkey];
+			if (rhkey) filterValue= [owner isKindOfClass:[CPString class]]? owner: [owner valueForKeyPath: rhkey];
 			var mypred = [CPPredicate predicateWithFormat: predf ];
 			if(filterValue) mypred = [mypred predicateWithSubstitutionVariables:@{rhkey: filterValue} ];
 			sourceArray =[sourceArray filteredArrayUsingPredicate: mypred];
 		}
 		someArray=[];
-		tagArray=[];
+		tagArray =[];
 
 		var  i, l = [sourceArray count];
 		for (i = 0; i < l; i++)
@@ -203,7 +203,8 @@
 {	return [[self selectedItem] tag];
 }
 -(void) setSelectedTag:(id)aTag
-{	[self selectItemWithTag:aTag];
+{
+    [self selectItemWithTag:aTag];
 }
 
 @end

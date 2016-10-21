@@ -48,15 +48,17 @@
 
 - (id) initPlatformObject: (id)platformObject
 {
+    if(!platformObject)
+        return;
   /* title done by the enclosing popupbutton  */
 
   /* tag */
   {
     var tag = [_attributes objectForKey: @"tag"];
-    if (tag != nil)
-      {
-	[platformObject setTag: [tag intValue]];
-      }
+    if (tag !== nil)
+    {
+       [platformObject setTag:parseInt(tag, 10)];
+    }
   }
   
   /* action */
@@ -81,18 +83,6 @@
   /* keyEquivalent */
   {
     var keyEquivalent = [_attributes objectForKey: @"keyEquivalent"];
-    
-    /* Backward-compatible hack to support obsolete attribute 'key'.
-     * It will be removed one year from now, on 4 March 2009.
-     */
-    if (keyEquivalent == nil)
-      {
-	keyEquivalent = [_attributes objectForKey: @"key"];
-	if (keyEquivalent != nil)
-	  {
-	    CPLog (@"The 'key' attribute of the <popUpButtonItem> tag is obsolete; please replace it with 'keyEquivalent'");
-	  }
-      }
 
     /* Mac OS X barfs on a nil keyEquivalent.  */    
     if (keyEquivalent != nil)
