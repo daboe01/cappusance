@@ -499,7 +499,8 @@ var _allRelationships;
     } else if(type == 1)
     {   // this is only to make KVC upates happen in order to update the selection in the arraycontrollers.
     }
-    else [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
+	else console.log("Key " + aKey + " is not a column");
+//[CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
 }
 - (id)valueForKeyPath:(CPString)aKeyPath
 {
