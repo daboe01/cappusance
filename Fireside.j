@@ -412,55 +412,63 @@ var _allRelationships;
     return CPNotFound;
 }
 
-- (id)valueForKey:(CPString)aKey synchronous:(BOOL) runSynced
+- (id)valueForKey:(CPString)aKey synchronous:(BOOL)runSynced
 {   var type = [self typeOfKey: aKey];
 
     if(type == 0)
     {
-        var  o= [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
+        var  o = [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
         var peek=[self formatterForColumnName:aKey];
         if(peek || (peek=[_entity formatterForColumnName:aKey]))
-           return [peek objectValueForString: o error: nil];    //<!> fixme handle errors somehow
+            return [peek objectValueForString: o error: nil];    //<!> fixme handle errors somehow
         else if([_entity  isNumericColumn:aKey])
             return [CPNumber numberWithInt:parseInt(o, 10)];
         else if (o)
-        {   if(![o isKindOfClass:[CPString class]])    // cast numbers to strings in order to make predicate filtering work
-            o=[o stringValue];
+        {   if(![o isKindOfClass:CPString])    // cast numbers to strings in order to make predicate filtering work
+			{
+                if ([o isKindOfClass:CPArray] && [o count])
+                    o=o[0];
+
+                if ([o respondsToSelector:@selector(stringValue)])
+                    o=[o stringValue];
+            }
         }
         return o;
-    } else if(type == 1)    // a relationship is accessed
+    }
+    else if(type == 1)    // a relationship is accessed
     {   var rel=[_entity relationOfName: aKey];
         var bindingColumn=[rel bindingColumn];
         if(!bindingColumn) bindingColumn=[_entity pk];
-        
+
         var isToMany=([rel type]== FSRelationshipTypeToMany);
         var myoptions=[CPMutableDictionary new];
-        if([rel type]== FSRelationshipTypeFuzzy)
+        if ([rel type]== FSRelationshipTypeFuzzy)
         {   isToMany=YES;
             [myoptions setObject:"1" forKey:"FSFuzzySearch"];
         }
-        if(!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
+        if (!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
         var results=[rel fetchObjectsForKey:[self valueForKey: bindingColumn] options: myoptions];
-        
-        if(isToMany)
+
+        if (isToMany)
         {
             var defaults = rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey:bindingColumn] forKey: rel._targetColumn]:@{};
             if(![results respondsToSelector:@selector(setDefaults:)])
                 return results
-                
+
 			[results setDefaults:defaults];
             [results setKvoKey:aKey];
             [results setKvoOwner:self];
             return results;
         } else
             return (results && [results count])? [results objectAtIndex: 0] : nil;
-    } else
+    }
+    else
     {   var propSEL = sel_getName(aKey);
         if (propSEL && [self respondsToSelector: propSEL ])
             return [self performSelector:propSEL];
     }
-	if (![[_entity columns] containsObject:aKey])
-        [CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column in entity "+[_entity name]];
+    if (![[_entity columns] containsObject:aKey])
+        console.log("Key "+aKey+" is not a column in entity "+[_entity name]);
     return nil
 }
 
