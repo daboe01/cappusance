@@ -446,7 +446,9 @@ var _allRelationships;
         {   isToMany=YES;
             [myoptions setObject:"1" forKey:"FSFuzzySearch"];
         }
-        if (!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
+        if (!isToMany || runSynced || [rel runSynced])
+            [myoptions setObject:"1" forKey:"FSSynchronous"];
+
         var results=[rel fetchObjectsForKey:[self valueForKey: bindingColumn] options: myoptions];
 
         if (isToMany)
