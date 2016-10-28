@@ -426,8 +426,8 @@
     else if(styleString === 'graphical')
     {   [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
         [platformObject setDatePickerElements: CPYearMonthDatePickerElementFlag]
-        [_attributes setObject: @"100" forKey: @"width"];
-        [_attributes setObject: @"100" forKey: @"height"];
+        [_attributes setObject: @"150" forKey: @"width"];
+        [_attributes setObject: @"150" forKey: @"height"];
     }
     
     return platformObject;
