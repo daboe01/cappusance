@@ -631,6 +631,18 @@ var _allRelationships;
 }
 -(void)connection:(CPConnection)someConnection didReceiveData:(id)ret
 {
+    if (someConnection._someObj)  // this is for retrieving the PK
+    {
+        var j = JSON.parse(ret);
+        var pk=j["pk"];
+        [someConnection._someObj willChangeValueForKey: [someConnection._someObj._entity pk]];
+        [someConnection._someObj._data setObject:pk forKey: [someConnection._someObj._entity pk]];
+        [someConnection._someObj._entity _registerObjectInPKCache:someConnection._someObj];
+        [someConnection._someObj didChangeValueForKey: [someConnection._entity pk]];
+        return;
+    }
+    
+
     var err;
     try{
         err  = JSON.parse(ret);
@@ -645,15 +657,28 @@ var _allRelationships;
     someConnection._object = nil;
 }
 
--(void) insertObject:(id)someObj
-{   var entity=[someObj entity];
+- (void)insertObject:(id)someObj
+{   var entity = [someObj entity];
+
+	if (entity._insertsAsyncronously)
+    {   if(!someObj._data) someObj._data=[CPMutableDictionary new];
+        var request=[self requestForInsertingObjectInEntity:entity];
+        [request setHTTPBody:[someObj._changes toJSON]];
+        var con = [CPURLConnection connectionWithRequest:request delegate:self];
+        con._someObj = someObj;  // this is necessary for retrieving the PK
+        return;
+	}
+
     var request=[self requestForInsertingObjectInEntity:entity];
     [request setHTTPBody:[someObj._changes toJSON] ];
     var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
     var j = JSON.parse( [data rawString]);    // this is necessary for retrieving the PK
     var pk=j["pk"];
     [someObj willChangeValueForKey: [entity pk]];
-    if(!someObj._data) someObj._data=[CPMutableDictionary new];
+
+    if (!someObj._data)
+		someObj._data=[CPMutableDictionary new];
+
     [someObj._data setObject: pk forKey: [entity pk]];
     [entity _registerObjectInPKCache:someObj];
     [someObj didChangeValueForKey: [entity pk]];
