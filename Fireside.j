@@ -380,10 +380,8 @@ var _allRelationships;
             var pnv = o[propName];
             if(pnv !== nil && pnv != [self valueForKey:propName])
             {
-                if(!_changes)
-                    _changes = [CPMutableDictionary dictionary];
                 [self willChangeValueForKey:propName];
-                [_changes setObject:pnv forKey:propName];
+                [_data setObject:pnv forKey:propName];
                 [self didChangeValueForKey:propName];
             }
         }
