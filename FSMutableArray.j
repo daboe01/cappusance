@@ -248,7 +248,7 @@
                 t._data = [CPMutableDictionary dictionary];
                 for (var propName in o) {
                     if (o.hasOwnProperty(propName)) {
-                        pnv = o[propName];
+                        var pnv = o[propName];
                         if(pnv !== nil)
                             t._data.setValueForKey(propName, pnv);
                     }

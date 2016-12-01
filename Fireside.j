@@ -374,12 +374,27 @@ var _allRelationships;
         }
     }
 }
+- (void)_refreshDataFromJSONObject:(id) o
+{   for (var propName in o) {
+        if (o.hasOwnProperty(propName)) {
+            var pnv = o[propName];
+            if(pnv !== nil && pnv != [self valueForKey:propName])
+            {
+                if(!_changes)
+                    _changes = [CPMutableDictionary dictionary];
+                [self willChangeValueForKey:propName];
+                [_changes setObject:pnv forKey:propName];
+                [self didChangeValueForKey:propName];
+            }
+        }
+    }
+}
 
 - (void)_setDataFromJSONObject:(id) o
 {   _data = [CPMutableDictionary dictionary];
     for (var propName in o) {
         if (o.hasOwnProperty(propName)) {
-            pnv = o[propName];
+            var pnv = o[propName];
             if(pnv !== nil)
                 _data.setValueForKey(propName, pnv);
         }
@@ -574,13 +589,14 @@ var _allRelationships;
         {   var pk=j[i][[someEntity pk]];
             var peek;
             if (peek=[someEntity _registeredObjectForPK: pk])    // enforce singleton pattern
-            {   [a addObject:peek];
-
+            {   if (someEntity._refreshCachedObjects)
+                    [peek _refreshDataFromJSONObject:j[i]];
+                a.push(peek);
             } else
             {   var t=[[FSObject alloc] initWithEntity: someEntity];
                 [t _setDataFromJSONObject: j[i] ];
                 [someEntity _registerObjectInPKCache: t];
-                [a addObject:t];
+                a.push(t);
             }
         }
     }
