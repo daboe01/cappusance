@@ -19,7 +19,7 @@ Example usage with backend:
 
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
 // The gui markup will usually connect GUI objects to instance variables.
-// From here on, manipulations at ArrayController and even at Objective-J level
+// From here on, manipulations at ArrayController and even at Objective-J level (when using the appropriate accessors)
 // (e.g. insertion into Arrays) are magically mapped to the backend.
 }
 ```
