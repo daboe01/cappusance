@@ -1,49 +1,6 @@
 @import <AppKit/CPTextView.j>
 
 
-@implementation KVOCPText:CPTextView
-- (CPString)objectValue
-{
-    return [self string];
-}
-- (void)setObjectValue:(CPString)aString
-{	[self setString:aString];
-}
-
-+ (Class)_binderClassForBinding:(CPString)aBinding
-{
-    if (aBinding === CPValueBinding)
-        return [_CPValueBinder class];
-    else if ([aBinding hasPrefix:CPEnabledBinding])
-        return [CPMultipleValueAndBinding class];
-    
-    return [super _binderClassForBinding:aBinding];
-}
-
-- (void)_continuouslyReverseSetBinding
-{
-    var binderClass = [[self class] _binderClassForBinding:CPValueBinding],
-    theBinding = [binderClass getBinding:CPValueBinding forObject:self];
-    
-    if ([theBinding continuouslyUpdatesValue])
-        [theBinding reverseSetValueFor:@"objectValue"];
-}
-
-- (void)_reverseSetBinding
-{
-    var binderClass = [[self class] _binderClassForBinding:CPValueBinding],
-    theBinding = [binderClass getBinding:CPValueBinding forObject:self];
-    
-    [theBinding reverseSetValueFor:@"objectValue"];
-}
-
-- (BOOL) resignFirstResponder
-{
-	[self _reverseSetBinding];
-	return [super resignFirstResponder];
-}
-@end
-
 @implementation GSMarkupTagTextView: GSMarkupTagView
 + (CPString) tagName
 {
@@ -52,7 +9,7 @@
 
 + (Class) platformObjectClass
 {
-  return [KVOCPText class];
+  return [CPTextView class];
 }
 
 - (id) initPlatformObject: (id)platformObject
