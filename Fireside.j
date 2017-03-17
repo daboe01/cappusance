@@ -663,12 +663,19 @@ var _allRelationships;
     } catch(e)
     {
     }
-    [someConnection._object reload];
-    if(err && err['err'])
-    {   alert(err['err']);
-        someConnection._object._changes=nil;  // make sure to discard all changes as they weren't accepted by the backend
+
+    if (someConnection._object)
+        [someConnection._object reload];
+    
+    if (err && err['err'])
+    {   alert (err['err']); // <!> fixme, raise
+        if (someConnection._object)
+            someConnection._object._changes=nil;  // make sure to discard all changes as they weren't accepted by the backend
+        else if(someConnection._entity && someConnection._entity.__ACForSpinner)
+            [someConnection._entity.__ACForSpinner reload]
     }
-    someConnection._object = nil;
+    if (someConnection._object)
+        someConnection._object = nil;
 }
 
 - (void)insertObject:(id)someObj
@@ -702,8 +709,8 @@ var _allRelationships;
 {
     var request=[self requestForAddressingObjectsWithKey:[[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
     [request setHTTPMethod:"DELETE"];
-    //[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
-    [CPURLConnection connectionWithRequest:request delegate:nil];
+    var con = [CPURLConnection connectionWithRequest:request delegate:self];
+    con._entity = obj._entity;
 }
 
 @end
