@@ -1,14 +1,13 @@
-Cappusance is a powerful GUI builder for Cappuccino. 
-Cappusance i.e. features strong autolayout capabilities. Cappusance is actually a port of GNUstep Renaissance.
+Cappusance is a powerful GUI builder for Cappuccinowith strong autolayout capabilities. Cappusance is actually a port of GNUstep Renaissance.
 See <http://www.gnustep.it/Renaissance/> for the original GNUstep Renaissance documentation. On top of that, Cappusance adds support for the more recent Cocoa controls and Cocoa bindings.
 
-As a big plus, Cappusance comes with a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application in XML -- without writing code in Objective-J! The Cappusance ORM conveys automatic database-to-GUI mapping in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. Additionally, data manipulations from Objective-J are transparently forwarded to the backend. ArrayControllers are extended to support CPUndoManager's undo/redo out of the box.
+As a big plus, Cappusance comes with a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application with a single XML file.  Cappusance   automatically links database and the GUI with bindings in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. ArrayControllers are extended to support CPUndoManager's undo/redo out of the box.
 
 Example usage with backend:
 ```Objective-J
 @import <Renaissance/Renaissance.j>
 [...]
-- (void) applicationDidFinishLaunching:(CPNotification)aNotification
+- (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
 // _store is an instance variable with an accessor named store
 	_store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
