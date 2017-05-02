@@ -138,25 +138,28 @@
 {   return [self createObjectWithDictionary:nil];
 }
 
--(id) createObjectWithDictionary:(CPDictionary) myDict
-{   var r=[[FSObject alloc] initWithEntity:self];
+- (id)createObjectWithDictionary:(CPDictionary)myDict
+{
+    var r=[[FSObject alloc] initWithEntity:self];
+    
     if(myDict)
-    {   r._changes=[myDict copy];
-        var allKeys=[myDict allKeys];
-        var i, l=[allKeys count]
-        for(i=0; i< l; i++)
-        {   var aKey=[allKeys objectAtIndex: i];
-            var someval=[myDict objectForKey: aKey];
+    {   r._changes = [myDict copy];
+        
+        var allKeys = [myDict allKeys];
+        var i, l = [allKeys count]
+        for(i=0; i < l; i++)
+        {
+            var aKey = [allKeys objectAtIndex:i];
+            
             var peek;
-            if (peek=[self formatterForColumnName: aKey])
-            {   someval= [peek objectValueForString: someval error: nil];    //<!> fixme handle errors somehow
-                [myDict setObject: someval forKey: aKey];
-            }
+            if (peek=[self formatterForColumnName:aKey])
+                [r._changes setObject:[peek stringForObjectValue:[myDict objectForKey:aKey]] forKey:aKey];
+            
         }
     }
     return r;
 }
-
+    
 -(FSObject) insertObject:(id)someObj
 {   if([someObj isKindOfClass: [CPDictionary class]])
     {   someObj=[self createObjectWithDictionary: someObj];
