@@ -318,15 +318,17 @@
                 if([oPO isKindOfClass: [CPPopUpButton class]])
                 {   if(itemsFace && valItemsFace)
                     {
-                        [oPO bind:"itemArray" toObject:arrCtrl withKeyPath: "arrangedObjects."+itemsFace options: @{"valueFace": valItemsFace}];
+                        [oPO bind:"itemArray" toObject:arrCtrl withKeyPath: "arrangedObjects."+itemsFace options: @{"valueFace":valItemsFace}];
                     }
                 } else if([oPO isKindOfClass: [CPSegmentedControl class]])
                 {
                     if(itemsFace && valItemsFace)
-                    {   [oPO bind:"segments" toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace   options: @{"valueFace": valItemsFace}];
+                    {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
                     }
-                } else if([oPO isKindOfClass: [CPComboBox class] ])
-                {   [oPO bind: CPContentValuesBinding  toObject: arrCtrl withKeyPath: "arrangedObjects."+itemsFace options:nil];
+                } else if([oPO isKindOfClass:[CPComboBox class]])
+                {   [oPO bind:CPContentValuesBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:nil];
+                } else if([oPO isKindOfClass:[GSComboBoxTagValue class]])
+                {   [oPO bind:CPContentBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
                 }
             }
         }

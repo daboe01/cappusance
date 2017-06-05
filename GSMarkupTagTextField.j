@@ -247,6 +247,51 @@ var _GSComboBoxDSCompletionTest = function(object, index, context)
 
 @end
 
+@implementation GSMarkupTagComboBoxTagValue: GSMarkupTagComboBox
++ (CPString) tagName
+{
+    return @"comboBox";
+}
+
++ (Class) platformObjectClass
+{
+    return [GSComboBoxTagValue class];
+}
+
+@end
+
+@implementation GSComboBoxTagValue
+
+- (void)setContent:(CPArray)anArray
+{
+    [self setUsesDataSource:NO];
+    _items = [];
+    var info = [CPBinder infoForBinding:CPContentBinding forObject:self];
+    var options = [info objectForKey:CPOptionsKey];
+    var myvalkey = [options objectForKey:"valueFace"];
+
+    var values = [anArray arrayByApplyingBlock:function(object)
+                  {   var r = [object description];
+                      r._realObjectValue = [object valueForKey:myvalkey]
+                      return r;
+                  }];
+    
+    [self addItemsWithObjectValues:values];
+}
+
+- (id)objectValueOfSelectedItem
+{
+    var row = [[_listDelegate tableView] selectedRow];
+    
+    if (row >= 0)
+        return _items[row]._realObjectValue;
+
+    return nil;
+}
+
+
+@end
+
 @implementation GSMarkupTagSearchField: GSMarkupTagTextField
 + (CPString) tagName
 {
