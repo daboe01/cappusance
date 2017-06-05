@@ -140,14 +140,14 @@
 
 - (id)createObjectWithDictionary:(CPDictionary)myDict
 {
-    var r=[[FSObject alloc] initWithEntity:self];
+    var r = [[FSObject alloc] initWithEntity:self];
     
-    if(myDict)
+    if (myDict)
     {   r._changes = [myDict copy];
         
         var allKeys = [myDict allKeys];
         var i, l = [allKeys count]
-        for(i=0; i < l; i++)
+        for (i=0; i < l; i++)
         {
             var aKey = [allKeys objectAtIndex:i];
             
