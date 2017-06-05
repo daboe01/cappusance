@@ -160,6 +160,51 @@
 
 @end
 
+var _GSComboBoxDSCompletionTest = function(object, index, context)
+{
+    return object.toString().toLowerCase().indexOf(context.toLowerCase()) === 0;
+};
+
+
+@implementation _GSComboBoxDS: CPObject
+{
+    CPArray _items;
+}
+
+- (id)init
+{
+    if (self = [super init])
+    {
+        _items = [];
+    }
+    
+    return self;
+}
+
+- (void)addItemWithTitle:(CPString)aTitle
+{
+    _items.push(aTitle);
+}
+- (CPInteger)numberOfItemsInComboBox:(CPComboBox)comboBox
+{   return _items.length;
+}
+- (id)comboBox:(CPComboBox)comboBox objectValueForItemAtIndex:(CPInteger)index
+{
+    return _items[index];
+}
+- (CPUInteger)comboBox:(CPComboBox)comboBox indexOfItemWithStringValue:(CPString)string
+{
+    return _items.indexOf(string);
+}
+- (CPString)comboBox:(CPComboBox)comboBox completedString:(CPString)string
+{
+    var index = [_items indexOfObjectPassingTest:_GSComboBoxDSCompletionTest context:string];
+    return index !== CPNotFound ? _items[index] : nil;
+
+}
+
+@end
+
 
 @implementation GSMarkupTagComboBox: GSMarkupTagTextField
 + (CPString) tagName
@@ -174,12 +219,30 @@
 
 - (id) initPlatformObject: (id)platformObject
 {
-	platformObject = [super initPlatformObject: platformObject];
-	if([self boolValueForAttribute: @"completes"]===1)
-	{	[platformObject setCompletes:YES];
-	}
+	platformObject = [super initPlatformObject:platformObject];
 
-	return platformObject;
+    if ([self boolValueForAttribute: @"completes"] == 1)
+        [platformObject setCompletes:YES];
+
+    var count = [_content count];
+    if (count)
+    {
+        var myDS = [_GSComboBoxDS new];
+        [platformObject setUsesDataSource:YES];
+        [platformObject setDataSource:myDS];
+
+        for (var i = 0; i < count; i++)
+        {
+            var title = [[_content objectAtIndex:i]._attributes objectForKey: @"title"];
+
+            if (!title)
+                title = @"";
+            
+            [myDS addItemWithTitle:title];
+        }
+        [platformObject setObjectValue:""]
+    }
+    return platformObject;
 }
 
 @end
