@@ -250,7 +250,6 @@ var _GSComboBoxHasName = function(object, index, context)
     }
     return platformObject;
 }
-
 @end
 
 @implementation GSMarkupTagComboBoxTagValue: GSMarkupTagComboBox
@@ -278,7 +277,7 @@ var _GSComboBoxHasName = function(object, index, context)
 }
 @end
 
-@implementation _CPComboTagValueBinder : CPBinder
+@implementation _CPComboTagValueBinder : _CPTextFieldValueBinder
 
 // name->id
 - (id)reverseTransformValue:(id)newValue withOptions:(id)options
@@ -327,7 +326,7 @@ var _GSComboBoxHasName = function(object, index, context)
 - (id) initPlatformObject: (id)platformObject
 {
 	platformObject = [super initPlatformObject: platformObject];
-  /* autosaveName */
+
     var autosaveName = [_attributes objectForKey: @"autosaveName"];
     if (autosaveName != nil) [platformObject setRecentsAutosaveName: autosaveName];
 
