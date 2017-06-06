@@ -298,7 +298,7 @@
 
 - (void) _postprocessForBindings:(CPArray) someArr
 {   var i, l=someArr.length;
-    for(i=0; i < l; i++)
+    for(i = 0; i < l; i++)
     {   var o=someArr[i];
         if(![o respondsToSelector:@selector(platformObject)]) continue;
         var oPO;
@@ -325,10 +325,10 @@
                     if(itemsFace && valItemsFace)
                     {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
                     }
-                } else if([oPO isKindOfClass:[CPComboBox class]])
-                {   [oPO bind:CPContentValuesBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:nil];
                 } else if([oPO isKindOfClass:[GSComboBoxTagValue class]])
                 {   [oPO bind:CPContentBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
+                } else if([oPO isKindOfClass:[CPComboBox class]])
+                {   [oPO bind:CPContentValuesBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:nil];
                 }
             }
         }
@@ -368,10 +368,12 @@
                 } else if([oPO isKindOfClass:[CPPopUpButton class]])
                 {   binding="selectedTag";
                 }
+
                 var options=nil;
                 if([[o attributes] objectForKey: "continuousBinding"]==="YES") options=@{CPContinuouslyUpdatesValueBindingOption:YES};
 
-				[oPO bind:binding toObject:target withKeyPath: keyValuePath options:options ];
+				[oPO bind:binding toObject:target withKeyPath:keyValuePath options:options];
+
                 if([oPO isKindOfClass:[CPCollectionView class]])
                 {
                     if (r.location != CPNotFound)

@@ -165,6 +165,12 @@ var _GSComboBoxDSCompletionTest = function(object, index, context)
     return object.toString().toLowerCase().indexOf(context.toLowerCase()) === 0;
 };
 
+var _GSComboBoxHasName = function(object, index, context)
+{
+    return object == context;
+};
+
+
 
 @implementation _GSComboBoxDS: CPObject
 {
@@ -260,35 +266,50 @@ var _GSComboBoxDSCompletionTest = function(object, index, context)
 
 @end
 
-@implementation GSComboBoxTagValue
+@implementation _CPComboTagContentBinder : _CPComboBoxContentBinder
 
-- (void)setContent:(CPArray)anArray
+- (void)setValueFor:(CPString)aBinding
 {
-    [self setUsesDataSource:NO];
-    _items = [];
-    var info = [CPBinder infoForBinding:CPContentBinding forObject:self];
-    var options = [info objectForKey:CPOptionsKey];
+    var destination = [_info objectForKey:CPObservedObjectKey];
+    var options = [_info objectForKey:CPOptionsKey];
     var myvalkey = [options objectForKey:"valueFace"];
-
-    var values = [anArray arrayByApplyingBlock:function(object)
-                  {   var r = [object description];
-                      r._realObjectValue = [object valueForKey:myvalkey]
-                      return r;
-                  }];
-    
-    [self addItemsWithObjectValues:values];
+    _source._realObjectValues = [destination valueForKeyPath:"arrangedObjects."+myvalkey];
+    [super setValueFor:aBinding];
 }
+@end
 
-- (id)objectValueOfSelectedItem
+@implementation _CPComboTagValueBinder : CPBinder
+
+// name->id
+- (id)reverseTransformValue:(id)newValue withOptions:(id)options
 {
-    var row = [[_listDelegate tableView] selectedRow];
-    
-    if (row >= 0)
-        return _items[row]._realObjectValue;
-
-    return nil;
+    var index = [_source._items indexOfObjectPassingTest:_GSComboBoxHasName context:newValue];
+    return index !== CPNotFound ? _source._realObjectValues[index] : nil;
+}
+// id->name
+- (id)transformValue:(id)newValue withOptions:(id)options
+{
+    var index = [_source._realObjectValues indexOfObjectPassingTest:_GSComboBoxHasName context:newValue];
+    return index !== CPNotFound ? _source._items[index] : nil;
 }
 
+@end
+
+@implementation GSComboBoxTagValue : CPComboBox
+{
+    CPArray _realObjectValues;
+}
+
++ (Class)_binderClassForBinding:(CPString)aBinding
+{
+    if (aBinding === CPContentBinding || aBinding === CPContentValuesBinding)
+        return [_CPComboTagContentBinder class];
+
+    if (aBinding === CPValueBinding)
+        return [_CPComboTagValueBinder class];
+    
+    return [super _binderClassForBinding:aBinding];
+}
 
 @end
 
