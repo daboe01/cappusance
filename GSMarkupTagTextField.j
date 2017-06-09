@@ -262,6 +262,14 @@ var _GSComboBoxHasName = function(object, index, context)
 {
     return [GSComboBoxTagValue class];
 }
+- (id) initPlatformObject: (id)platformObject
+{
+    platformObject = [super initPlatformObject:platformObject];
+    
+    [platformObject setCompletes:YES];
+    
+    return platformObject;
+}
 
 @end
 
