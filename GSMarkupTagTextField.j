@@ -232,7 +232,8 @@ var _GSComboBoxHasName = function(object, index, context)
 
     var count = [_content count];
     if (count)
-    {
+    {   platformObject._items = [];
+        platformObject._realObjectValues = [];
         var myDS = [_GSComboBoxDS new];
         [platformObject setUsesDataSource:YES];
         [platformObject setDataSource:myDS];
@@ -240,11 +241,16 @@ var _GSComboBoxHasName = function(object, index, context)
         for (var i = 0; i < count; i++)
         {
             var title = [[_content objectAtIndex:i]._attributes objectForKey: @"title"];
+            var tag = [[_content objectAtIndex:i]._attributes objectForKey: @"tag"];
 
             if (!title)
                 title = @"";
+            if (!tag)
+                tag = @"";
             
             [myDS addItemWithTitle:title];
+            platformObject._items.push(title);
+            platformObject._realObjectValues.push(tag);
         }
         [platformObject setObjectValue:""]
     }
@@ -296,6 +302,7 @@ var _GSComboBoxHasName = function(object, index, context)
 // id->name
 - (id)transformValue:(id)newValue withOptions:(id)options
 {
+    debugger
     var index = [_source._realObjectValues indexOfObjectPassingTest:_GSComboBoxHasName context:newValue];
     return index !== CPNotFound ? _source._items[index] : nil;
 }
