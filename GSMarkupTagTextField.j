@@ -244,9 +244,9 @@ var _GSComboBoxHasName = function(object, index, context)
             var tag = [[_content objectAtIndex:i]._attributes objectForKey: @"tag"];
             
             if (!title)
-            title = @"";
+                title = @"";
             if (!tag)
-            tag = @"";
+                tag = @"";
             
             [myDS addItemWithTitle:title];
             platformObject._items.push(title);
