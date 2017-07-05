@@ -188,7 +188,8 @@ var _GSComboBoxHasName = function(object, index, context)
 
 @implementation _GSComboBoxDS: CPObject
 {
-    CPArray _items;    
+    CPArray _items;
+}
 
 - (id)init
 {
