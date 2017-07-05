@@ -1,161 +1,175 @@
 /* -*-objc-*-
 
 
-   Author: Nicola Pero <n.pero@mi.flashnet.it>
-   Date: January 2003
-   Author of Cappuccino port: Daniel Boehringer (2012)
+Author: Nicola Pero <n.pero@mi.flashnet.it>
+Date: January 2003
+Author of Cappuccino port: Daniel Boehringer (2012)
 
-   This file is part of GNUstep Renaissance
+This file is part of GNUstep Renaissance
 
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public
-   License as published by the Free Software Foundation; either
-   version 2 of the License, or (at your option) any later version.
-   
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Library General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
 
-   You should have received a copy of the GNU Library General Public
-   License along with this library; see the file COPYING.LIB.
-   If not, write to the Free Software Foundation,
-   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/ 
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
+
+You should have received a copy of the GNU Library General Public
+License along with this library; see the file COPYING.LIB.
+If not, write to the Free Software Foundation,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
 
 @import "GSMarkupTagControl.j"
 
 @implementation GSMarkupTagTextField: GSMarkupTagControl
 + (CPString) tagName
 {
-  return @"textField";
+    return @"textField";
 }
 
 + (Class) platformObjectClass
 {
-  return [CPTextField class];
+    return [CPTextField class];
 }
 
 - (id) initPlatformObject: (id)platformObject
 {
-  platformObject = [super initPlatformObject: platformObject];
+    platformObject = [super initPlatformObject: platformObject];
 
-  /* should be editable and selectable by default.  */
+    /* sendsActionOnEndEditing */
+    {
+        var sendsActionOnEndEditing = [self boolValueForAttribute: @"sendsActionOnEndEditing"];
+        
+        if (sendsActionOnEndEditing == 1)
+        {
+            [platformObject setSendsActionOnEndEditing: YES];
+        }
+        else
+        {
+            [platformObject setSendsActionOnEndEditing: NO];
+        }
+    }
 
-  /* editable */
-  {
-    var editable = [self boolValueForAttribute: @"editable"];
+    /* should be editable and selectable by default.  */
     
-    if (editable == 0)
-      {
-	[platformObject setEditable: NO];
-      }
-    else
-      {
-	[platformObject setEditable: YES];	
-      }
-  }
-
-  /* selectable */
-  {
-    var selectable = [self boolValueForAttribute: @"selectable"];
+    /* editable */
+    {
+        var editable = [self boolValueForAttribute: @"editable"];
+        
+        if (editable == 0)
+        {
+            [platformObject setEditable: NO];
+        }
+        else
+        {
+            [platformObject setEditable: YES];
+        }
+    }
     
-    if (selectable == 0)
-      {
-	[platformObject setSelectable: NO];
-      }
-    else
-      {
-	[platformObject setSelectable: YES];
-      }
-  }
-  
-  /* allowsEditingTextAttributes  */
-  if( [platformObject respondsToSelector:@selector(setAllowsEditingTextAttributes:)])
-  {
-    var allowsEditingTextAttributes = [self boolValueForAttribute: @"allowsEditingTextAttributes"];
-
-    if (allowsEditingTextAttributes == 1 )
-      {
-	[platformObject setAllowsEditingTextAttributes: YES];
-      }
-    else
-      {
-	[platformObject setAllowsEditingTextAttributes: NO];
-      }
-  }
-
-  /* importsGraphics  */
-  if( [platformObject respondsToSelector:@selector(setImportsGraphics:)])
-  {
-    var importsGraphics = [self boolValueForAttribute: @"importsGraphics"];
-
-    if (importsGraphics == 1)
-      {
-	[platformObject setImportsGraphics: YES];
-      }
-    else
-      {
-	[platformObject setImportsGraphics: NO];
-      }
-  }
-
-  /* placeholder */
-  {
-    var c = [self stringValueForAttribute: @"placeholder"];
+    /* selectable */
+    {
+        var selectable = [self boolValueForAttribute: @"selectable"];
+        
+        if (selectable == 0)
+        {
+            [platformObject setSelectable: NO];
+        }
+        else
+        {
+            [platformObject setSelectable: YES];
+        }
+    }
     
-    if (c != nil)
-      {
-	[platformObject setPlaceholderString: c];
-      }
-  }
-
-  /* textColor */
-  {
-    var c = [self colorValueForAttribute: @"textColor"];
+    /* allowsEditingTextAttributes  */
+    if( [platformObject respondsToSelector:@selector(setAllowsEditingTextAttributes:)])
+    {
+        var allowsEditingTextAttributes = [self boolValueForAttribute: @"allowsEditingTextAttributes"];
+        
+        if (allowsEditingTextAttributes == 1 )
+        {
+            [platformObject setAllowsEditingTextAttributes: YES];
+        }
+        else
+        {
+            [platformObject setAllowsEditingTextAttributes: NO];
+        }
+    }
     
-    if (c != nil)
-      {
-	[platformObject setTextColor: c];
-      }
-  }
-
-  /* backgroundColor */
-  {
-    var c = [self colorValueForAttribute: @"backgroundColor"];
+    /* importsGraphics  */
+    if( [platformObject respondsToSelector:@selector(setImportsGraphics:)])
+    {
+        var importsGraphics = [self boolValueForAttribute: @"importsGraphics"];
+        
+        if (importsGraphics == 1)
+        {
+            [platformObject setImportsGraphics: YES];
+        }
+        else
+        {
+            [platformObject setImportsGraphics: NO];
+        }
+    }
     
-    if (c != nil)
-      {
-	[platformObject setBackgroundColor: c];
-      }
-  }
-
-  /* drawsBackground */
-  {
-    var drawsBackground = [self boolValueForAttribute: @"drawsBackground"];
-
-    if (drawsBackground == 1)
-      {
-	[platformObject setDrawsBackground: YES];
-      }
-    else if (drawsBackground == 0)
-      {
-	[platformObject setDrawsBackground: NO];
-      }
-  }
-
-  /* eventual text is in the content.  */
-  {
-      {
-	if (_content != nil)
-	  {
-	    [platformObject setStringValue: _content];
-	  }
-      }
-  }
-	[platformObject setBezeled:YES];
-
-  return platformObject;
+    /* placeholder */
+    {
+        var c = [self stringValueForAttribute: @"placeholder"];
+        
+        if (c != nil)
+        {
+            [platformObject setPlaceholderString: c];
+        }
+    }
+    
+    /* textColor */
+    {
+        var c = [self colorValueForAttribute: @"textColor"];
+        
+        if (c != nil)
+        {
+            [platformObject setTextColor: c];
+        }
+    }
+    
+    /* backgroundColor */
+    {
+        var c = [self colorValueForAttribute: @"backgroundColor"];
+        
+        if (c != nil)
+        {
+            [platformObject setBackgroundColor: c];
+        }
+    }
+    
+    /* drawsBackground */
+    {
+        var drawsBackground = [self boolValueForAttribute: @"drawsBackground"];
+        
+        if (drawsBackground == 1)
+        {
+            [platformObject setDrawsBackground: YES];
+        }
+        else if (drawsBackground == 0)
+        {
+            [platformObject setDrawsBackground: NO];
+        }
+    }
+    
+    /* eventual text is in the content.  */
+    {
+        {
+            if (_content != nil)
+            {
+                [platformObject setStringValue: _content];
+            }
+        }
+    }
+    [platformObject setBezeled:YES];
+    
+    return platformObject;
 }
 
 @end
@@ -206,7 +220,6 @@ var _GSComboBoxHasName = function(object, index, context)
 {
     var index = [_items indexOfObjectPassingTest:_GSComboBoxDSCompletionTest context:string];
     return index !== CPNotFound ? _items[index] : nil;
-
 }
 
 @end
@@ -215,21 +228,21 @@ var _GSComboBoxHasName = function(object, index, context)
 @implementation GSMarkupTagComboBox: GSMarkupTagTextField
 + (CPString) tagName
 {
-	return @"comboBox";
+    return @"comboBox";
 }
 
 + (Class) platformObjectClass
 {
-	return [CPComboBox class];
+    return [CPComboBox class];
 }
 
 - (id) initPlatformObject: (id)platformObject
 {
-	platformObject = [super initPlatformObject:platformObject];
-
+    platformObject = [super initPlatformObject:platformObject];
+    
     if ([self boolValueForAttribute: @"completes"] == 1)
-        [platformObject setCompletes:YES];
-
+    [platformObject setCompletes:YES];
+    
     var count = [_content count];
     if (count)
     {   platformObject._items = [];
@@ -237,12 +250,12 @@ var _GSComboBoxHasName = function(object, index, context)
         var myDS = [_GSComboBoxDS new];
         [platformObject setUsesDataSource:YES];
         [platformObject setDataSource:myDS];
-
+        
         for (var i = 0; i < count; i++)
         {
             var title = [[_content objectAtIndex:i]._attributes objectForKey: @"title"];
             var tag = [[_content objectAtIndex:i]._attributes objectForKey: @"tag"];
-
+            
             if (!title)
                 title = @"";
             if (!tag)
@@ -302,7 +315,6 @@ var _GSComboBoxHasName = function(object, index, context)
 // id->name
 - (id)transformValue:(id)newValue withOptions:(id)options
 {
-    debugger
     var index = [_source._realObjectValues indexOfObjectPassingTest:_GSComboBoxHasName context:newValue];
     return index !== CPNotFound ? _source._items[index] : nil;
 }
@@ -318,7 +330,7 @@ var _GSComboBoxHasName = function(object, index, context)
 {
     if (aBinding === CPContentBinding || aBinding === CPContentValuesBinding)
         return [_CPComboTagContentBinder class];
-
+    
     if (aBinding === CPValueBinding)
         return [_CPComboTagValueBinder class];
     
@@ -330,28 +342,28 @@ var _GSComboBoxHasName = function(object, index, context)
 @implementation GSMarkupTagSearchField: GSMarkupTagTextField
 + (CPString) tagName
 {
-	return @"searchField";
+    return @"searchField";
 }
 
 + (Class) platformObjectClass
 {
-	return [CPSearchField class];
+    return [CPSearchField class];
 }
 
 - (id) initPlatformObject: (id)platformObject
 {
-	platformObject = [super initPlatformObject: platformObject];
-
+    platformObject = [super initPlatformObject: platformObject];
+    
     var autosaveName = [_attributes objectForKey: @"autosaveName"];
     if (autosaveName != nil) [platformObject setRecentsAutosaveName: autosaveName];
-
-	return platformObject;
+    
+    return platformObject;
 }
 - (id) postInitPlatformObject: (id)platformObject
 {
-	platformObject = [super postInitPlatformObject: platformObject];
-	[platformObject _init];
-	return platformObject;
+    platformObject = [super postInitPlatformObject: platformObject];
+    [platformObject _init];
+    return platformObject;
 }
 
 @end
@@ -360,12 +372,12 @@ var _GSComboBoxHasName = function(object, index, context)
 @implementation GSMarkupTagSecureTextField: GSMarkupTagTextField
 + (CPString) tagName
 {
-	return @"secureField";
+    return @"secureField";
 }
 
 + (Class) platformObjectClass
 {
-	return [CPSecureTextField class];
+    return [CPSecureTextField class];
 }
 
 @end
