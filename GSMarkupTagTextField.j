@@ -39,21 +39,7 @@ If not, write to the Free Software Foundation,
 - (id) initPlatformObject: (id)platformObject
 {
     platformObject = [super initPlatformObject: platformObject];
-
-    /* sendsActionOnEndEditing */
-    {
-        var sendsActionOnEndEditing = [self boolValueForAttribute: @"sendsActionOnEndEditing"];
-        
-        if (sendsActionOnEndEditing == 1)
-        {
-            [platformObject setSendsActionOnEndEditing: YES];
-        }
-        else
-        {
-            [platformObject setSendsActionOnEndEditing: NO];
-        }
-    }
-
+    
     /* should be editable and selectable by default.  */
     
     /* editable */
@@ -220,6 +206,7 @@ var _GSComboBoxHasName = function(object, index, context)
 {
     var index = [_items indexOfObjectPassingTest:_GSComboBoxDSCompletionTest context:string];
     return index !== CPNotFound ? _items[index] : nil;
+    
 }
 
 @end
@@ -315,6 +302,7 @@ var _GSComboBoxHasName = function(object, index, context)
 // id->name
 - (id)transformValue:(id)newValue withOptions:(id)options
 {
+    debugger
     var index = [_source._realObjectValues indexOfObjectPassingTest:_GSComboBoxHasName context:newValue];
     return index !== CPNotFound ? _source._items[index] : nil;
 }
@@ -329,10 +317,10 @@ var _GSComboBoxHasName = function(object, index, context)
 + (Class)_binderClassForBinding:(CPString)aBinding
 {
     if (aBinding === CPContentBinding || aBinding === CPContentValuesBinding)
-        return [_CPComboTagContentBinder class];
+    return [_CPComboTagContentBinder class];
     
     if (aBinding === CPValueBinding)
-        return [_CPComboTagValueBinder class];
+    return [_CPComboTagValueBinder class];
     
     return [super _binderClassForBinding:aBinding];
 }
