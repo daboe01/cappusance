@@ -176,20 +176,19 @@ If not, write to the Free Software Foundation,
 
 var _GSComboBoxDSCompletionTest = function(object, index, context)
 {
-return object.toString().toLowerCase().indexOf(context.toLowerCase()) === 0;
+    return object.toString().toLowerCase().indexOf(context.toLowerCase()) === 0;
 };
 
 var _GSComboBoxHasName = function(object, index, context)
 {
-return object == context;
+    return object == context;
 };
 
 
 
 @implementation _GSComboBoxDS: CPObject
 {
-    CPArray _items;
-}
+    CPArray _items;    
 
 - (id)init
 {
@@ -220,7 +219,6 @@ return object == context;
 {
     var index = [_items indexOfObjectPassingTest:_GSComboBoxDSCompletionTest context:string];
     return index !== CPNotFound ? _items[index] : nil;
-    
 }
 
 @end
