@@ -54,9 +54,12 @@ If not, write to the Free Software Foundation,
 
     var c = [self boolValueForAttribute: @"wordWrap"];
 
-    if (c)
+    if (c == 1)
     {
         [platformObject setLineBreakMode:CPLineBreakByWordWrapping]
+    } else
+    {
+        [platformObject setLineBreakMode:CPLineBreakByClipping]
     }
 
 
