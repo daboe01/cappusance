@@ -326,7 +326,7 @@
                     {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
                     }
                     else if(itemsFace)
-                    {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"selection."+itemsFace options:nil];
+                    {   [oPO bind:"mask" toObject:arrCtrl withKeyPath:"selection."+itemsFace options:nil];
                     }
                 } else if([oPO isKindOfClass:[GSComboBoxTagValue class]])
                 {   [oPO bind:CPContentBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
