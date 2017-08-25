@@ -453,20 +453,23 @@ var _allRelationships;
         return o;
     }
     else if(type == 1)    // a relationship is accessed
-    {   var rel=[_entity relationOfName: aKey];
-        var bindingColumn=[rel bindingColumn];
-        if(!bindingColumn) bindingColumn=[_entity pk];
+    {   var rel = [_entity relationOfName:aKey];
+        var bindingColumn = [rel bindingColumn];
 
-        var isToMany=([rel type]== FSRelationshipTypeToMany);
+        if(!bindingColumn)
+            bindingColumn=[_entity pk];
+
+        var isToMany = ([rel type] == FSRelationshipTypeToMany);
         var myoptions=[CPMutableDictionary new];
-        if ([rel type]== FSRelationshipTypeFuzzy)
+
+        if ([rel type] == FSRelationshipTypeFuzzy)
         {   isToMany=YES;
             [myoptions setObject:"1" forKey:"FSFuzzySearch"];
         }
         if (!isToMany || runSynced || [rel runSynced])
             [myoptions setObject:"1" forKey:"FSSynchronous"];
 
-        var results=[rel fetchObjectsForKey:[self valueForKey: bindingColumn] options: myoptions];
+        var results = [rel fetchObjectsForKey:[self valueForKey:bindingColumn] options:myoptions];
 
         if (isToMany)
         {
@@ -477,8 +480,10 @@ var _allRelationships;
 			[results setDefaults:defaults];
             [results setKvoKey:aKey];
             [results setKvoOwner:self];
+
             return results;
-        } else
+        }
+        else
             return (results && [results count])? [results objectAtIndex: 0] : nil;
     }
     else
@@ -486,6 +491,7 @@ var _allRelationships;
         if (propSEL && [self respondsToSelector: propSEL ])
             return [self performSelector:propSEL];
     }
+
     if (_entity._delegate && [_entity._delegate respondsToSelector:@selector(entity:valueForKey:synchronous:)])
         return [_entity._delegate entity:_entity valueForKey:aKey synchronous:runSynced];
 
