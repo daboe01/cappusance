@@ -436,10 +436,12 @@ var _allRelationships;
     {
         var  o = [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
         var peek=[self formatterForColumnName:aKey];
-        if(peek || (peek=[_entity formatterForColumnName:aKey]))
+        if(peek || (peek = [_entity formatterForColumnName:aKey]))
             return [peek objectValueForString: o error: nil];    //<!> fixme handle errors somehow
+
         else if([_entity  isNumericColumn:aKey])
             return [CPNumber numberWithInt:parseInt(o, 10)];
+
         else if (o)
         {   if(![o isKindOfClass:CPString])    // cast numbers to strings in order to make predicate filtering work
 			{
@@ -447,7 +449,7 @@ var _allRelationships;
                     o=o[0];
 
                 if ([o respondsToSelector:@selector(stringValue)])
-                    o=[o stringValue];
+                    o = [o stringValue];
             }
         }
         return o;
@@ -457,7 +459,7 @@ var _allRelationships;
         var bindingColumn = [rel bindingColumn];
 
         if(!bindingColumn)
-            bindingColumn=[_entity pk];
+            bindingColumn = [_entity pk];
 
         var isToMany = ([rel type] == FSRelationshipTypeToMany);
         var myoptions=[CPMutableDictionary new];
@@ -503,7 +505,7 @@ var _allRelationships;
 - (id)valueForKey:(CPString)aKey
 {   return [self valueForKey: aKey synchronous: NO];
 }
-- (void)setValue: someval forKey:(CPString)aKey
+- (void)setValue:(id)someval forKey:(CPString)aKey
 {   var type= [self typeOfKey:aKey];
     var oldval=[self valueForKey:aKey];
 
