@@ -31,15 +31,16 @@
 @end
 
 @implementation FSEntity : CPObject 
-{   CPString    _name @accessors(property=name);
-    CPString    _pk @accessors(property=pk);
-    CPSet        _columns @accessors(property=columns);
-    CPSet        _relations;
-    CPSet        _numerics;
-    CPSet        _optimistics;
+{   CPString       _name @accessors(property=name);
+    CPString       _pk @accessors(property=pk);
+    CPSet          _columns @accessors(property=columns);
+    CPSet          _relations;
+    CPSet          _numerics;
+    CPSet          _optimistics;
     FSStore        _store @accessors(property=store);
     CPMutableArray _pkcache;
     CPMutableDictionary _formatters;
+    id             _delegate @accessors(property=delegate)
 }
 
 -(FSEntity)copyOfEntity
@@ -485,6 +486,9 @@ var _allRelationships;
         if (propSEL && [self respondsToSelector: propSEL ])
             return [self performSelector:propSEL];
     }
+    if (_entity._delegate && [_entity._delegate respondsToSelector:@selector(entity:valueForKey:synchronous:)])
+        return [_entity._delegate entity:_entity valueForKey:aKey synchronous:runSynced];
+
     if (![[_entity columns] containsObject:aKey])
         console.log("Key "+aKey+" is not a column in entity "+[_entity name]);
     return nil
