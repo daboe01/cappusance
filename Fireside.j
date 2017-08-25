@@ -436,6 +436,7 @@ var _allRelationships;
     {
         var  o = [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
         var peek=[self formatterForColumnName:aKey];
+
         if(peek || (peek = [_entity formatterForColumnName:aKey]))
             return [peek objectValueForString: o error: nil];    //<!> fixme handle errors somehow
 
@@ -454,6 +455,7 @@ var _allRelationships;
         }
         return o;
     }
+
     else if(type == 1)    // a relationship is accessed
     {   var rel = [_entity relationOfName:aKey];
         var bindingColumn = [rel bindingColumn];
@@ -499,12 +501,14 @@ var _allRelationships;
 
     if (![[_entity columns] containsObject:aKey])
         console.log("Key "+aKey+" is not a column in entity "+[_entity name]);
+
     return nil
 }
 
 - (id)valueForKey:(CPString)aKey
 {   return [self valueForKey: aKey synchronous: NO];
 }
+
 - (void)setValue:(id)someval forKey:(CPString)aKey
 {   var type= [self typeOfKey:aKey];
     var oldval=[self valueForKey:aKey];
@@ -514,16 +518,16 @@ var _allRelationships;
     if(type == 0)
     {   if(!_changes) _changes = [CPMutableDictionary dictionary];
         [self willChangeValueForKey:aKey];
-        var peek=[self formatterForColumnName: aKey];
+        var peek = [self formatterForColumnName: aKey];
 
-        if(peek || (peek=[_entity formatterForColumnName: aKey]))
-            someval= [peek stringForObjectValue:someval];
+        if(peek || (peek = [_entity formatterForColumnName: aKey]))
+            someval = [peek stringForObjectValue:someval];
 
         [_changes setObject: someval forKey: aKey];
         [self didChangeValueForKey:aKey];
         [[_entity store] writeChangesInObject:self];
 
-        var allRels=[_entity._relations allObjects];
+        var allRels = [_entity._relations allObjects];
         if (allRels && ![_entity isOptimisticColumn:aKey])
         {   var i,l= allRels.length;
             for(i=0; i<l; i++)
