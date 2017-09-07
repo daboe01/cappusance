@@ -307,26 +307,36 @@
         {   var r = [peek rangeOfString: @"."];
             if (r.location != CPNotFound)
             {   r = [peek rangeOfString: @"." options: CPBackwardsSearch];
-                var pathComponents=[peek componentsSeparatedByString:"."];
-                var subPathArray=[pathComponents subarrayWithRange: CPMakeRange(0, pathComponents.length-2)];
-                var baseObjectPath=(subPathArray.length>1)? subPathArray.join("."):subPathArray[0];
-                var arrCtrl= [self _getObjectForIdString: baseObjectPath];
+                var pathComponents = [peek componentsSeparatedByString:"."];
+                var subPathArray = [pathComponents subarrayWithRange: CPMakeRange(0, pathComponents.length-2)];
+                var baseObjectPath = (subPathArray.length>1)? subPathArray.join("."):subPathArray[0];
+                var arrCtrl = [self _getObjectForIdString: baseObjectPath];
                 var itemsFace = [peek substringFromIndex: CPMaxRange(r)];
-                var valItemsFace=[arrCtrl pk];
+                var valItemsFace;
+
+                if([arrCtrl respondsToSelector:@selector(pk)])
+                    valItemsFace = [arrCtrl pk];
 
                 oPO=[o platformObject];
-                if([oPO isKindOfClass: [CPPopUpButton class]])
+
+                if([oPO isKindOfClass:[CPPopUpButton class]])
                 {   if(itemsFace && valItemsFace)
                     {
                         [oPO bind:"itemArray" toObject:arrCtrl withKeyPath: "arrangedObjects."+itemsFace options: @{"valueFace":valItemsFace}];
                     }
-                } else if([oPO isKindOfClass: [CPSegmentedControl class]])
+                } else if([oPO isKindOfClass:[CPSegmentedControl class]])
                 {
-                    if(itemsFace && valItemsFace)
-                    {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
+                    // crude hack to make mask bindings work in ARGOS
+                    if([[o attributes] objectForKey: "mask"])
+                    {
+                        subPathArray = [pathComponents subarrayWithRange: CPMakeRange(0, pathComponents.length-3)];  // <!> fime detect .selection/arrangedObjects instead of using a constant
+                        baseObjectPath = (subPathArray.length>1)? subPathArray.join("."):subPathArray[0];
+                        arrCtrl = [self _getObjectForIdString: baseObjectPath];
+                        itemsFace = [pathComponents subarrayWithRange: CPMakeRange(2, pathComponents.length-2)].join(".");
+                        [oPO bind:"mask" toObject:arrCtrl withKeyPath:itemsFace options:nil];
                     }
-                    else if(itemsFace)
-                    {   [oPO bind:"mask" toObject:arrCtrl withKeyPath:"selection."+itemsFace options:nil];
+                    else if(itemsFace && valItemsFace)
+                    {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
                     }
                 } else if([oPO isKindOfClass:[GSComboBoxTagValue class]])
                 {   [oPO bind:CPContentBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
