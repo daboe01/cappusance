@@ -510,10 +510,15 @@ var _allRelationships;
 }
 
 - (void)setValue:(id)someval forKey:(CPString)aKey
-{   var type= [self typeOfKey:aKey];
-    var oldval=[self valueForKey:aKey];
+{
+    if (someval === nil)
+        return;
 
-    if(oldval === someval) return;    // we are not interested in side effects, so ignore identity-updates
+    var type = [self typeOfKey:aKey];
+    var oldval = [self valueForKey:aKey];
+
+    if (oldval === someval)
+        return;    // we are not interested in side effects, so ignore identity-updates
 
     if(type == 0)
     {   if(!_changes) _changes = [CPMutableDictionary dictionary];
