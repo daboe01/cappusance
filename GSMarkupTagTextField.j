@@ -220,6 +220,23 @@ var _GSComboBoxHasName = function(object, index, context)
 {
     var index = [_items indexOfObjectPassingTest:_GSComboBoxDSCompletionTest context:string];
     return index !== CPNotFound ? _items[index] : nil;
+    
+}
+
+- (id)initWithCoder:(CPCoder)aCoder
+{
+    self = [self init];
+
+    if (self)
+    {
+        _items = [aCoder decodeObjectForKey:"_GSComboBoxDS_items"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(CPCoder)aCoder
+{
+    [aCoder encodeObject:_items forKey:"_GSComboBoxDS_items"];
 }
 
 @end
