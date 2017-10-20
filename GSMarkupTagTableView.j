@@ -268,6 +268,16 @@
       }
   }
 
+    /* rowHeight */
+    {
+        var value = [self intValueForAttribute: @"rowHeight"];
+
+        if (value)
+        {
+            [platformObject setRowHeight:value];
+        }
+    }
+
   /* Now the contents.  An array of tableColumn objects.  */
   {
     var i, numberOfColumns;
