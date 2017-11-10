@@ -355,29 +355,38 @@ var _allRelationships;
     return self;
 }
 
--(void) reload
-{   var mypk = [_data objectForKey:_entity._pk];
-    
-    if([self entity]._pkcache)
+- (void)reload
+{
+    var mypk = [_data objectForKey:_entity._pk];
+
+    if ([self entity]._pkcache)
         [self entity]._pkcache[mypk] = undefined;
-    
-    var tmpbj= [[self entity] objectWithPK:mypk];
-    
-    if(!tmpbj)
+
+    var tmpbj = [[self entity] objectWithPK:mypk];
+
+    if (!tmpbj)
         return;
-    
-    var cols = [tmpbj._data allKeys];
-    var i,l = [cols count];
-    for(i=0; i < l; i++)
-    {   var aKey = [cols objectAtIndex:i];
-        if([self valueForKey:aKey] !== [tmpbj._data objectForKey: aKey])
-        {   [self willChangeValueForKey:aKey];
-            [_data setObject: [tmpbj._data objectForKey: aKey] forKey: aKey];
-            if(_changes) [_changes removeObjectForKey: aKey];
+
+    var cols = [CPSet setWithArray:[tmpbj._data allKeys]];
+    [cols intersectSet:[self entity]._columns];
+    var objectEnumerator = [cols objectEnumerator];
+    var aKey;
+
+    while ((aKey = [objectEnumerator nextObject]) !== nil)
+    {
+        if([self valueForKey:aKey] !== [tmpbj._data objectForKey:aKey])
+        {
+            [self willChangeValueForKey:aKey];
+            [_data setObject: [tmpbj._data objectForKey:aKey] forKey:aKey];
+
+            if(_changes)
+                [_changes removeObjectForKey: aKey];
+
             [self didChangeValueForKey:aKey];
         }
     }
 }
+
 - (void)_refreshDataFromJSONObject:(id) o
 {   for (var propName in o) {
         if (o.hasOwnProperty(propName)) {
