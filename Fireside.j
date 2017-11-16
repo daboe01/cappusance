@@ -529,8 +529,15 @@ var _allRelationships;
     if (oldval === someval)
         return;    // we are not interested in side effects, so ignore identity-updates
 
-    if(type == 0)
-    {   if(!_changes) _changes = [CPMutableDictionary dictionary];
+    if (_entity._delegate && [_entity._delegate respondsToSelector:@selector(entity:shouldChangeValueFrom:toValue:forKey:)])
+        if (![_entity._delegate entity:_entity shouldChangeValueFrom:oldval toValue:someval forKey:aKey])
+            return;
+
+    if (type == 0)
+    {
+        if(!_changes)
+            _changes = [CPMutableDictionary dictionary];
+
         [self willChangeValueForKey:aKey];
         var peek = [self formatterForColumnName: aKey];
 
@@ -542,22 +549,28 @@ var _allRelationships;
         [[_entity store] writeChangesInObject:self];
 
         var allRels = [_entity._relations allObjects];
+
         if (allRels && ![_entity isOptimisticColumn:aKey])
         {   var i,l= allRels.length;
-            for(i=0; i<l; i++)
-            {   var rel = allRels[i];
+
+            for(i=0; i < l; i++)
+            {
+                var rel = allRels[i];
                 rel._target_cache=[];
                 var name = [rel name];
                 [self willChangeValueForKey:name];
                 [self didChangeValueForKey:name];
             }
         }
-    } else if(type == 1)
+    }
+    else if(type == 1)
     {   // this is only to make KVC upates happen in order to update the selection in the arraycontrollers.
     }
-	else console.log("Key " + aKey + " is not a column");
-//[CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
+    else
+        console.log("Key " + aKey + " is not a column");
+    //[CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
 }
+
 - (id)valueForKeyPath:(CPString)aKeyPath
 {
     var firstDotIndex = aKeyPath.indexOf(".");
