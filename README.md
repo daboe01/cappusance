@@ -9,13 +9,15 @@ Example usage with backend:
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
 // _store is an instance variable with an accessor named store
-	_store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"]; 
-// gui.gsmarkup is loaded from the Ressources folder
+	_store=[[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000"];
+	
+	
+// gui.gsmarkup is loaded from your Resources folder
 // we specify "self" (our AppController instance) as 'files owner'.
 // this object is aliased as '#CPOwner' in the markup file.
 // You can access e.g. the store instance varibale via '#CPOwner.store' in your markup file.
-
 	[CPBundle loadRessourceNamed: "gui.gsmarkup" owner:self];
+	
 // The gui markup will usually connect GUI objects to instance variables.
 // From here on, manipulations at ArrayController and even at Objective-J level (when using the appropriate accessors)
 // (e.g. insertion into Arrays) are magically mapped to the backend.
