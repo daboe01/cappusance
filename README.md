@@ -1,6 +1,6 @@
 Cappusance is a powerful GUI builder for Cappuccino with strong autolayout capabilities. Cappusance is actually a port of <http://www.gnustep.it/Renaissance/>.
 
-On top of that, Cappusance adds support for the more recent Cocoa controls and Cocoa bindings and a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application with a single XML file.  Cappusance   automatically links database and the GUI with bindings in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. ArrayControllers are extended to support CPUndoManager's undo/redo out of the box.
+On top of that, Cappusance adds support for the more recent Cocoa controls and Cocoa bindings and a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application with a single XML file.  Cappusance automatically glues  database to the GUI with bidirectional bindings in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. ArrayControllers are extended to support CPUndoManager's undo/redo out of the box.
 
 Example usage with backend:
 ```Objective-J
@@ -23,7 +23,6 @@ Example usage with backend:
 ```
 Mojolicious is a perfect match for creating backends (http://mojolicio.us/).
 This modern perl framework comes with a powerful rest router and a builtin static server for serving the Cappuccino framework.
-The REST dialect of Cappusance can be easily adapted to any backend. Ideally, you only need to subclass FSStore and override a few simple methods.
 
 Unfortunately, i did not yet have the time to write documentation for the ORM-part (i.e. Fireside.j) and how everything fits together. However, a comprehensive use case is here:
 <https://github.com/daboe01/Clinical>
