@@ -674,20 +674,23 @@ var _allRelationships;
     return [self fetchObjectsForURLRequest: request inEntity: someEntity requestDelegate: a];
 }
 
--(void) writeChangesInObject: (id) obj
+- (void)writeChangesInObject:(id)obj
 {   var mypk = [obj valueForKey: [[obj entity] pk]];
-    
-    if([[obj entity] pk] === undefined) return;
-    
+
+    if([[obj entity] pk] === undefined)
+        return;
+
     if(!obj._changes)
         return;
-    
-    var request=[self requestForAddressingObjectsWithKey: [[obj entity] pk] equallingValue: mypk inEntity:[obj entity]];
+
+    var request = [self requestForAddressingObjectsWithKey:[[obj entity] pk] equallingValue:mypk inEntity:[obj entity]];
     [request setHTTPMethod:"PUT"];
-    [request setHTTPBody: [obj._changes toJSON] ];
-    // var ret=[CPURLConnection sendSynchronousRequest:request returningResponse: nil];
+    [request setHTTPBody:[obj._changes toJSON]];
+
     var myConn = [CPURLConnection connectionWithRequest:request delegate:self];
-    myConn._object = obj;
+
+    if (![obj entity]._doNotReloadAfterWrite)
+        myConn._object = obj;
 }
 -(void)connection:(CPConnection)someConnection didReceiveData:(id)ret
 {
