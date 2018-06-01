@@ -327,6 +327,35 @@
 	return platformObject;
 }
 
+- (CPButton)addButtonWithImageName:(CPString)aName target:(id) aTarget action:(SEL) aSelector
+{   var sendimage=[[CPImage alloc] initWithContentsOfFile:[CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], aName]];
+    var newbutton = [[CPButton alloc] initWithFrame:CGRectMake(0, 0, 35, 25)];
+    [newbutton setBordered:NO];
+    [newbutton setImage:sendimage];
+    [newbutton setImagePosition:CPImageOnly];
+    [newbutton setTarget:aTarget];
+    [newbutton setAction:aSelector];
+    [self setButtons:[[self buttons] arrayByAddingObject:newbutton] ];
+    return newbutton;
+}
+- (void) registerWithArrayController:(CPArrayController) aController plusTooltip:(CPString)ptt minusTooltip:(CPString)mtt
+{
+    [[self buttons][1] bind:CPEnabledBinding toObject:aController withKeyPath:"selectedObjects.@count" options:nil];
+    
+    if(ptt)
+        [[self buttons][0] setToolTip:ptt]
+
+    if(mtt)
+        [[self buttons][1] setToolTip:mtt]
+            // fixme add insert and remove actions unless already wired!
+}
+
+- (void) registerWithArrayController:(CPArrayController) aController
+{
+    [self registerWithArrayController:aController plusTooltip:nil minusTooltip:nil]
+}
+
+
 @end
 
 @implementation CPButtonBar(RennaissanceAdditions)
