@@ -216,6 +216,18 @@ var _sharedUndoManager;
 	[[FSRelationship relationshipsWithTargetEntity:_entity] makeObjectsPerformSelector:@selector(_invalidateCache)];
     [[[[self class] _binderClassForBinding:@"contentArray"] getBinding:@"contentArray" forObject:self] setValueFor:@"contentArray"];
 }
+
+- (void)fullyReloadAsync
+{   var entity = self._entity;
+    var ao = [[FSMutableArray alloc] initWithArray:[] ofEntity:entity];
+    ao._kvoMethod = @selector(setContent:);
+    ao._kvoOwner = self;
+    entity._pkcache = [];
+    [self setContent:ao];
+    [entity._store fetchObjectsForURLRequest:[entity._store requestForAddressingAllObjectsInEntity:entity] inEntity:entity requestDelegate:ao];
+}
+
+
 -(void) undo
 {
     [_sharedUndoManager undo];
