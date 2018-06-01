@@ -15,6 +15,39 @@
 @import <Foundation/CPObject.j>
 @import "GSMarkupConnector.j"
 
+@implementation FSRegexBindingTransformer : CPObject
+{
+    CPString _regex;
+    CPString _template;
+    CPString _revregex;
+    CPString _revtemplate;
+}
+
+- (id)initWithRegex:(CPString)aRegex template:(CPString)aTemplate reverseRegex:(CPString)revRegex reverseTemplate:(CPString)reverseTemplate
+{
+    if (self = [super init])
+    {
+        _regex = aRegex;
+        _template = aTemplate;
+        _revregex = revRegex;
+        _revtemplate = reverseTemplate;
+    }
+
+    return self;
+}
+
+- (CPString)transformedValue:(id)theObject
+{   var ret = theObject;
+    return ret.replace(new RegExp(_regex, "i"), _template)
+}
+
+- (id)reverseTransformedValue:(CPString)aString
+{
+    var ret = aString;
+    return ret.replace(new RegExp(_revregex, "i"), _revtemplate)
+}
+
+@end
 
 
 @implementation CPString (CapitalizedString)
@@ -351,20 +384,35 @@
             oPO=[o platformObject];
             if ([oPO isKindOfClass: [CPTableView class] ])
             {   var target=[self _getObjectForIdString: peek];
+
                 if([o boolValueForAttribute: "viewBasedBindings"] == 1)
                 {   [oPO bind:"content"          toObject: target withKeyPath:"arrangedObjects" options: nil];
                     [oPO bind:"selectionIndexes" toObject: target withKeyPath:"selectionIndexes" options:nil];
                 } else        // "explicit" bindings for tableView columns, where you do not want to connect the columns individually but through "identifier" property
                 {   var _content=[o content];
                     var j, l1 = _content? _content.length:0;
+                    var bindingOptions = nil;
+
+                    if ([[o attributes] objectForKey:"transformingRegex"])
+                    {
+                        var bindingTransformer = [[FSRegexBindingTransformer alloc] initWithRegex:[[o attributes] objectForKey:"transformingRegex"]
+                                                                                         template:[[o attributes] objectForKey:"transformingTemplate"]
+                                                                                     reverseRegex:[[o attributes] objectForKey:"transformingReverseRegex"]
+                                                                                  reverseTemplate:[[o attributes] objectForKey:"transformingReverseTemplate"]];
+                        bindingOptions = @{CPValueTransformerBindingOption:bindingTransformer};
+                    }
+
                     for(j = 0; j < l1; j++)
                     {   var column = _content[j];
-                        if (column && [column  isKindOfClass: [GSMarkupTagTableColumn class]])
-                        {   [[column platformObject]    bind: CPValueBinding
-                                                    toObject: target
-                                                 withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
-                                                     options: nil];
-                            if(target) target.__tableViewForSpinner=[[column platformObject] tableView];
+
+                        if (column && [column isKindOfClass:[GSMarkupTagTableColumn class]])
+                        {   [[column platformObject]   bind:CPValueBinding
+                                                   toObject:target
+                                                withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
+                                                    options:bindingOptions];
+
+                            if(target)
+                                target.__tableViewForSpinner=[[column platformObject] tableView];
                         }
                     }
                 }
