@@ -47,6 +47,11 @@
     return ret.replace(new RegExp(_revregex, "i"), _revtemplate)
 }
 
++ (BOOL)allowsReverseTransformation
+{
+    return YES;
+}
+
 @end
 
 
@@ -390,26 +395,28 @@
                     [oPO bind:"selectionIndexes" toObject: target withKeyPath:"selectionIndexes" options:nil];
                 } else        // "explicit" bindings for tableView columns, where you do not want to connect the columns individually but through "identifier" property
                 {   var _content=[o content];
-                    var j, l1 = _content? _content.length:0;
-                    var bindingOptions = nil;
-
-                    if ([[o attributes] objectForKey:"transformingRegex"])
-                    {
-                        var bindingTransformer = [[FSRegexBindingTransformer alloc] initWithRegex:[[o attributes] objectForKey:"transformingRegex"]
-                                                                                         template:[[o attributes] objectForKey:"transformingTemplate"]
-                                                                                     reverseRegex:[[o attributes] objectForKey:"transformingReverseRegex"]
-                                                                                  reverseTemplate:[[o attributes] objectForKey:"transformingReverseTemplate"]];
-                        bindingOptions = @{CPValueTransformerBindingOption:bindingTransformer};
-                    }
+                    var j, l1 = _content? _content.length : 0;
 
                     for(j = 0; j < l1; j++)
                     {   var column = _content[j];
 
                         if (column && [column isKindOfClass:[GSMarkupTagTableColumn class]])
-                        {   [[column platformObject]   bind:CPValueBinding
-                                                   toObject:target
-                                                withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
-                                                    options:bindingOptions];
+                        {
+                            var columnAttributes = [column attributes];
+                            if ([columnAttributes objectForKey:"transformingRegex"])
+                            {
+                                var bindingOptions = nil;
+                                var bindingTransformer = [[FSRegexBindingTransformer alloc] initWithRegex:[columnAttributes objectForKey:"transformingRegex"]
+                                                                                                 template:[columnAttributes objectForKey:"transformingTemplate"]
+                                                                                             reverseRegex:[columnAttributes objectForKey:"transformingReverseRegex"]
+                                                                                          reverseTemplate:[columnAttributes objectForKey:"transformingReverseTemplate"]];
+                                bindingOptions = @{CPValueTransformerBindingOption:bindingTransformer};
+                            }
+
+                            [[column platformObject] bind:CPValueBinding
+                                                 toObject:target
+                                              withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
+                                                  options:bindingOptions];
 
                             if(target)
                                 target.__tableViewForSpinner=[[column platformObject] tableView];
