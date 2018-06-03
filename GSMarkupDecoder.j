@@ -38,12 +38,20 @@
 
 - (CPString)transformedValue:(id)theObject
 {   var ret = theObject;
+
+    if (!ret)
+        return ret;
+
     return ret.replace(new RegExp(_regex, "i"), _template)
 }
 
 - (id)reverseTransformedValue:(CPString)aString
 {
     var ret = aString;
+
+    if (!ret)
+        return ret;
+
     return ret.replace(new RegExp(_revregex, "i"), _revtemplate)
 }
 
@@ -402,10 +410,11 @@
 
                         if (column && [column isKindOfClass:[GSMarkupTagTableColumn class]])
                         {
+                            var bindingOptions = nil;
                             var columnAttributes = [column attributes];
+                            
                             if ([columnAttributes objectForKey:"transformingRegex"])
                             {
-                                var bindingOptions = nil;
                                 var bindingTransformer = [[FSRegexBindingTransformer alloc] initWithRegex:[columnAttributes objectForKey:"transformingRegex"]
                                                                                                  template:[columnAttributes objectForKey:"transformingTemplate"]
                                                                                              reverseRegex:[columnAttributes objectForKey:"transformingReverseRegex"]
