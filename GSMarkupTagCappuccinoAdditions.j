@@ -447,7 +447,7 @@
         
         if ([self boolValueForAttribute: @"hm"] == 1)
         {   elements |= CPHourMinuteDatePickerElementFlag;
-            [_attributes setObject: @"250" forKey: @"width"];
+            [_attributes setObject: @"160" forKey: @"width"];
         }
         
         [platformObject setDatePickerElements:elements];
