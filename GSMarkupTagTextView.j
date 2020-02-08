@@ -62,7 +62,19 @@
     {
         [platformObject setSelectable: NO];
     }
-    
+
+     /* enabled */
+      var enabled = [self boolValueForAttribute: @"enabled"];
+
+      if (enabled == 1)
+      {
+          [platformObject setEnabled: YES];
+      }
+      else if (enabled == 0)
+      {
+          [platformObject setEnabled: NO];
+      }
+
     var param;
     
     /* richText (richtext or textonly?) */
