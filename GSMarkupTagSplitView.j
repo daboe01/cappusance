@@ -12,7 +12,7 @@
    var it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    var library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -31,16 +31,14 @@
 {
     if (_shouldRestoreFromAutosaveUnlessFrameSize)
         _shouldAutosave = NO;
-    else
-        [self _adjustSubviewsWithCalculatedSize];
 
     [super setFrameSize:aSize];
 
     if (_shouldRestoreFromAutosaveUnlessFrameSize)
         _shouldAutosave = YES;
 
-    [self setNeedsDisplay:YES];
-    [self _restoreFromAutosaveIfNeeded]
+    if (_shouldRestoreFromAutosaveUnlessFrameSize && !CGSizeEqualToSize([self frameSize], _shouldRestoreFromAutosaveUnlessFrameSize))
+        [self _restoreFromAutosave];
 }
 @end
 
@@ -60,33 +58,26 @@
 - (id) initPlatformObject: (id)platformObject
 {
   platformObject = [platformObject init];
-  
+  [platformObject setDividerStyle:CPSplitViewDividerStyleThin];
+
   if ([self boolValueForAttribute: @"vertical"] == 0)
-    {
       [platformObject setVertical: NO];
-    }
   else
-    {
       [platformObject setVertical: YES];
-    }
-  
+
   /* Add content.  */
-  {
     var count = [_content count];
 
     for (var i = 0; i < count; i++)
-	{
-	 var view = [_content objectAtIndex: i];
-	 var v;
-	
-	v = [view platformObject];
-	if (v != nil  &&  [v isKindOfClass: [CPView class]])
-	  {
-	    [platformObject addSubview: v];
-	  }
-      }
-  }
-  return platformObject;
+    {
+      var view = [_content objectAtIndex:i];
+      var v = [view platformObject];
+
+      if (v &&  [v isKindOfClass:[CPView class]])
+        [platformObject addArrangedSubview:v];
+    }
+
+    return platformObject;
 }
 
 /*
@@ -96,24 +87,23 @@
 }
 */
 
--(void) _restoreFromAutosave: platformObject
-{	[platformObject setAutosaveName: [_attributes objectForKey: "autosaveName"] ];
-	[platformObject _restoreFromAutosave];
-    platformObject._shouldRestoreFromAutosaveUnlessFrameSize = CGSizeMakeCopy([platformObject frameSize]);
-}
-- (id) postInitPlatformObject: (id)platformObject
+- (id)postInitPlatformObject:(id)platformObject
 {
-	platformObject = [super postInitPlatformObject: platformObject];
+    platformObject = [super postInitPlatformObject:platformObject];
 
-  /* Make sure subviews are adjusted.  This must be done after the
-   * size of the splitview has been set.
-   */
-	[platformObject adjustSubviews];
-	if([_attributes objectForKey: "autosaveName"])
-	{	[[CPRunLoop currentRunLoop] performSelector:@selector(_restoreFromAutosave:) target:self argument: platformObject order:0 modes:[CPDefaultRunLoopMode]];
-	}
+   /*
+    * Make sure subviews are adjusted.  This must be done after the
+    * size of the splitview has been set.
+    */
 
-  return platformObject;
+    if ([_attributes objectForKey:"autosaveName"])
+    {
+        [platformObject setAutosaveName:[_attributes objectForKey:"autosaveName"]];
+        [platformObject _restoreFromAutosave];
+        platformObject._shouldRestoreFromAutosaveUnlessFrameSize = [platformObject frameSize];
+    }
+    return platformObject;
 }
 
 @end
+
