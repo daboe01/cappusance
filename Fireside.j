@@ -546,7 +546,11 @@ var _allRelationships;
 
         [_changes setObject: someval forKey: aKey];
         [self didChangeValueForKey:aKey];
-        [[_entity store] writeChangesInObject:self];
+
+        //  [[_entity store] writeChangesInObject:self];
+        // coalesce all writes in next iteration of runloop
+        [[CPRunLoop currentRunLoop] cancelPerformSelector::@selector(writeChangesInObject:) target:[_entity store] argument:self];
+        [[CPRunLoop currentRunLoop] performSelector:@selector(writeChangesInObject:) target:[_entity store] argument:self order:0 modes:[CPDefaultRunLoopMode]];
 
         var allRels = [_entity._relations allObjects];
 
