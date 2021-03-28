@@ -164,17 +164,23 @@
 {	if([_attributes objectForKey: "type"]=="topBezel") return CPTopTabsBezelBorder;
 	return CPNoTabsBezelBorder;
 }
-- (id) initPlatformObject: (id)platformObject
-{	platformObject = [super initPlatformObject: platformObject];
-	[platformObject setTabViewType: [self type]];
+- (id)initPlatformObject:(id)platformObject
+{
+	platformObject = [super initPlatformObject:platformObject];
+	[platformObject setTabViewType:[self type]];
 
-    var  i, count = _content? _content.length:0;
+    [platformObject._box setBorderType:CPLineBorder];
+    [platformObject._box setBoxType:CPBoxCustom];
+
+    var  i, count = _content ? _content.length : 0;
+
 	for (i = 0 ; i < count; i++)
 	{	var item = [_content[i] platformObject];
         [item setView: [[_content[i] content][0] platformObject] ];
         [item setLabel: [_content[i] title] ];
 		[platformObject addTabViewItem: item];
 	}
+
 	return platformObject;
 }
 @end
@@ -202,8 +208,13 @@
 }
 
 - (id) initPlatformObject: (id)platformObject
-{	platformObject = [super initPlatformObject: platformObject];
-	[platformObject setTitle: [_attributes objectForKey:"title"] ];
+{
+	platformObject = [super initPlatformObject: platformObject];
+	[platformObject setTitle:[_attributes objectForKey:"title"]];
+
+    [platformObject setHighlightsBy:CPContentsCellMask];
+    [platformObject setShowsStateBy:CPContentsCellMask];
+
 	return platformObject;
 }
 @end
@@ -392,17 +403,22 @@
 @end
 
 @implementation GSMarkupTagSwitchButton: GSMarkupTagButton
-- (id) initPlatformObject: (id)platformObject
-{	platformObject = [super initPlatformObject: platformObject];
-    [platformObject setObjectValue:[self boolValueForAttribute:"selected"]==1 ];
+- (id)initPlatformObject:(id)platformObject
+{
+	platformObject = [super initPlatformObject:platformObject];
+    [platformObject setObjectValue:[self boolValueForAttribute:"selected"] == 1];
+
+    [platformObject setHighlightsBy:CPContentsCellMask];
+    [platformObject setShowsStateBy:CPContentsCellMask];
+
     return platformObject;
 }
-+ (CPString) tagName
++ (CPString)tagName
 {
-  return @"switchButton";
+    return @"switchButton";
 }
 
-+ (Class) platformObjectClass
++ (Class)platformObjectClass
 {	return [CPCheckBox class];
 }
 
