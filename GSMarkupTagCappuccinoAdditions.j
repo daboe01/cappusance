@@ -1,30 +1,5 @@
 @import "GSMarkupTagView.j"
 
-@implementation GSMarkupTagFlashView : GSMarkupTagView
-+ (CPString) tagName
-{
-  return @"flashView";
-}
-
-+ (Class) platformObjectClass
-{
-  return [CPFlashView class];
-}
-
-- (id) initPlatformObject: (id)platformObject
-{	platformObject = [super initPlatformObject: platformObject];
-
-    var name = [_attributes objectForKey: @"ressource"];
-
-    if (name != nil)
-	{	[platformObject setFlashMovie: [CPFlashMovie flashMovieWithFile: [CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], name ]] ];
-	}
-
-	return platformObject;
-}
-@end
-
-
 @implementation GSMarkupTagLevelIndicator : GSMarkupTagControl
 + (CPString) tagName
 {
