@@ -469,10 +469,14 @@
         [platformObject setDatePickerElements:elements];
     }
     else if(styleString === 'graphical')
-    {   [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
+    {
+        [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
         [platformObject setDatePickerElements: CPYearMonthDatePickerElementFlag]
         [_attributes setObject: @"150" forKey: @"width"];
         [_attributes setObject: @"150" forKey: @"height"];
+
+        var c = [self colorValueForAttribute: @"backgroundColor"] || [CPColor whiteColor];
+        [platformObject setBackgroundColor:c];
     }
     
     return platformObject;
