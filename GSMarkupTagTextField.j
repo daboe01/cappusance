@@ -371,16 +371,18 @@ var _GSComboBoxHasName = function(object, index, context)
 {
     platformObject = [super initPlatformObject: platformObject];
     [platformObject _init];
-    
+
     var autosaveName = [_attributes objectForKey: @"autosaveName"];
-    if (autosaveName != nil) [platformObject setRecentsAutosaveName: autosaveName];
+
+    if (autosaveName != nil)
+        [platformObject setRecentsAutosaveName:autosaveName];
     
     return platformObject;
 }
 - (id) postInitPlatformObject: (id)platformObject
 {
     platformObject = [super postInitPlatformObject: platformObject];
-    [platformObject _init];
+
     return platformObject;
 }
 
