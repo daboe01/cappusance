@@ -298,7 +298,7 @@
 	{	var actionButton;
 		[buttons addObject:actionButton=[CPButtonBar actionPopupButton] ];
 		var i, count = [_content count];
-    
+
 		for (i = 0; i < count; i++)
 		{	var item = [_content objectAtIndex: i];
 			var title = [item localizedStringValueForAttribute: @"title"];

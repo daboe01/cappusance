@@ -324,6 +324,12 @@
 
   return platformObject;
 }
+- (id) postInitPlatformObject: (id)platformObject
+{
+  [platformObject setBezelStyle:CPRoundedBezelStyle];
+  [platformObject sizeToFit];
+  return [super postInitPlatformObject: platformObject];
+}
 
 + (CPArray) localizableAttributes
 {

@@ -41,7 +41,7 @@
 - (id) initPlatformObject: (id)platformObject
 {
   platformObject = [super initPlatformObject: platformObject];
-  
+  [platformObject setBezelStyle:CPRoundedBezelStyle];
   /* title */
   {
     var title = [self localizedStringValueForAttribute: @"title"];
