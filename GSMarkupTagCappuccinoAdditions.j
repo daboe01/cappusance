@@ -457,12 +457,6 @@
     return platformObject;
 }
 
-- (id) postInitPlatformObject: (id)platformObject
-{	platformObject=[super postInitPlatformObject: platformObject];
-	[platformObject _init];
-	return platformObject;
-}
-
 @end
 
 
