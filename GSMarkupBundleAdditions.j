@@ -34,7 +34,15 @@ GSMarkupBundleDidLoadGSMarkupNotification= @"GSMarkupBundleDidLoadGSMarkupNotifi
 
 var staticNameTable;
 
+var __sharedDecoder;
+
 @implementation CPBundle (GSMarkupBundleStaticObjects)
+
++ sharedGSMarkupDecoder
+{
+    return __sharedDecoder;
+}
+
 - (CPString)localizedStringForKey:(CPString )key value:(CPString)value table:(CPString)tableName
 {	if(!key || !tableName) return value;
 	return key;
@@ -82,7 +90,7 @@ var staticNameTable;
 	var key;
 	var topLevelObjects = nil;
 	var awaker = [GSMarkupAwaker new];
-	var decoder=[[GSMarkupDecoder alloc] initWithXMLString: [data rawString]];
+	var decoder = __sharedDecoder = [[GSMarkupDecoder alloc] initWithXMLString:[data rawString]];
 	[decoder setExternalNameTable:context];
     console.log("Will parse");
 	[decoder parse];

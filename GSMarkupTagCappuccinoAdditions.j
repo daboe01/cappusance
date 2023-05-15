@@ -1,5 +1,30 @@
 @import "GSMarkupTagView.j"
 
+@implementation GSMarkupTagFlashView : GSMarkupTagView
++ (CPString) tagName
+{
+  return @"flashView";
+}
+
++ (Class) platformObjectClass
+{
+  return [CPFlashView class];
+}
+
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+
+    var name = [_attributes objectForKey: @"ressource"];
+
+    if (name != nil)
+	{	[platformObject setFlashMovie: [CPFlashMovie flashMovieWithFile: [CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], name ]] ];
+	}
+
+	return platformObject;
+}
+@end
+
+
 @implementation GSMarkupTagLevelIndicator : GSMarkupTagControl
 + (CPString) tagName
 {
@@ -139,23 +164,19 @@
 {	if([_attributes objectForKey: "type"]=="topBezel") return CPTopTabsBezelBorder;
 	return CPNoTabsBezelBorder;
 }
-- (id)initPlatformObject:(id)platformObject
-{
-	platformObject = [super initPlatformObject:platformObject];
-	[platformObject setTabViewType:[self type]];
-
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
+	[platformObject setTabViewType: [self type]];
     [platformObject._box setBorderType:CPLineBorder];
     [platformObject._box setBoxType:CPBoxCustom];
 
-    var  i, count = _content ? _content.length : 0;
-
+    var  i, count = _content? _content.length:0;
 	for (i = 0 ; i < count; i++)
 	{	var item = [_content[i] platformObject];
         [item setView: [[_content[i] content][0] platformObject] ];
         [item setLabel: [_content[i] title] ];
 		[platformObject addTabViewItem: item];
 	}
-
 	return platformObject;
 }
 @end
@@ -185,8 +206,7 @@
 - (id) initPlatformObject: (id)platformObject
 {
 	platformObject = [super initPlatformObject: platformObject];
-	[platformObject setTitle:[_attributes objectForKey:"title"]];
-
+	[platformObject setTitle: [_attributes objectForKey:"title"] ];
     [platformObject setHighlightsBy:CPContentsCellMask];
     [platformObject setShowsStateBy:CPContentsCellMask];
 
@@ -298,7 +318,7 @@
 	{	var actionButton;
 		[buttons addObject:actionButton=[CPButtonBar actionPopupButton] ];
 		var i, count = [_content count];
-
+    
 		for (i = 0; i < count; i++)
 		{	var item = [_content objectAtIndex: i];
 			var title = [item localizedStringValueForAttribute: @"title"];
@@ -306,41 +326,25 @@
 			[actionButton addItemWithTitle: title];
 			var platformItem = [actionButton lastItem];
 			platformItem = [item initPlatformObject: platformItem];	// load additional attributes into the init platform object
-			[item setPlatformObject: platformItem];
+			[item setPlatformObject:platformItem];
+
+            var peek;
+            if (peek = [[item attributes] objectForKey: "enabledBinding"])
+            {
+                debugger
+                var r = [peek rangeOfString: @"."];
+                var objectName = [peek substringToIndex:r.location];
+                var target = [[CPBundle sharedGSMarkupDecoder] _getObjectForIdString:objectName];
+                var keyValuePath = [peek substringFromIndex:CPMaxRange(r)];
+                var binding = CPEnabledBinding;
+                var options = nil;
+                [platformItem bind:binding toObject:target withKeyPath:keyValuePath options:options];
+            }
 		}
 	}
 	[platformObject setButtons: buttons ];
 	return platformObject;
 }
-
-- (CPButton)addButtonWithImageName:(CPString)aName target:(id) aTarget action:(SEL) aSelector
-{   var sendimage=[[CPImage alloc] initWithContentsOfFile:[CPString stringWithFormat:@"%@/%@", [[CPBundle mainBundle] resourcePath], aName]];
-    var newbutton = [[CPButton alloc] initWithFrame:CGRectMake(0, 0, 35, 25)];
-    [newbutton setBordered:NO];
-    [newbutton setImage:sendimage];
-    [newbutton setImagePosition:CPImageOnly];
-    [newbutton setTarget:aTarget];
-    [newbutton setAction:aSelector];
-    [self setButtons:[[self buttons] arrayByAddingObject:newbutton] ];
-    return newbutton;
-}
-- (void) registerWithArrayController:(CPArrayController) aController plusTooltip:(CPString)ptt minusTooltip:(CPString)mtt
-{
-    [[self buttons][1] bind:CPEnabledBinding toObject:aController withKeyPath:"selectedObjects.@count" options:nil];
-    
-    if(ptt)
-        [[self buttons][0] setToolTip:ptt]
-
-    if(mtt)
-        [[self buttons][1] setToolTip:mtt]
-            // fixme add insert and remove actions unless already wired!
-}
-
-- (void) registerWithArrayController:(CPArrayController) aController
-{
-    [self registerWithArrayController:aController plusTooltip:nil minusTooltip:nil]
-}
-
 
 @end
 
@@ -378,22 +382,21 @@
 @end
 
 @implementation GSMarkupTagSwitchButton: GSMarkupTagButton
-- (id)initPlatformObject:(id)platformObject
-{
-	platformObject = [super initPlatformObject:platformObject];
-    [platformObject setObjectValue:[self boolValueForAttribute:"selected"] == 1];
+- (id) initPlatformObject: (id)platformObject
+{	platformObject = [super initPlatformObject: platformObject];
 
     [platformObject setHighlightsBy:CPContentsCellMask];
     [platformObject setShowsStateBy:CPContentsCellMask];
 
+    [platformObject setObjectValue:[self boolValueForAttribute:"selected"]==1 ];
     return platformObject;
 }
-+ (CPString)tagName
++ (CPString) tagName
 {
-    return @"switchButton";
+  return @"switchButton";
 }
 
-+ (Class)platformObjectClass
++ (Class) platformObjectClass
 {	return [CPCheckBox class];
 }
 
@@ -426,8 +429,9 @@
 }
 
 - (id) initPlatformObject: (id)platformObject
-{	platformObject = [super initPlatformObject: platformObject];
-    [platformObject setLocale: [[CPLocale alloc] initWithLocaleIdentifier:@"de_DE"]];	//<!> fixme
+{
+    platformObject = [super initPlatformObject: platformObject];
+    [platformObject setLocale:[[CPLocale alloc] initWithLocaleIdentifier:@"de_DE"]];	//<!> fixme
     var styleString = [_attributes objectForKey: @"style"];
 
     if(styleString === 'textual')
@@ -444,8 +448,7 @@
         [platformObject setDatePickerElements:elements];
     }
     else if(styleString === 'graphical')
-    {
-        [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
+    {   [platformObject setDatePickerStyle: CPClockAndCalendarDatePickerStyle];
         [platformObject setDatePickerElements: CPYearMonthDatePickerElementFlag]
         [_attributes setObject: @"150" forKey: @"width"];
         [_attributes setObject: @"150" forKey: @"height"];
@@ -455,6 +458,12 @@
     }
     
     return platformObject;
+}
+
+- (id) postInitPlatformObject: (id)platformObject
+{	platformObject=[super postInitPlatformObject: platformObject];
+	[platformObject _init];
+	return platformObject;
 }
 
 @end
