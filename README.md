@@ -1,4 +1,4 @@
-Cappusance is a powerful GUI builder for Cappuccino with strong autolayout capabilities. Cappusance is actually a port of <http://www.gnustep.it/Renaissance>.
+Cappusance is a powerful GUI builder for Cappuccino with strong autolayout capabilities. Cappusance is actually a port of <[http://www.gnustep.it/Renaissance](https://github.com/gnustep/libs-renaissance)>.
 
 On top of that, Cappusance adds support for the more recent Cocoa controls and Cocoa bindings and a RESTful Object/Relational Mapper (ORM). This allows you to write a CRUD-functional application with a single XML file.  Cappusance automatically glues  database to the GUI with bidirectional bindings in the spirit of EOF/WebObjects: database entities map to ArrayControllers, relations can be expressed as master-detail bindings between ArrayControllers. ArrayControllers are extended to support CPUndoManager's undo/redo out of the box.
 
