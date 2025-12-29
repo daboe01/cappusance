@@ -127,7 +127,7 @@ Initialize the store. That's it. Fireside detects the entity, subscribes to the 
 ```
 
 ### 4. The Backend (Mojolicious)
-**[Mojolicious](http://mojolicio.us/)** with `Mojo::Pg` provides the REST API and the WebSocket stream. The following generic script handles CRUD and broadcasts updates to all connected clients.
+**[Mojolicious](http://mojolicio.us/)** with `Mojo::Pg` is a perfect match as this framework easily provides the REST API and the WebSocket stream. The following generic script handles CRUD and broadcasts updates to all connected clients. Any other backend will do, though, as Fireside is backend-agnostic.
 
 ```perl
 use Mojolicious::Lite;
