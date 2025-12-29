@@ -100,7 +100,7 @@ Initialize the store. That's it. Fireside detects the entity, subscribes to the 
 {
     // Outlets connected via GSMarkup
     id manuscriptsController @accessors;
-    id store @accessors;
+    id _store @accessors(property = store);
     
     id mainwindow;
     id manuscriptsTableView;
@@ -109,7 +109,6 @@ Initialize the store. That's it. Fireside detects the entity, subscribes to the 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
     // 1. Connect to the Backend
-    // _store is an instance variable with an accessor named store
     _store = [[FSStore alloc] initWithBaseURL: "http://127.0.0.1:3000/DB"];
 
     // 2. Load the Model
