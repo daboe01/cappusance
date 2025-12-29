@@ -1,397 +1,820 @@
 /*
- * Fireside: yet another restful ORM mapper for cappuccino
- * ToDo:
- *  catch write conflicts as in original EOF.
+ * Fireside: a battle-tested restful ORM mapper for cappuccino
+ * (c) 2016-2025  by Daniel Boehringer
+ * Modernized & PubSub Enabled Live-Sync Edition
  */
 
 @import <Foundation/CPObject.j>
 @import <Foundation/CPDictionary.j>
+@import <Foundation/CPString.j>
+@import <Foundation/CPURLRequest.j>
+@import <Foundation/CPURLConnection.j>
+@import <Foundation/CPOperationQueue.j>
 @import "FSMutableArray.j"
 
-@implementation CPNull(FSFix)
--stringValue{return "NULL"}
-@end
-@implementation CPArray(AllObjects)
--(CPArray) allObjects {return self;}
+// MARK: - Utilities
+
+@implementation CPNull (FSFix)
+- (CPString)stringValue { return "NULL"; }
 @end
 
-@implementation CPDictionary(JSONExport)
--(CPString) toJSON
-{   var keys=[self allKeys];
-    var i,l=keys.length;
-    var o={};
-    var nullobj=[CPNull null]
-    for(i=0;i<l;i++)
-    {   var key=keys[i];
-        var peek=[self objectForKey:key];
-        o[key]=peek === nullobj? 'NULL': peek;
+@implementation CPArray (AllObjects)
+- (CPArray)allObjects { return self; }
+@end
+
+@implementation CPDictionary (JSONExport)
+- (CPString)toJSON
+{
+    var keys = [self allKeys],
+    l = keys.length,
+    o = {},
+    nullObj = [CPNull null];
+
+    for (var i = 0; i < l; i++)
+    {
+        var key = keys[i],
+        val = [self objectForKey:key];
+        o[key] = (val === nullObj) ? null : val;
     }
+
     return JSON.stringify(o);
 }
 @end
 
-@implementation FSEntity : CPObject 
-{   CPString       _name @accessors(property=name);
-    CPString       _pk @accessors(property=pk);
-    CPSet          _columns @accessors(property=columns);
-    CPSet          _relations;
-    CPSet          _numerics;
-    CPSet          _optimistics;
-    FSStore        _store @accessors(property=store);
-    CPMutableArray _pkcache;
+// MARK: - Forward Declarations & Constants
+
+var FSRelationshipTypeToOne = 0;
+var FSRelationshipTypeToMany = 1;
+var FSRelationshipTypeFuzzy = 2;
+
+@class FSStore
+@class FSObject
+
+// MARK: - FSEntity
+
+@implementation FSEntity : CPObject
+{
+    CPString            _name @accessors(property=name);
+    CPString            _pk @accessors(property=pk);
+    CPSet               _columns @accessors(property=columns);
+    CPSet               _relations;
+    CPSet               _numerics;
+    CPSet               _optimistics;
+    FSStore             _store @accessors(property=store);
+    CPMutableArray      _pkcache;
     CPMutableDictionary _formatters;
-    id             _delegate @accessors(property=delegate)
+    id                  _delegate @accessors(property=delegate);
+
+    // Live Sync Tracking
+    Array               _liveArrays;
 }
 
--(FSEntity)copyOfEntity
-{   var other = [[FSEntity alloc] init];
+- (id)initWithName:(CPString)aName andStore:(FSStore)someStore
+{
+    self = [super init];
+
+    if (self)
+    {
+        _store = someStore;
+        _name = aName;
+        _pkcache = [];
+        _relations = [CPSet set];
+        _numerics = [CPSet set];
+        _optimistics = [CPSet set];
+        _liveArrays = [];
+    }
+    return self;
+}
+
+- (id)init
+{
+    return [self initWithName:nil andStore:nil];
+}
+
+- (FSEntity)copyOfEntity
+{
+    var other = [[FSEntity alloc] init];
     other._name = _name;
     other._pk = _pk;
     other._columns = _columns;
     other._relations = _relations;
-    if(_numerics) other._numerics = _numerics;
+    other._numerics = _numerics;
     other._store = _store;
     other._pkcache = _pkcache;
-    if(_formatters) other._formatters = _formatters;
-    if(_optimistics) other._optimistics = _optimistics;
+    other._formatters = _formatters;
+    other._optimistics = _optimistics;
+    other._liveArrays = []; // Do not copy live arrays
 
     return other;
 }
 
--(CPArray) relationshipWithTarget:(CPString)aTarget
-{   var ret=[];
-    var rels=[_relations allObjects];
-    if(!rels) return [];
-    var i,l= rels.length;
-    for(i=0;i<l;i++)
-    {   var r= rels[i];
-        if(r._target && r._target._name === aTarget)
-        return r;
+// Relationships
+
+- (FSRelationship)relationshipWithTarget:(CPString)targetEntityName
+{
+    var rels = [_relations allObjects];
+    for (var i = 0; i < [rels count]; i++)
+    {
+        var r = rels[i], target = [r target];
+        if (target && [[target name] isEqualToString:targetEntityName]) return r;
     }
     return nil;
 }
--(CPArray) relationshipWithName:(CPString)aTarget
-{   var ret=[];
-    var rels=[_relations allObjects];
-    if(!rels) return [];
-    var i,l= rels.length;
-    for(i=0;i<l;i++)
-    {   var r= rels[i];
-        if(r._name === aTarget)
-        return r;
+
+- (FSRelationship)relationshipWithName:(CPString)aName
+{
+    var rels = [_relations allObjects];
+    for(var i = 0; i < [rels count]; i++)
+    {
+        var r = rels[i];
+        if([r name] == aName) return r;
     }
     return nil;
+}
+
+- (void)addRelationship:(FSRelationship)someRel
+{
+    [_relations addObject:someRel];
 }
 
 - (void)setRelationship:(FSRelationship)aRel forTarget:(CPString)aTarget
-{   var o = [self relationshipWithTarget:aTarget];
-    
-    if (o)
-    {    _relations = [CPSet setWithSet:_relations];
-        [_relations removeObject:o];
-        [_relations addObject:aRel];
-    }
+{
+    var existingRel = [self relationshipWithTarget:aTarget];
+    if (existingRel) [_relations removeObject:existingRel];
+    [_relations addObject:aRel];
 }
 
--(CPArray) relationshipsWithTargetProperty: aKey
-{   var ret=[];
-    var rels=[_relations allObjects];
-    if(!rels) return [];
-    var i,l= rels.length;
-    for(i=0;i<l;i++)
-    {   var r= rels[i];
-        if([r targetColumn] === aKey) [ret addObject: r];
-    }
-    return ret;
-}
--(CPArray) relationshipsWithSourceProperty: aKey
-{   var ret=[];
-    var rels=[_relations allObjects]
-    if(!rels) return [];
-    var i,l= rels.length;
-    for(i=0;i<l;i++)
-    {   var r= rels[i];
-        if([r bindingColumn] === aKey) [ret addObject: r];
+- (CPArray)relationshipsWithTargetProperty:(CPString)aKey
+{
+    var ret = [CPMutableArray array], rels = [_relations allObjects];
+    if (!rels) return ret;
+    for (var i = 0; i < [rels count]; i++)
+    {
+        var r = rels[i];
+        if ([r targetColumn] === aKey) [ret addObject:r];
     }
     return ret;
 }
 
--(CPArray)_arrayForArray: results withDefaults: someDefaults
-{   var r=[[FSMutableArray alloc] initWithArray: results ofEntity: self];
-    [r setDefaults: someDefaults];
+- (CPArray)relationshipsWithSourceProperty:(CPString)aKey
+{
+    var ret = [CPMutableArray array], rels = [_relations allObjects];
+    if (!rels) return ret;
+    for (var i = 0; i < [rels count]; i++)
+    {
+        var r = rels[i];
+        if ([r bindingColumn] === aKey) [ret addObject:r];
+    }
+    return ret;
+}
+
+- (FSMutableArray)_arrayForArray:(CPArray)results withDefaults:(CPDictionary)someDefaults
+{
+    var r = [[FSMutableArray alloc] initWithArray:results ofEntity:self];
+    if ([r respondsToSelector:@selector(setDefaults:)]) [r setDefaults:someDefaults];
     return r;
 }
 
-
--(id) initWithName:(CPString) aName andStore:(FSStore) someStore
-{   self = [super init];
-    if (self)
-    {   _store = someStore;
-        _name = aName;
-    }
-    return self;
-}
--(id) init
-{   return [self initWithName: nil andStore: nil];
+- (CPArray)relationships
+{
+    return [_relations allObjects];
 }
 
--(id) createObject
-{   return [self createObjectWithDictionary:nil];
+// Columns & Formatting
+
+- (void)addNumericColumn:(CPString)aCol { [_numerics addObject:aCol]; }
+- (BOOL)isNumericColumn:(CPString)aCol { return [_numerics containsObject:aCol]; }
+- (void)addOptimisticColumn:(CPString)aCol { [_optimistics addObject:aCol]; }
+- (BOOL)isOptimisticColumn:(CPString)aCol { return [_optimistics containsObject:aCol]; }
+
+- (void)setFormatter:(CPFormatter)aFormatter forColumnName:(CPString)aName
+{
+    if(!_formatters) _formatters = [CPMutableDictionary dictionary];
+    [_formatters setObject:aFormatter forKey:aName];
+}
+
+- (CPFormatter)formatterForColumnName:(CPString)aName
+{
+    return [_formatters objectForKey:aName];
+}
+
+// Object Management
+
+- (id)createObject
+{
+    return [self createObjectWithDictionary:nil];
 }
 
 - (id)createObjectWithDictionary:(CPDictionary)myDict
 {
     var r = [[FSObject alloc] initWithEntity:self];
-    
     if (myDict)
-    {   r._changes = [myDict copy];
-        
+    {
+        r._changes = [myDict copy];
         var allKeys = [myDict allKeys];
-        var i, l = [allKeys count]
-        for (i=0; i < l; i++)
+        for (var i = 0; i < [allKeys count]; i++)
         {
-            var aKey = [allKeys objectAtIndex:i];
-            
-            var peek;
-            if (peek=[self formatterForColumnName:aKey])
-                [r._changes setObject:[peek stringForObjectValue:[myDict objectForKey:aKey]] forKey:aKey];
-            
+            var aKey = [allKeys objectAtIndex:i], formatter = [self formatterForColumnName:aKey];
+            if (formatter) [r._changes setObject:[formatter stringForObjectValue:[myDict objectForKey:aKey]] forKey:aKey];
         }
     }
     return r;
 }
-    
--(FSObject) insertObject:(id)someObj
-{   if([someObj isKindOfClass: [CPDictionary class]])
-    {   someObj=[self createObjectWithDictionary: someObj];
-    } else if(![someObj isKindOfClass: [FSObject class]])
-    {   //<!> fixme warn or raise...
-    }
-    [_store insertObject: someObj];
+
+- (FSObject)insertObject:(id)someObj
+{
+    if([someObj isKindOfClass:[CPDictionary class]]) someObj = [self createObjectWithDictionary:someObj];
+    [_store insertObject:someObj];
     return someObj;
 }
--(void) deleteObject:(id)someObj
+
+- (void)deleteObject:(id)someObj
 {
-    [_store deleteObject: someObj];
+    [_store deleteObject:someObj];
 }
 
--(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
-{   if(!_formatters) _formatters=[CPMutableDictionary new];
-    [_formatters setObject:aFormatter forKey: aName];
-}
--(CPFormatter) formatterForColumnName:(CPString) aName
-{   if(!_formatters) return nil;
-    return [_formatters objectForKey: aName];
-}
-
--(id) objectWithPK:(id) somePK
-{   var myoptions=[CPDictionary dictionaryWithObject: "1" forKey: "FSSynchronous"];
-
-    var a=[[self store] fetchObjectsWithKey: [self pk] equallingValue: somePK inEntity: self options: myoptions];
-    if([a count]==1) return [a objectAtIndex: 0];
+- (id)objectWithPK:(id)somePK
+{
+    var myoptions = [CPDictionary dictionaryWithObject:"1" forKey:"FSSynchronous"];
+    var a = [[self store] fetchObjectsWithKey:[self pk] equallingValue:somePK inEntity:self options:myoptions];
+    if([a count] == 1) return [a objectAtIndex:0];
     return nil;
 }
 
--(FSRelationship) relationOfName:(CPString) aName
-{   var rels=[_relations allObjects];
-    var i,l=[rels count];
-    for(i=0;i<l;i++)
-    {   var r=rels[i];
-        if([r name]==aName) return r;
-    }
-    return nil;
-}
--(CPArray) relationships
-{   return [_relations allObjects];
-}
-
-
--(void) addRelationship:(FSRelationship) someRel
-{   if(!_relations) _relations=[CPSet setWithObject:someRel];
-    else [_relations addObject: someRel];
-}
--(void) addNumericColumn:(CPString) aCol
-{   if(!_numerics) _numerics =[CPSet setWithObject:aCol];
-    else [_numerics addObject: aCol];
-}
--(BOOL) isNumericColumn:(CPString) aCol
-{   return [_numerics containsObject: aCol];
-}
-
--(void) addOptimisticColumn:(CPString)aCol
-{   if(!_optimistics) _optimistics =[CPSet setWithObject:aCol];
-    else [_optimistics addObject: aCol];
-}
--(BOOL) isOptimisticColumn:(CPString) aCol
-{   return [_optimistics containsObject:aCol];
-}
-
--(CPArray) allObjects
+- (CPArray)allObjects
 {
-    return [_store fetchAllObjectsInEntity: self];
+    return [_store fetchAllObjectsInEntity:self];
 }
 
--(void) _registerObjectInPKCache:(id)someObj
-{   if(!_pkcache) _pkcache=[];
-    if(_pk)
-        _pkcache[someObj._data.valueForKey(_pk)] = someObj;
+// Cache Internals
+
+- (void)_registerObjectInPKCache:(id)someObj
+{
+    if (!_pkcache) _pkcache = [];
+    if(_pk) _pkcache[someObj._data.valueForKey(_pk)] = someObj;
 }
 
--(void) _registeredObjectForPK:(id) somePK
-{   if(!_pkcache) return nil;
+- (id)_registeredObjectForPK:(id)somePK
+{
+    if(!_pkcache) return nil;
     return _pkcache[somePK];
 }
--(BOOL) _hasCaches
-{   var rels=[_relations allObjects];
-    var i,l=[rels count];
-    for(i=0;i<l;i++)
-    {   var r=[rels objectAtIndex: i];
-        if (r._target_cache && [r._target_cache count]) return YES;
-    }
-    return NO;
+
+- (void)_invalidatePKCache
+{
+    _pkcache = [];
 }
--(void) _invalidatePKCache
-{   _pkcache=[];
+
+
+// MARK: - Transparent Live Sync
+
+/*
+ * Tracks a CPArray so that we can push WebSocket updates to it automatically.
+ * Uses WeakRef to avoid memory leaks since FSEntity lives forever.
+ */
+- (void)_registerLiveArray:(CPArray)anArray withMatcher:(Function)matcher
+{
+    if (!_liveArrays) _liveArrays = [];
+
+    // Check for WeakRef support (Modern browsers/environments)
+    var ref = (typeof WeakRef !== 'undefined') ? new WeakRef(anArray) : { deref: function(){ return anArray; }, isStrong: true };
+
+    _liveArrays.push({
+        ref: ref,
+        matcher: matcher
+    });
+}
+
+/*
+ * Called by FSStore when a Push Notification arrives.
+ * Updates all tracked arrays.
+ */
+- (void)_applyRemoteChange:(CPString)type object:(id)object
+{
+    if (!_liveArrays || _liveArrays.length === 0) return;
+
+    var activeArrays = [];
+
+    for (var i = 0; i < _liveArrays.length; i++)
+    {
+        var entry = _liveArrays[i];
+        var arr = entry.ref.deref();
+
+        // If array was collected, drop it (unless we are forced to keep strong refs)
+        if (arr)
+        {
+            activeArrays.push(entry);
+
+            try
+            {
+                if (type === "INSERT")
+                {
+                    // Check if object belongs in this array based on criteria
+                    if (entry.matcher && entry.matcher(object))
+                    {
+                        // Prevent duplicates
+                        if (![arr containsObject:object])
+                            [arr addObject:object];
+                    }
+                }
+                else if (type === "DELETE")
+                {
+                    // removeObject works because we use singleton FSObjects
+                    [arr removeObject:object];
+                }
+            }
+            catch (e) { console.error("Error applying remote change to array: " + e); }
+        }
+    }
+
+    _liveArrays = activeArrays;
 }
 
 @end
 
 
-FSRelationshipTypeToOne=0;
-FSRelationshipTypeToMany=1;
-FSRelationshipTypeFuzzy=2;
+// MARK: - FSRelationship
 
 var _allRelationships;
 
-@implementation FSRelationship : CPObject 
-{   CPString _name @accessors(property=name);
-    FSEntity _source @accessors(property=source);
-    FSEntity _target @accessors(property=target);
-    CPString _bindingColumn @accessors(property=bindingColumn);
-    CPString _targetColumn @accessors(setter=setTargetColumn:);
-    CPString _type @accessors(property=type);
-    var         _target_cache;
-    var         _runSynced @accessors(property=runSynced);
+@implementation FSRelationship : CPObject
+{
+    CPString    _name @accessors(property=name);
+    FSEntity    _source @accessors(property=source);
+    FSEntity    _target @accessors(property=target);
+    CPString    _bindingColumn @accessors(property=bindingColumn);
+    CPString    _targetColumn @accessors(setter=setTargetColumn:);
+    int         _type @accessors(property=type);
+    CPMutableArray _target_cache;
+    BOOL        _runSynced @accessors(property=runSynced);
 }
 
--(FSEntity)copyOfRelationship
-{   var other =[[FSRelationship alloc] init];
-    other._name = _name;
-    other._source = _source;
-    other._target = _target;
-    other._bindingColumn = _bindingColumn;
-    other._targetColumn = _targetColumn;
-    other._type = _type;
-    other._target_cache = _target_cache;
-    other._runSynced = _runSynced;
-    return other;
-}
-
--(id) initWithName:(CPString) aName source: someSource andTargetEntity:(FSEntity) anEntity
-{   self = [super init];
+- (id)initWithName:(CPString)aName source:someSource andTargetEntity:(FSEntity)anEntity
+{
+    self = [super init];
     if (self)
-    {   _target    = anEntity;
-        _name    = aName;
+    {
+        _target = anEntity;
+        _name = aName;
         _source = someSource;
-        _type    = FSRelationshipTypeToOne;
+        _type = FSRelationshipTypeToOne;
+        _target_cache = [];
     }
 
-    if(!_allRelationships) _allRelationships=[];
+    if(!_allRelationships) _allRelationships = [];
     _allRelationships.push(self);
-    return self;
 
+    return self;
 }
--(id) init
-{   return [self initWithName: nil source: nil andTargetEntity: nil];
-}
--(CPString) targetColumn
-{   if(_targetColumn && _targetColumn.length) return _targetColumn;
+
+- (CPString)targetColumn
+{
+    if(_targetColumn && [_targetColumn length]) return _targetColumn;
     return [_target pk];
 }
--(CPArray) fetchObjectsForKey:(id)targetPK options:(CPDictionary)myOptions
-{   if(!targetPK) return nil;
-    var peek;
-    if(!_target_cache) _target_cache=[];
-    if(peek=_target_cache[targetPK]) return peek;
-    var res= [[_target store] fetchObjectsWithKey:[self targetColumn] equallingValue:targetPK inEntity:_target options: myOptions];
-    _target_cache[targetPK]=res;
+
+- (CPArray)fetchObjectsForKey:(id)targetPK options:(CPDictionary)myOptions
+{
+    if(!targetPK) return nil;
+    if(!_target_cache) _target_cache = [];
+
+    var cached = _target_cache[targetPK];
+    if(cached) return cached;
+
+    var res = [[_target store] fetchObjectsWithKey:[self targetColumn] equallingValue:targetPK inEntity:_target options:myOptions];
+    _target_cache[targetPK] = res;
+
     return res;
 }
--(CPArray) fetchObjectsForKey:(id) targetPK
-{   var myoptions=[CPDictionary dictionaryWithObject: "0" forKey: "FSSynchronous"];
-    return [self fetchObjectsForKey: targetPK options: myoptions];
+
+- (CPArray)fetchObjectsForKey:(id)targetPK
+{
+    var myoptions = [CPDictionary dictionaryWithObject:"0" forKey:"FSSynchronous"];
+    return [self fetchObjectsForKey:targetPK options:myoptions];
 }
 
--(void) _invalidateCache
-{   _target_cache=[];
+- (void)_invalidateCache
+{
+    _target_cache = [];
     [_target _invalidatePKCache];
 }
 
-+(CPArray) relationshipsWithTargetEntity:(FSEntity) anEntity
-{   var ret=[];
-    var i,l= _allRelationships.length;
-    for(i=0;i<l;i++)
-    {   var r= _allRelationships[i];
-        if(r._target === anEntity) ret.push(r);
++ (CPArray)relationshipsWithTargetEntity:(FSEntity)anEntity
+{
+    var ret = [CPMutableArray array];
+    var l = _allRelationships.length;
+    for (var i = 0; i < l; i++)
+    {
+        var r = _allRelationships[i];
+        if ([r target] === anEntity) [ret addObject:r];
     }
     return ret;
+}
+@end
+
+
+// MARK: - FSStore (Modernized + Compatible)
+
+@implementation FSStore : CPObject
+{
+    CPString            _baseURL @accessors(property=baseURL);
+    CPOperationQueue    _persistenceQueue;
+    id                  _webSocket;
+    CPMutableDictionary _registeredEntities;
+}
+
+- (id)initWithBaseURL:(CPString)someURL
+{
+    self = [super init];
+    if (self)
+    {
+        _baseURL = someURL;
+        _registeredEntities = [CPMutableDictionary dictionary];
+        _persistenceQueue = [[CPOperationQueue alloc] init];
+        [self _connectWebSocket];
+    }
+    return self;
+}
+
+- (void)registerEntity:(FSEntity)anEntity
+{
+    [_registeredEntities setObject:anEntity forKey:[anEntity name]];
+}
+
+// WebSocket Live Sync
+
+- (void)_connectWebSocket
+{
+    var wsURL = _baseURL.replace("http", "ws") + "/socket";
+    if (window.G_SESSION) wsURL += "?session=" + window.G_SESSION;
+
+    _webSocket = new WebSocket(wsURL);
+    _webSocket.onmessage = function(evt) { [self _handlePushNotification:evt.data]; };
+    _webSocket.onclose = function() { window.setTimeout(function(){ [self _connectWebSocket]; }, 5000); };
+}
+
+- (void)_handlePushNotification:(CPString)jsonString
+{
+    try
+    {
+        var payload = JSON.parse(jsonString);
+        var entity = [_registeredEntities objectForKey:payload.table];
+
+        if (!entity) return;
+
+        var object = [entity _registeredObjectForPK:payload.pk];
+
+        if (payload.type === "UPDATE")
+        {
+            if (object) [object _refreshDataFromJSONObject:payload.data];
+        }
+        else if (payload.type === "INSERT")
+        {
+            // Even if we don't have it, create it so we can push it to live arrays
+            if (!object)
+            {
+                object = [[FSObject alloc] initWithEntity:entity];
+                [object _setDataFromJSONObject:payload.data];
+                [entity _registerObjectInPKCache:object];
+            }
+
+            // Push to any active arrays that match
+            [entity _applyRemoteChange:"INSERT" object:object];
+        }
+        else if (payload.type === "DELETE")
+        {
+            if (object)
+            {
+                // Remove from active arrays first
+                [entity _applyRemoteChange:"DELETE" object:object];
+                entity._pkcache[payload.pk] = undefined;
+            }
+        }
+    }
+    catch (e) { console.error(e); }
+}
+
+// Factories
+
+- (CPURLRequest)requestForInsertingObjectInEntity:(FSEntity)e
+{
+    [self registerEntity:e];
+    var r = [CPURLRequest requestWithURL:_baseURL+"/"+[e name]+"/"+[e pk]];
+    [r setHTTPMethod:"POST"];
+    return r;
+}
+
+- (CPURLRequest)requestForUpdatingObject:(FSObject)o
+{
+    var e = [o entity];
+    [self registerEntity:e];
+    var r = [CPURLRequest requestWithURL:_baseURL+"/"+[e name]+"/"+[e pk]+"/"+encodeURIComponent([o valueForKey:[e pk]])];
+    [r setHTTPMethod:"PATCH"];
+    return r;
+}
+
+- (CPURLRequest)requestForDeletingObject:(FSObject)o
+{
+    var e = [o entity];
+    var r = [CPURLRequest requestWithURL:_baseURL+"/"+[e name]+"/"+[e pk]+"/"+encodeURIComponent([o valueForKey:[e pk]])];
+    [r setHTTPMethod:"DELETE"];
+    return r;
+}
+
+// Writes (Serial Queue)
+
+- (void)insertObject:(id)obj
+{
+    if(!obj._changes) return;
+    var req = [self requestForInsertingObjectInEntity:[obj entity]];
+    [req setHTTPBody:[obj._changes toJSON]];
+    [_persistenceQueue addOperation:[[FSRequestOperation alloc] initWithRequest:req object:obj type:"INSERT"]];
+}
+
+- (void)writeChangesInObject:(id)obj
+{
+    if(![obj._changes count]) return;
+    var req = [self requestForUpdatingObject:obj];
+    [req setHTTPBody:[obj._changes toJSON]];
+    [_persistenceQueue addOperation:[[FSRequestOperation alloc] initWithRequest:req object:obj type:"UPDATE"]];
+}
+
+- (void)deleteObject:(id)obj
+{
+    var req = [self requestForDeletingObject:obj];
+    [_persistenceQueue addOperation:[[FSRequestOperation alloc] initWithRequest:req object:obj type:"DELETE"]];
+}
+
+// Reads (Async + Sync Compatibility + Live Tracking)
+
+- (id)fetchObjectsWithKey:(CPString)aKey equallingValue:(id)someVal inEntity:(FSEntity)someEntity options:(CPDictionary)myOptions
+{
+    [self registerEntity:someEntity];
+
+    if(aKey == [someEntity pk])
+    {
+        var peek = [someEntity _registeredObjectForPK:someVal];
+        if(peek) return [CPArray arrayWithObject:peek];
+    }
+
+    var isFuzzy = (myOptions && [myOptions objectForKey:"FSFuzzySearch"]);
+    var urlStr = _baseURL + "/" + [someEntity name] + "/" + aKey + (isFuzzy ? "/like/" : "/") + encodeURIComponent(someVal);
+    var request = [CPURLRequest requestWithURL:urlStr];
+
+    // Define Matcher for this fetch
+    var matcher = function(candidateObj) {
+        if (aKey === "1" && someVal === "1") return true; // All Objects
+        var val = [candidateObj valueForKey:aKey];
+        // Loose equality (to match "1" with 1)
+        return val == someVal;
+    };
+
+    // --- Synchronous Path ---
+    if(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"], 10))
+    {
+        var data = [CPURLConnection sendSynchronousRequest:request returningResponse:nil];
+        if (!data) return nil;
+        var json = JSON.parse([data rawString]);
+        var resArray = [CPMutableArray array];
+        for(var i = 0; i<json.length; i++) {
+            [resArray addObject:[self _processJSON:json[i] forEntity:someEntity]];
+        }
+        var finalArr = [[FSMutableArray alloc] initWithArray:resArray ofEntity:someEntity];
+
+        // AUTO-TRACKING
+        [someEntity _registerLiveArray:finalArr withMatcher:matcher];
+
+        return finalArr;
+    }
+
+    // --- Asynchronous Path ---
+    var resultArray = [[FSMutableArray alloc] initWithArray:@[] ofEntity:someEntity];
+
+    // AUTO-TRACKING immediately (it will populate later, but we track the instance)
+    [someEntity _registerLiveArray:resultArray withMatcher:matcher];
+
+    [CPURLConnection sendAsynchronousRequest:request queue:[CPOperationQueue mainQueue] completionHandler:function(resp, data, err)
+     {
+        if(err || !data) return;
+        var json = JSON.parse([data rawString]);
+        var objects = [];
+        for(var i = 0; i<json.length; i++) {
+            [objects addObject:[self _processJSON:json[i] forEntity:someEntity]];
+        }
+        [resultArray addObjectsFromArray:objects];
+        if(someEntity.__ACForSpinner) [someEntity.__ACForSpinner setContent:resultArray];
+    }];
+
+    return resultArray;
+}
+
+- (id)_processJSON:(Object)row forEntity:(FSEntity)entity
+{
+    var pk = row[[entity pk]];
+    var obj = [entity _registeredObjectForPK:pk];
+    if(!obj) {
+        obj = [[FSObject alloc] initWithEntity:entity];
+        [obj _setDataFromJSONObject:row];
+        [entity _registerObjectInPKCache:obj];
+    } else {
+        [obj _refreshDataFromJSONObject:row];
+    }
+    return obj;
+}
+
+- (CPArray)fetchAllObjectsInEntity:(FSEntity)e
+{
+    return [self fetchObjectsWithKey:@"1" equallingValue:@"1" inEntity:e options:nil];
+}
+
+
+- (CPArray)fetchObjectsForURLRequest:(CPURLRequest)request inEntity:(FSEntity)someEntity requestDelegate:(id)someDelegate
+{
+    [self registerEntity:someEntity];
+
+    // --- Asynchronous Path (Delegate) ---
+    if (someDelegate)
+    {
+        // Try to hook into the delegate if it's an array for Live Sync
+        if ([someDelegate isKindOfClass:[CPArray class]])
+        {
+            // Heuristic: If we are fetching all objects via fullyReloadAsync, the URL usually
+            // matches the pattern for "All Objects". If not, we fall back to a "permissive" matcher
+            // or we try to parse the URL. For simplicity in the use case:
+            // Assume if it's a delegate-based fetch on the entity root, it's ALL.
+
+            var urlStr = [[request URL] absoluteString];
+            // Basic matcher: accepts everything if we can't parse strictly.
+            // Or assume "1"=="1" if the URL ends with the entity name.
+
+            var matcher = function(candidate) { return true; }; // Default to accepting all insertions for delegate arrays
+
+            [someEntity _registerLiveArray:someDelegate withMatcher:matcher];
+        }
+
+        [CPURLConnection connectionWithRequest:request delegate:someDelegate];
+        return someDelegate;
+    }
+
+    // --- Synchronous Path ---
+    var data = [CPURLConnection sendSynchronousRequest:request returningResponse:nil];
+    if (!data) return [[FSMutableArray alloc] initWithArray:@[] ofEntity:someEntity];
+
+    try
+    {
+        var json = JSON.parse([data rawString]);
+        var results = [CPMutableArray array];
+
+        if (json && json.length)
+        {
+            for (var i = 0; i < json.length; i++)
+                [results addObject:[self _processJSON:json[i] forEntity:someEntity]];
+        }
+
+        var finalArr = [[FSMutableArray alloc] initWithArray:results ofEntity:someEntity];
+        // Track Sync URL requests as "All/Permissive"
+        [someEntity _registerLiveArray:finalArr withMatcher:function(){return true;}];
+
+        return finalArr;
+    }
+    catch (e)
+    {
+        console.error("Failed to parse JSON: " + e);
+        return [[FSMutableArray alloc] initWithArray:@[] ofEntity:someEntity];
+    }
 }
 
 @end
 
 
-@implementation FSObject : CPObject 
-{   CPMutableDictionary _data;
-    CPMutableDictionary _changes;
-    CPMutableDictionary _formatters;
-    FSEntity _entity @accessors(property=entity);
+// MARK: - FSRequestOperation
+
+@implementation FSRequestOperation : CPOperation
+{
+    CPURLRequest    _req;
+    id              _obj;
+    CPString        _type;
+    BOOL            _opExecuting;
+    BOOL            _opFinished;
+    CPString        _data;
 }
 
--(id) initWithEntity:(id) anEntity
-{   self = [super init];
+- (id)initWithRequest:(CPURLRequest)r object:(id)o type:(CPString)t
+{
+    self = [super init];
+    if(self)
+    {
+        _req = r;
+        _obj = o;
+        _type = t;
+        _opExecuting = NO;
+        _opFinished = NO;
+    }
+    return self;
+}
+
+- (void)start
+{
+    if([self isCancelled]) { [self finish]; return; }
+    [self willChangeValueForKey:@"isExecuting"];
+    _opExecuting = YES;
+    [self didChangeValueForKey:@"isExecuting"];
+    [CPURLConnection connectionWithRequest:_req delegate:self];
+}
+
+- (BOOL)isConcurrent { return YES; }
+- (BOOL)isExecuting { return _opExecuting; }
+- (BOOL)isFinished { return _opFinished; }
+
+- (void)connection:(CPURLConnection)c didReceiveData:(CPString)d
+{
+    if(!_data) _data = "";
+    _data += d;
+}
+
+- (void)connectionDidFinishLoading:(CPURLConnection)c
+{
+    try {
+        var json = JSON.parse(_data);
+        if (json.err) {
+            console.error("Error " + _type + ": " + json.err);
+        }
+        else if (_type === "INSERT" && json.pk) {
+            var e = [_obj entity];
+            [_obj willChangeValueForKey:[e pk]];
+            [_obj._data setObject:json.pk forKey:[e pk]];
+            [e _registerObjectInPKCache:_obj];
+            [_obj didChangeValueForKey:[e pk]];
+            _obj._changes = nil;
+        }
+        else if (_type === "UPDATE") {
+            var changedKeys = [_obj._changes allKeys], count = [changedKeys count];
+            for (var i = 0; i < count; i++) {
+                var key = changedKeys[i], val = [_obj._changes objectForKey:key];
+                if (json && json[key] !== undefined) val = json[key];
+                [_obj willChangeValueForKey:key];
+                [_obj._data setObject:val forKey:key];
+                [_obj didChangeValueForKey:key];
+            }
+            _obj._changes = nil;
+            if (json) [_obj _refreshDataFromJSONObject:json];
+        }
+    } catch(e) { console.error("JSON Error: " + e); }
+    [self finish];
+}
+- (void)connection:(CPURLConnection)c didFailWithError:(id)e
+{
+    console.error("Connection Failed: " + e);
+    [self finish];
+}
+- (void)finish
+{
+    [self willChangeValueForKey:@"isExecuting"];
+    [self willChangeValueForKey:@"isFinished"];
+    _opExecuting = NO;
+    _opFinished = YES;
+    [self didChangeValueForKey:@"isExecuting"];
+    [self didChangeValueForKey:@"isFinished"];
+}
+@end
+
+// MARK: - FSObject
+
+@implementation FSObject : CPObject
+{
+    CPMutableDictionary _data;
+    CPMutableDictionary _changes @accessors(property=changes);
+    CPMutableDictionary _formatters;
+    FSEntity            _entity @accessors(property=entity);
+}
+
+- (id)initWithEntity:(id)anEntity
+{
+    self = [super init];
     if (self)
-    {   _entity=anEntity;
+    {
+        _entity = anEntity;
+        _data = [CPMutableDictionary dictionary];
     }
     return self;
 }
 
 - (void)reload
 {
-    var mypk = [_data objectForKey:_entity._pk];
-
-    if ([self entity]._pkcache)
-        [self entity]._pkcache[mypk] = undefined;
-
-    var tmpbj = [[self entity] objectWithPK:mypk];
-
-    if (!tmpbj)
-        return;
-
-    var cols = [CPSet setWithArray:[tmpbj._data allKeys]];
-    [cols intersectSet:[self entity]._columns];
-    var objectEnumerator = [cols objectEnumerator];
-    var aKey;
-
-    while ((aKey = [objectEnumerator nextObject]) !== nil)
-    {
-        if([self valueForKey:aKey] !== [tmpbj._data objectForKey:aKey])
-        {
-            [self willChangeValueForKey:aKey];
-            [_data setObject: [tmpbj._data objectForKey:aKey] forKey:aKey];
-
-            if(_changes)
-                [_changes removeObjectForKey: aKey];
-
-            [self didChangeValueForKey:aKey];
-        }
-    }
+    var pk = [_data objectForKey:_entity._pk];
+    if (_entity._pkcache) _entity._pkcache[pk] = undefined;
+    var fresh = [_entity objectWithPK:pk];
+    if(fresh) [self _refreshDataFromJSONObject:fresh._data];
 }
 
-- (void)_refreshDataFromJSONObject:(id) o
-{   for (var propName in o) {
-        if (o.hasOwnProperty(propName)) {
+- (void)_refreshDataFromJSONObject:(id)o
+{
+    for (var propName in o)
+    {
+        if (o.hasOwnProperty(propName))
+        {
             var pnv = o[propName];
-            if(pnv !== nil && pnv != [self valueForKey:propName])
+            if(pnv !== nil && ![pnv isEqual:[_data objectForKey:propName]])
             {
                 [self willChangeValueForKey:propName];
                 [_data setObject:pnv forKey:propName];
@@ -401,369 +824,127 @@ var _allRelationships;
     }
 }
 
-- (void)_setDataFromJSONObject:(id) o
-{   _data = [CPMutableDictionary dictionary];
-    for (var propName in o) {
-        if (o.hasOwnProperty(propName)) {
-            var pnv = o[propName];
-            if(pnv !== nil)
-                _data.setValueForKey(propName, pnv);
-        }
-    }
-}
-
--(void) setFormatter: (CPFormatter) aFormatter forColumnName:(CPString) aName
-{   if(!_formatters) _formatters=[CPMutableDictionary new];
-    [_formatters setObject:aFormatter forKey: aName];
-}
--(CPFormatter) formatterForColumnName:(CPString) aName
-{   if(!_formatters) return nil;
-    return [_formatters objectForKey: aName];
+- (void)_setDataFromJSONObject:(id)o
+{
+    _data = [CPMutableDictionary dictionary];
+    for (var propName in o)
+        if (o.hasOwnProperty(propName) && o[propName] !== nil) _data.setValueForKey(propName, o[propName]);
 }
 
 - (id)dictionary
-{   var o=[_data copy];
-    if(!o) o=[CPMutableDictionary new];
-    if(_changes) [o addEntriesFromDictionary: _changes];
+{
+    var o = [_data copy];
+    if(_changes) [o addEntriesFromDictionary:_changes];
     return o;
 }
-- (id)description
-{
-    return [[self dictionary] description];
-}
 
--(int) typeOfKey:(CPString)aKey
-{   if( [[_entity columns] containsObject: aKey]) return 0;
-    if( [_entity relationOfName: aKey]) return 1;
+- (int)typeOfKey:(CPString)aKey
+{
+    if( [[_entity columns] containsObject:aKey]) return 0;
+    if( [_entity relationOfName:aKey]) return 1;
     return CPNotFound;
 }
 
 - (id)valueForKey:(CPString)aKey synchronous:(BOOL)runSynced
-{   var type = [self typeOfKey: aKey];
+{
+    var type = [self typeOfKey:aKey];
 
     if(type == 0)
     {
-        var  o = [([_changes containsKey: aKey]? _changes:_data) objectForKey: aKey];
-        var peek=[self formatterForColumnName:aKey];
-
-        if(peek || (peek = [_entity formatterForColumnName:aKey]))
-            return [peek objectValueForString: o error: nil];    //<!> fixme handle errors somehow
-
-        else if([_entity  isNumericColumn:aKey])
-            return [CPNumber numberWithInt:parseInt(o, 10)];
-
-        else if (o)
-        {   if(![o isKindOfClass:CPString])    // cast numbers to strings in order to make predicate filtering work
-			{
-                if ([o isKindOfClass:CPArray] && [o count])
-                    o=o[0];
-
-                if ([o respondsToSelector:@selector(stringValue)])
-                    o = [o stringValue];
-            }
+        var o = ([_changes objectForKey:aKey]) ? [_changes objectForKey:aKey] : [_data objectForKey:aKey];
+        var formatter = [self formatterForColumnName:aKey] || [_entity formatterForColumnName:aKey];
+        if(formatter) return [formatter objectValueForString:o error:nil];
+        if([_entity isNumericColumn:aKey]) return [CPNumber numberWithInt:parseInt(o, 10)];
+        if (o && ![o isKindOfClass:[CPString class]]) {
+            if([o isKindOfClass:[CPArray class]] && [o count]) o = o[0];
+            if([o respondsToSelector:@selector(stringValue)]) o = [o stringValue];
         }
         return o;
     }
-
-    else if(type == 1)    // a relationship is accessed
-    {   var rel = [_entity relationOfName:aKey];
-        var bindingColumn = [rel bindingColumn];
-
-        if(!bindingColumn)
-            bindingColumn = [_entity pk];
-
+    else if(type == 1)
+    {
+        var rel = [_entity relationOfName:aKey];
+        var bindingColumn = [rel bindingColumn] || [_entity pk];
         var isToMany = ([rel type] == FSRelationshipTypeToMany);
-        var myoptions=[CPMutableDictionary new];
+        var myoptions = [CPMutableDictionary dictionary];
 
-        if ([rel type] == FSRelationshipTypeFuzzy)
-        {   isToMany=YES;
+        if ([rel type] == FSRelationshipTypeFuzzy) {
+            isToMany = YES;
             [myoptions setObject:"1" forKey:"FSFuzzySearch"];
         }
-        if (!isToMany || runSynced || [rel runSynced])
-            [myoptions setObject:"1" forKey:"FSSynchronous"];
+        if (!isToMany || runSynced || [rel runSynced]) [myoptions setObject:"1" forKey:"FSSynchronous"];
 
         var results = [rel fetchObjectsForKey:[self valueForKey:bindingColumn] options:myoptions];
-
-        if (isToMany)
-        {
-            var defaults = rel._targetColumn? [CPDictionary dictionaryWithObject:[self valueForKey:bindingColumn] forKey: rel._targetColumn]:@{};
-            if(![results respondsToSelector:@selector(setDefaults:)])
-                return results
-
-			[results setDefaults:defaults];
-            [results setKvoKey:aKey];
-            [results setKvoOwner:self];
-
+        if (isToMany) {
+            var defaults = rel._targetColumn ? [CPDictionary dictionaryWithObject:[self valueForKey:bindingColumn] forKey:rel._targetColumn] : @{};
+            if([results respondsToSelector:@selector(setDefaults:)]) [results setDefaults:defaults];
+            if([results respondsToSelector:@selector(setKvoKey:)]) { [results setKvoKey:aKey]; [results setKvoOwner:self]; }
             return results;
         }
-        else
-            return (results && [results count])? [results objectAtIndex: 0] : nil;
+        else return (results && [results count]) ? [results objectAtIndex:0] : nil;
     }
     else
-    {   var propSEL = sel_getName(aKey);
-        if (propSEL && [self respondsToSelector: propSEL ])
-            return [self performSelector:propSEL];
-    }
-
-    if (_entity._delegate && [_entity._delegate respondsToSelector:@selector(entity:valueForKey:synchronous:)])
-        return [_entity._delegate entity:_entity valueForKey:aKey synchronous:runSynced];
-
-    if (![[_entity columns] containsObject:aKey])
+    {
+        var propSEL = sel_getName(aKey);
+        if (propSEL && [self respondsToSelector:propSEL]) return [self performSelector:propSEL];
+        if (_entity._delegate && [_entity._delegate respondsToSelector:@selector(entity:valueForKey:synchronous:)])
+            return [_entity._delegate entity:_entity valueForKey:aKey synchronous:runSynced];
         console.log("Key "+aKey+" is not a column in entity "+[_entity name]);
-
-    return nil
+    }
+    return nil;
 }
 
-- (id)valueForKey:(CPString)aKey
-{   return [self valueForKey: aKey synchronous: NO];
-}
+- (id)valueForKey:(CPString)aKey { return [self valueForKey:aKey synchronous:NO]; }
 
 - (void)setValue:(id)someval forKey:(CPString)aKey
 {
-    if (someval === nil)
-        return;
-
+    if (someval === nil) return;
+    var currentVal = [self valueForKey:aKey];
+    if (currentVal === someval) return;
     var type = [self typeOfKey:aKey];
-    var oldval = [self valueForKey:aKey];
 
-    if (oldval === someval)
-        return;    // we are not interested in side effects, so ignore identity-updates
-
-    if (_entity._delegate && [_entity._delegate respondsToSelector:@selector(entity:shouldChangeValueFrom:toValue:forKey:)])
-        if (![_entity._delegate entity:_entity shouldChangeValueFrom:oldval toValue:someval forKey:aKey])
-            return;
-
-    if (type == 0)
+    if(type == 0)
     {
-        if(!_changes)
-            _changes = [CPMutableDictionary dictionary];
-
+        if(!_changes) _changes = [CPMutableDictionary dictionary];
         [self willChangeValueForKey:aKey];
-        var peek = [self formatterForColumnName: aKey];
-
-        if(peek || (peek = [_entity formatterForColumnName: aKey]))
-            someval = [peek stringForObjectValue:someval];
-
-        [_changes setObject: someval forKey: aKey];
+        var formatter = [self formatterForColumnName:aKey] || [_entity formatterForColumnName:aKey];
+        if(formatter) someval = [formatter stringForObjectValue:someval];
+        [_changes setObject:someval forKey:aKey];
         [self didChangeValueForKey:aKey];
 
-        //  [[_entity store] writeChangesInObject:self];
-        // coalesce all writes in next iteration of runloop
-        [[CPRunLoop currentRunLoop] cancelPerformSelector::@selector(writeChangesInObject:) target:[_entity store] argument:self];
-        [[CPRunLoop currentRunLoop] performSelector:@selector(writeChangesInObject:) target:[_entity store] argument:self order:0 modes:[CPDefaultRunLoopMode]];
+        [[_entity store] writeChangesInObject:self];
 
-        var allRels = [_entity._relations allObjects];
-
-        if (allRels && ![_entity isOptimisticColumn:aKey])
-        {   var i,l= allRels.length;
-
-            for(i=0; i < l; i++)
-            {
+        if (![_entity isOptimisticColumn:aKey]) {
+            var allRels = [_entity relationships];
+            for(var i = 0; i<[allRels count]; i++) {
                 var rel = allRels[i];
-                rel._target_cache=[];
-                var name = [rel name];
-                [self willChangeValueForKey:name];
-                [self didChangeValueForKey:name];
+                [rel _invalidateCache];
+                [self willChangeValueForKey:[rel name]];
+                [self didChangeValueForKey:[rel name]];
             }
         }
     }
-    else if(type == 1)
-    {   // this is only to make KVC upates happen in order to update the selection in the arraycontrollers.
-    }
-    else
-        console.log("Key " + aKey + " is not a column");
-    //[CPException raise:CPInvalidArgumentException reason:@"Key "+aKey+" is not a column"];
 }
 
 - (id)valueForKeyPath:(CPString)aKeyPath
 {
-    var firstDotIndex = aKeyPath.indexOf(".");
-
-    if (firstDotIndex === CPNotFound)
-        return [self valueForKey:aKeyPath];
-
-    var firstKeyComponent = aKeyPath.substring(0, firstDotIndex),
-        remainingKeyPath = aKeyPath.substring(firstDotIndex + 1),
-        value = [self valueForKey:firstKeyComponent synchronous: YES];
-
-    return [value valueForKeyPath:remainingKeyPath];
+    var firstDot = aKeyPath.indexOf(".");
+    if (firstDot === CPNotFound) return [self valueForKey:aKeyPath];
+    var first = aKeyPath.substring(0, firstDot);
+    var rest = aKeyPath.substring(firstDot + 1);
+    var val = [self valueForKey:first synchronous:YES];
+    return [val valueForKeyPath:rest];
 }
 
-@end
-
-@implementation FSStore : CPObject 
-{   CPString _baseURL @accessors(property=baseURL);
-    unsigned _fetchLimit @accessors(property=fetchLimit);
-}
-
--(CPURLRequest) requestForInsertingObjectInEntity:(FSEntity) someEntity
-{   var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+ [someEntity pk]];
-    [request setHTTPMethod:"POST"];
-    return request;
-}
--(CPURLRequest) requestForAddressingObjectsWithKey:(CPString)aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity
-{   var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/"+encodeURIComponent(someval)];
-    return request;
-}
--(CPURLRequest) requestForFuzzilyAddressingObjectsWithKey:(CPString)aKey equallingValue:(id) someval inEntity:(FSEntity)someEntity
-{   var request = [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name]+"/"+aKey+"/like/"+encodeURIComponent(someval)];
-    return request;
-}
--(CPURLRequest) requestForAddressingAllObjectsInEntity:(FSEntity) someEntity
+- (void)setFormatter:(CPFormatter)f forColumnName:(CPString)n
 {
-// alert([self baseURL]+"/"+[someEntity name])
-    return [CPURLRequest requestWithURL: [self baseURL]+"/"+[someEntity name] ];
+    if(!_formatters) _formatters=[CPMutableDictionary dictionary];
+    [_formatters setObject:f forKey:n];
 }
 
--(id) initWithBaseURL:(CPString) someURL
-{   self = [super init];
-    if (self)
-    {   _baseURL = someURL;
-    }
-    return self;
-}
-
--(CPArray) fetchObjectsForURLRequest:(CPURLRequest) request inEntity: (FSEntity) someEntity requestDelegate: someDelegate
-{   if(someDelegate)
-    {   [CPURLConnection connectionWithRequest:request delegate:someDelegate];
-        return someDelegate;
-    }
-    var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
-    var j = JSON.parse( [data rawString]);
-    var a=[CPMutableArray new];
-    if(j)
-    {   var i,l=j.length;
-        for(i=0;i<l;i++)
-        {   var pk=j[i][[someEntity pk]];
-            var peek;
-            if (peek=[someEntity _registeredObjectForPK: pk])    // enforce singleton pattern
-            {   if (someEntity._refreshCachedObjects)
-                    [peek _refreshDataFromJSONObject:j[i]];
-                a.push(peek);
-            } else
-            {   var t=[[FSObject alloc] initWithEntity: someEntity];
-                [t _setDataFromJSONObject: j[i] ];
-                [someEntity _registerObjectInPKCache: t];
-                a.push(t);
-            }
-        }
-    }
-    return [[FSMutableArray alloc] initWithArray: a ofEntity: someEntity];
-}
-
-
-
-
--(CPArray) fetchAllObjectsInEntity:(FSEntity) someEntity
-{   return [self fetchObjectsForURLRequest: [self requestForAddressingAllObjectsInEntity: someEntity] inEntity:someEntity requestDelegate: nil];
-}
-
-// CRUD combo
-
--(id) fetchObjectsWithKey: aKey equallingValue: (id) someval inEntity:(FSEntity) someEntity options: myOptions
-{   if( aKey == [someEntity pk] ) 
-    {   var peek;
-        if(peek=[someEntity _registeredObjectForPK: someval]) return [CPArray arrayWithObject: peek];
-    }
-    var request;
-    if(myOptions && parseInt([myOptions objectForKey: "FSFuzzySearch"], 10))
-         request=[self requestForFuzzilyAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
-    else request=[self requestForAddressingObjectsWithKey: aKey equallingValue: someval inEntity: someEntity];
-    var a=nil;
-    if(!(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"], 10)))
-    {   a=[[FSMutableArray alloc] initWithArray: [] ofEntity: someEntity];
-        if(someEntity.__ACForSpinner && someEntity.__ACForSpinner.__tableViewForSpinner)
-            [someEntity.__ACForSpinner.__tableViewForSpinner _startAnimation: self];
-    }
-    return [self fetchObjectsForURLRequest: request inEntity: someEntity requestDelegate: a];
-}
-
-- (void)writeChangesInObject:(id)obj
-{   var mypk = [obj valueForKey: [[obj entity] pk]];
-
-    if([[obj entity] pk] === undefined)
-        return;
-
-    if(!obj._changes)
-        return;
-
-    var request = [self requestForAddressingObjectsWithKey:[[obj entity] pk] equallingValue:mypk inEntity:[obj entity]];
-    [request setHTTPMethod:"PUT"];
-    [request setHTTPBody:[obj._changes toJSON]];
-
-    var myConn = [CPURLConnection connectionWithRequest:request delegate:self];
-
-    if (![obj entity]._doNotReloadAfterWrite)
-        myConn._object = obj;
-}
--(void)connection:(CPConnection)someConnection didReceiveData:(id)ret
+- (CPFormatter)formatterForColumnName:(CPString)n
 {
-    if (someConnection._someObj)  // this is for retrieving the PK
-    {
-        var j = JSON.parse(ret);
-        var pk=j["pk"];
-        [someConnection._someObj willChangeValueForKey: [someConnection._someObj._entity pk]];
-        [someConnection._someObj._data setObject:pk forKey: [someConnection._someObj._entity pk]];
-        [someConnection._someObj._entity _registerObjectInPKCache:someConnection._someObj];
-        [someConnection._someObj didChangeValueForKey: [someConnection._entity pk]];
-        return;
-    }
-    
-
-    var err;
-    try{
-        err  = JSON.parse(ret);
-    } catch(e)
-    {
-    }
-
-    if (someConnection._object)
-        [someConnection._object reload];
-    
-    if (err && err['err'])
-    {   alert (err['err']); // <!> fixme, raise
-        if (someConnection._object)
-            someConnection._object._changes=nil;  // make sure to discard all changes as they weren't accepted by the backend
-        else if(someConnection._entity && someConnection._entity.__ACForSpinner)
-            [someConnection._entity.__ACForSpinner reload]
-    }
-    if (someConnection._object)
-        someConnection._object = nil;
-}
-
-- (void)insertObject:(id)someObj
-{   var entity = [someObj entity];
-
-	if (entity._insertsAsyncronously)
-    {   if(!someObj._data) someObj._data=[CPMutableDictionary new];
-        var request=[self requestForInsertingObjectInEntity:entity];
-        [request setHTTPBody:[someObj._changes toJSON]];
-        var con = [CPURLConnection connectionWithRequest:request delegate:self];
-        con._someObj = someObj;  // this is necessary for retrieving the PK
-        return;
-	}
-
-    var request=[self requestForInsertingObjectInEntity:entity];
-    [request setHTTPBody:[someObj._changes toJSON] ];
-    var data=[CPURLConnection sendSynchronousRequest: request returningResponse: nil];
-    var j = JSON.parse( [data rawString]);    // this is necessary for retrieving the PK
-    var pk=j["pk"];
-    [someObj willChangeValueForKey: [entity pk]];
-
-    if (!someObj._data)
-		someObj._data=[CPMutableDictionary new];
-
-    [someObj._data setObject: pk forKey: [entity pk]];
-    [entity _registerObjectInPKCache:someObj];
-    [someObj didChangeValueForKey: [entity pk]];
-}
-
-- (void)deleteObject:(id)obj
-{
-    var request=[self requestForAddressingObjectsWithKey:[[obj entity] pk] equallingValue: [obj valueForKey: [[obj entity] pk]] inEntity:[obj entity]];
-    [request setHTTPMethod:"DELETE"];
-    var con = [CPURLConnection connectionWithRequest:request delegate:self];
-    con._entity = obj._entity;
+    return [_formatters objectForKey:n];
 }
 
 @end
