@@ -135,7 +135,7 @@ use Mojo::Pg;
 use Mojo::JSON qw(encode_json decode_json);
 
 # 1. Connect to Postgres
-helper pg => sub { state $pg = Mojo::Pg->new('postgresql://postgres@localhost/cochrane_gpt') };
+helper pg => sub { state $pg = Mojo::Pg->new('postgresql://postgres@localhost/name_of_your_postgres_database') };
 
 # 2. WebSocket Route for Live Sync
 websocket '/DB/socket' => sub {
