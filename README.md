@@ -153,16 +153,31 @@ websocket '/DB/socket' => sub {
 # 3. Helper to Broadcast Changes (Safe for Large Payloads)
 helper notify_change => sub {
     my ($self, $table, $pk, $type, $data) = @_;
-    
-    # Strip fields > 3000 chars to avoid PG NOTIFY limit
-    my $lean_data = { %$data };
-    foreach my $key (keys %$lean_data) {
-        delete $lean_data->{$key} if length($lean_data->{$key} // '') > 3000;
+
+    my $payload = {
+        table => $table,
+        pk    => $pk,
+        type  => $type,
+        data  => $data
+    };
+
+    my $json_str = encode_json($payload);
+
+    if (length($json_str) > 7500) {
+        $payload = {
+            table     => $table,
+            pk        => $pk,
+            type      => $type,
+            truncated => Mojo::JSON->true,
+            # IMPORTANT: We still send the PK inside 'data' so the
+            # frontend cache logic works without modification.
+            data      => { id => $pk }
+        };
+
+        $json_str = encode_json($payload);
     }
 
-    $self->pg->pubsub->notify(fireside_updates => encode_json({
-        table => $table, pk => $pk, type => $type, data => $lean_data
-    }));
+    $self->pg->pubsub->notify(fireside_updates => $json_str);
 };
 
 # 4. Generic REST API
