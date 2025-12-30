@@ -25,8 +25,10 @@ Declaratively connect to your database entities. `FSArrayController` handles fet
 <!DOCTYPE gsmarkup>
 <gsmarkup>
     <objects>
+        <!-- Automatic Sort Descriptors -->
         <sortDescriptor id="time_sort" key="insertion_time" ascending="NO"/>
 
+        <!-- The Controller: auto-fetches data and listens for WebSocket updates -->
         <arrayController id="manuscripts_controller" 
                          entity="manuscripts" 
                          autoFetch="YES" 
@@ -34,6 +36,7 @@ Declaratively connect to your database entities. `FSArrayController` handles fet
     </objects>
 
     <entities>
+        <!-- Map directly to your Postgres table -->
         <entity id="manuscripts" store="#CPOwner.store">
             <column name="id" primaryKey="YES"/>
             <column name="name"/>
@@ -43,6 +46,7 @@ Declaratively connect to your database entities. `FSArrayController` handles fet
     </entities>
 
     <connectors>
+        <!-- Hook the controller to your AppController -->
         <outlet source="#CPOwner" target="manuscripts_controller" label="manuscriptsController"/>
     </connectors>
 </gsmarkup>
@@ -58,6 +62,7 @@ Build native-feeling interfaces using standard controls. Just bind the UI direct
     <objects>
         <window bridge="YES" id="mainwindow" delegate="#CPOwner">
              <vbox>
+                 <!-- Master View: List of Manuscripts -->
                  <scrollView hasHorizontalScroller="NO">
                      <tableView zebra="yes" autosaveName="tv_manuscripts" id="tv_manuscripts" valueBinding="#CPOwner.manuscriptsController" allowsMultipleSelection="NO">
                          <tableColumn identifier="id" title="id"  editable="NO"/>
@@ -66,9 +71,12 @@ Build native-feeling interfaces using standard controls. Just bind the UI direct
                      </tableView>
                  </scrollView>
                  
-                 <ButtonBar actionsButton="NO" target="#CPOwner.manuscriptsController" minusButtonAction="remove:"/>
+                <!-- Action Bar: Add/Remove handled by the controller -->
+                <ButtonBar actionsButton="NO" target="#CPOwner.manuscriptsController" minusButtonAction="remove:"/>
                  
-                 <scrollView hasHorizontalScroller="NO">
+                <!-- Detail View: Text Editor -->
+                <!-- Binds to the 'content' column of the currently selected row -->
+                <scrollView hasHorizontalScroller="NO">
                      <textView editable="YES" valueBinding="#CPOwner.manuscriptsController.selection.content" backgroundColor="white"/>
                  </scrollView>
              </vbox>
