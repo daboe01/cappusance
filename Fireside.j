@@ -1,6 +1,7 @@
 /*
- * Fireside: Modernized & PubSub Enabled
- * Transparent Live-Sync Edition
+ * Fireside: yet another restful ORM mapper for cappuccino
+ * (C) 2017-2025 by Daniel Böhringer
+ * Live-Sync Edition
  */
 
 @import <Foundation/CPObject.j>
