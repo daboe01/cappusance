@@ -58,7 +58,6 @@ Build native-feeling interfaces using standard controls. Just bind the UI direct
     <objects>
         <window bridge="YES" id="mainwindow" delegate="#CPOwner">
              <vbox>
-                 <!-- Master View: List of Manuscripts -->
                  <scrollView hasHorizontalScroller="NO">
                      <tableView zebra="yes" autosaveName="tv_manuscripts" id="tv_manuscripts" valueBinding="#CPOwner.manuscriptsController" allowsMultipleSelection="NO">
                          <tableColumn identifier="id" title="id"  editable="NO"/>
@@ -67,11 +66,8 @@ Build native-feeling interfaces using standard controls. Just bind the UI direct
                      </tableView>
                  </scrollView>
                  
-                 <!-- Action Bar: Add/Remove handled by the controller -->
                  <ButtonBar actionsButton="NO" target="#CPOwner.manuscriptsController" minusButtonAction="remove:"/>
                  
-                 <!-- Detail View: Text Editor -->
-                 <!-- Binds to the 'content' column of the currently selected row -->
                  <scrollView hasHorizontalScroller="NO">
                      <textView editable="YES" valueBinding="#CPOwner.manuscriptsController.selection.content" backgroundColor="white"/>
                  </scrollView>
