@@ -169,8 +169,6 @@ helper notify_change => sub {
             pk        => $pk,
             type      => $type,
             truncated => Mojo::JSON->true,
-            # IMPORTANT: We still send the PK inside 'data' so the
-            # frontend cache logic works without modification.
             data      => { id => $pk }
         };
 
