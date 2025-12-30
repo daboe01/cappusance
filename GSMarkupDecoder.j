@@ -15,197 +15,202 @@
 @import <Foundation/CPObject.j>
 @import "GSMarkupConnector.j"
 
-@implementation FSRegexBindingTransformer : CPObject
-{
-    CPString _regex;
-    CPString _template;
-    CPString _revregex;
-    CPString _revtemplate;
-}
-
-- (id)initWithRegex:(CPString)aRegex template:(CPString)aTemplate reverseRegex:(CPString)revRegex reverseTemplate:(CPString)reverseTemplate
-{
-    if (self = [super init])
-    {
-        _regex = aRegex;
-        _template = aTemplate;
-        _revregex = revRegex;
-        _revtemplate = reverseTemplate;
-    }
-
-    return self;
-}
-
-- (CPString)transformedValue:(id)theObject
-{   var ret = theObject;
-
-    if (!ret)
-        return ret;
-
-    return ret.replace(new RegExp(_regex, "i"), _template)
-}
-
-- (id)reverseTransformedValue:(CPString)aString
-{
-    var ret = aString;
-
-    if (!ret)
-        return ret;
-
-    return ret.replace(new RegExp(_revregex, "i"), _revtemplate)
-}
-
-+ (BOOL)allowsReverseTransformation
-{
-    return YES;
-}
-
-@end
-
 
 @implementation CPString (CapitalizedString)
-- (CPString) stringByUppercasingFirstCharacter
-{   var length = [self length];
 
-    if (length < 1) return self;
-    else {
-        var s;
-        /* Get the first character.  */
-        var c = [self characterAtIndex: 0];
+- (CPString)stringByUppercasingFirstCharacter
+{
+    var length = [self length];
 
-        /* If it's not lowercase ... */
-        if (c < 'a'  ||  c > 'z')
-        {
-        /* then no need to uppercase.  */
-            return self;
-        }
-      
-        /* Else, uppercase the first character.  */
-        c = c.toUpperCase();
-      
-        s = [CPString stringWithString:c];
-      
-        if (length == 1)  return s;
-        else  return [s stringByAppendingString: [self substringFromIndex: 1]];
+    if (length < 1) 
+        return self;
+    
+    /* Get the first character. */
+    var c = [self characterAtIndex:0];
+
+    /* If it's not lowercase ... */
+    if (c < 'a' || c > 'z')
+    {
+        /* then no need to uppercase. */
+        return self;
     }
+  
+    /* Else, uppercase the first character. */
+    c = c.toUpperCase();
+    var s = [CPString stringWithString:c];
+  
+    if (length == 1) 
+        return s;
+    else 
+        return [s stringByAppendingString:[self substringFromIndex:1]];
 }
-- (CPString) trimmedString
-{   var t=self.replace(/^\s+|\s+$/g,"");
-    if(!t) return @"";
-    return [CPString stringWithString: t];
+
+- (CPString)trimmedString
+{
+    var t = self.replace(/^\s+|\s+$/g, "");
+    if (!t) 
+        return @"";
+        
+    return [CPString stringWithString:t];
 }
 
 @end
 
-@implementation CPData(FileLoading)
+
+@implementation CPData (FileLoading)
 
 - (id)initWithContentsOfURL:(CPURL)aURL
-{   var plist = [CPURLConnection sendSynchronousRequest:[CPURLRequest requestWithURL:aURL] returningResponse:nil error:nil];
-    if (plist == nil) return nil;
+{
+    var plist = [CPURLConnection sendSynchronousRequest:[CPURLRequest requestWithURL:aURL] returningResponse:nil error:nil];
+    if (plist == nil) 
+        return nil;
+        
     return plist;
 }
 
 - (id)initWithContentsOfFile:(CPString)aPath
-{   return [self initWithContentsOfURL:[CPURL URLWithString:aPath]];
+{
+    return [self initWithContentsOfURL:[CPURL URLWithString:aPath]];
 }
+
 @end
 
 
-@implementation GSMarkupDecoder: CPObject
-{   var                    _uniqueID;
+@implementation GSMarkupDecoder : CPObject
+{
+    var                 _uniqueID;
     CPMutableDictionary _nameTable;
     CPMutableDictionary _replicationNameTable;
     CPDictionary        _externalNameTable;
     CPMutableDictionary _tagNameToObjectClass;
     CPString            _xmlStr;
-    CPMutableArray        _objects;
-    CPMutableArray        _connectors;
+    CPMutableArray      _objects;
+    CPMutableArray      _connectors;
+    CPMutableArray      _entites;
 }
 
-+ initialize
-{   if(self=[super initialize])
++ (void)initialize
+{
+    if (self = [super initialize])
     {
     }
     return self;
 }
 
-+ (id) decoderWithContentsOfFile: (CPString)file
++ (id)decoderWithContentsOfFile:(CPString)file
 {
-   return [[self alloc] initWithContentsOfFile: file];
+    return [[self alloc] initWithContentsOfFile:file];
 }
 
-- (id) initWithContentsOfFile: (CPString)file
+- (id)initWithContentsOfFile:(CPString)file
 {
-  var d = [[CPData alloc] initWithContentsOfFile: file];
-
-  return [self initWithData: d];
-}
-- (id) initWithData: someXMLData
-{   return [self initWithXMLString: [someXMLData rawString]];
+    var d = [[CPData alloc] initWithContentsOfFile:file];
+    return [self initWithData:d];
 }
 
-- (Class) objectClassForTagName: (CPString)tagName mappedByFormatArray: arr
-{   var c;
-    var capitalizedTagName = [tagName stringByUppercasingFirstCharacter];
-
-    var className = [_tagNameToObjectClass objectForKey: tagName];
-    if (className != nil) [arr insertObject:className atIndex:0];
-    var i, cnt=arr.length;
-
-    for(i=0; i<cnt; i++)
-    {   className = [CPString stringWithFormat: arr[i], capitalizedTagName];
-        c = CPClassFromString (className);
-        if (c != Nil) return c;
-    } return Nil;
+- (id)initWithData:(CPData)someXMLData
+{
+    return [self initWithXMLString:[someXMLData rawString]];
 }
 
-- (Class) objectClassForTagName: (CPString)tagName
-{   return [self objectClassForTagName: tagName
-            mappedByFormatArray: [CPArray arrayWithObjects: @"GSMarkup%@Tag",@"GSMarkupTag%@", @"GS%@Tag", @"GSTag%@", @"%@Tag", @"Tag%@"]];
-}
+- (Class)objectClassForTagName:(CPString)tagName mappedByFormatArray:(CPArray)arr
+{
+    var c,
+        capitalizedTagName = [tagName stringByUppercasingFirstCharacter];
 
-- (id) connectorClassForTagName: (CPString)tagName
-{   if (tagName == "control")
-    {   return [GSMarkupControlConnector class];
-    } else if (tagName == "outlet")
-    {   return [GSMarkupOutletConnector class];
+    var className = [_tagNameToObjectClass objectForKey:tagName];
+    if (className != nil) 
+        [arr insertObject:className atIndex:0];
+    
+    var i, cnt = arr.length;
+
+    for (i = 0; i < cnt; i++)
+    {
+        className = [CPString stringWithFormat:arr[i], capitalizedTagName];
+        c = CPClassFromString(className);
+        if (c != Nil) 
+            return c;
     }
-    return [self objectClassForTagName: tagName
-            mappedByFormatArray: [CPArray arrayWithObjects: @"GSMarkup%@Connector",  @"GSMarkupConnector%@",  @"GS%@Connector", @"GSConnector%@",  @"%@Connector",@"Connector%@"]];
+    return Nil;
 }
 
-
-
-- (id) entityClassForTagName: (CPString)tagName
-{   return [self objectClassForTagName: tagName mappedByFormatArray: [CPArray arrayWithObjects: @"GSMarkup%@"]];
+- (Class)objectClassForTagName:(CPString)tagName
+{
+    return [self objectClassForTagName:tagName
+                   mappedByFormatArray:[CPArray arrayWithObjects:@"GSMarkup%@Tag", @"GSMarkupTag%@", @"GS%@Tag", @"GSTag%@", @"%@Tag", @"Tag%@"]];
 }
 
+- (id)connectorClassForTagName:(CPString)tagName
+{
+    if (tagName == "control")
+    {
+        return [GSMarkupControlConnector class];
+    }
+    else if (tagName == "outlet")
+    {
+        return [GSMarkupOutletConnector class];
+    }
+    return [self objectClassForTagName:tagName
+                   mappedByFormatArray:[CPArray arrayWithObjects:@"GSMarkup%@Connector", @"GSMarkupConnector%@", @"GS%@Connector", @"GSConnector%@", @"%@Connector", @"Connector%@"]];
+}
 
-- (id) attributesForDOMNode: aDOMNode
-{   var attributes=aDOMNode.attributes;
-    if(!attributes) return nil;
-    var ret=[CPMutableDictionary dictionary];
-    var i,cnt=attributes.length;
-    for(i=0;i<cnt;i++)
-    {   [ret setValue: attributes[i].nodeValue forKey: attributes[i].nodeName];
+- (id)entityClassForTagName:(CPString)tagName
+{
+    return [self objectClassForTagName:tagName mappedByFormatArray:[CPArray arrayWithObjects:@"GSMarkup%@"]];
+}
+
+- (id)attributesForDOMNode:(id)aDOMNode
+{
+    var attributes = aDOMNode.attributes;
+    if (!attributes) 
+        return nil;
+        
+    var ret = [CPMutableDictionary dictionary],
+        i, 
+        cnt = attributes.length;
+        
+    for (i = 0; i < cnt; i++)
+    {
+        [ret setValue:attributes[i].nodeValue forKey:attributes[i].nodeName];
     }
     return ret;
 }
 
-- (id) insertChildrenOfDOMNode: aDOMNode intoContainer: container
-{   if(!aDOMNode) return nil;
-    var children;
-    if (children=aDOMNode.childNodes)
-    {   var tagChildren=[CPMutableArray new];
-        var childrenCount=children.length;
-        var i;
-        for(i=0;i<childrenCount;i++)
-        {   var co=[self insertMarkupObjectFromDOMNode: children[i] intoContainer: nil];
-            if(co) [tagChildren addObject: co ];
+- (id)insertChildrenOfDOMNode:(id)aDOMNode intoContainer:(id)container
+{
+    if (!aDOMNode) 
+        return nil;
+        
+    var children = aDOMNode.childNodes;
+    if (children)
+    {
+        var tagChildren = [CPMutableArray new],
+            childrenCount = children.length,
+            i;
+
+        for (i = 0; i < childrenCount; i++)
+        {
+            var childNode = children[i];
+
+            // FIX: Skip comments (nodeType 8) to prevent them being read as text content
+            if (childNode.nodeType === 8) 
+                continue;
+
+            var co = [self insertMarkupObjectFromDOMNode:childNode intoContainer:nil];
+            
+            if (co)
+            {
+                [tagChildren addObject:co];
+            }
             else
-            {   var cnv=children[i].nodeValue;
-                var ts=[cnv trimmedString];
-                if( ts &&  ts.length) return [CPArray arrayWithObject: cnv];
+            {
+                // If it's not a recognized object, check if it is text content
+                var cnv = childNode.nodeValue;
+                var ts = [cnv trimmedString];
+                
+                // Only return text if it has actual content
+                if (ts && ts.length) 
+                    return [CPArray arrayWithObject:cnv];
             }
         }
         return tagChildren;
@@ -213,381 +218,488 @@
     return nil;
 }
 
-- (id) insertMarkupObjectFromDOMNode: o intoContainer: container
+- (id)insertMarkupObjectFromDOMNode:(id)o intoContainer:(id)container
 {
-    var nclass;
-    nclass=[self objectClassForTagName: o.nodeName];
-    if(!nclass) nclass=[self connectorClassForTagName: o.nodeName];
-    if(!nclass) nclass=[self entityClassForTagName: o.nodeName];
+    var nclass = [self objectClassForTagName:o.nodeName];
+    if (!nclass) nclass = [self connectorClassForTagName:o.nodeName];
+    if (!nclass) nclass = [self entityClassForTagName:o.nodeName];
 
     if (nclass)
-    {   var attribs=[self attributesForDOMNode: o];
-        var oid=[attribs objectForKey:@"id"];
-        if(!oid) oid=[CPString stringWithFormat: @"%@%d", o.nodeName, ++_uniqueID];
+    {
+        var attribs = [self attributesForDOMNode:o];
+        var oid = [attribs objectForKey:@"id"];
+        if (!oid) 
+            oid = [CPString stringWithFormat:@"%@%d", o.nodeName, ++_uniqueID];
 
-        var keys = [attribs allKeys];
-        var  i, count = [keys count];
+        var keys = [attribs allKeys],
+            i, 
+            count = [keys count];
+            
         for (i = 0; i < count; i++)
-        {   var key, value;
+        {
+            var key = [keys objectAtIndex:i];
+            if (![key length]) continue;
+            
+            var value = [attribs objectForKey:key];
 
-            key = [keys objectAtIndex: i];
-            if(![key length]) continue;
-            value = [attribs objectForKey: key];
-
-            if (container !== _connectors && (  key === 'delegate' || [value hasPrefix: @"#"]) )
-            {   if(container === _entites)
-                {   [attribs setObject: [GSMarkupConnector getObjectForIdString: [value substringFromIndex: 1] usingNameTable: _externalNameTable] forKey: key];
-                } else if(key !== 'itemsBinding' && key !== 'valueBinding' && key !== 'enabledBinding')    // bindings will be processed elsewhere
-                {   var outlet;    // GSMarkupOutletConnector
-
-                    /* We pass the value unchanged to the outlet.  If
+            if (container !== _connectors && (key === 'delegate' || [value hasPrefix:@"#"]))
+            {
+                if (container === _entites)
+                {
+                    [attribs setObject:[GSMarkupConnector getObjectForIdString:[value substringFromIndex:1] usingNameTable:_externalNameTable] forKey:key];
+                }
+                else if (key !== 'itemsBinding' && key !== 'valueBinding' && key !== 'enabledBinding') // bindings will be processed elsewhere
+                {
+                    /* We pass the value unchanged to the outlet. If
                      * value contains a key value path using dots, those
-                     * will be processed by the outlet when it is
-                     * established.  */
-                    var outlet = [[GSMarkupOutletConnector alloc] 
-                           initWithSource: oid
-                           target: value
-                           label: key];
-                    if(outlet)
-                    {   [_connectors addObject: outlet];
-                        /* Hide the attribute - it has been already processed.  */
-                        [attribs removeObjectForKey: key];
+                     * will be processed by the outlet when it is established. */
+                    var outlet = [[GSMarkupOutletConnector alloc] initWithSource:oid target:value label:key];
+                    if (outlet)
+                    {
+                        [_connectors addObject:outlet];
+                        /* Hide the attribute - it has been already processed. */
+                        [attribs removeObjectForKey:key];
                     }
                 }
             }
         }
-        var newo= [[nclass alloc] initWithAttributes: attribs content: [self insertChildrenOfDOMNode: o intoContainer: container]];
-        if(!newo) return nil;
-        if(container) [container addObject:newo];
-        if(container!=_connectors) [_nameTable setObject:newo forKey:oid];
+        
+        var newo = [[nclass alloc] initWithAttributes:attribs content:[self insertChildrenOfDOMNode:o intoContainer:container]];
+        if (!newo) 
+            return nil;
+            
+        if (container) 
+            [container addObject:newo];
+            
+        if (container != _connectors) 
+            [_nameTable setObject:newo forKey:oid];
+            
         return newo;
-    } return  nil;
+    }
+    return nil;
 }
 
-- (id) parseXMLString: aXMLStr
-{   function _parseXml(xmlStr)
-    {   if (typeof window.DOMParser != "undefined") {
-            return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
-        } else if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
+- (id)parseXMLString:(CPString)aXMLStr
+{
+    function _parseXml(xmlStr)
+    {
+        if (typeof window.DOMParser != "undefined") 
+        {
+            return (new window.DOMParser()).parseFromString(xmlStr, "text/xml");
+        } 
+        else if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) 
+        {
             var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
             xmlDoc.async = false;
             xmlDoc.validateOnParse = false;
             xmlDoc.loadXML(xmlStr);
             if (xmlDoc.parseError.errorCode != 0)
-            {   alert("Error in line " + xmlDoc.parseError.line +
-                        " position " + xmlDoc.parseError.linePos +
-                        "\nError Code: " + xmlDoc.parseError.errorCode +
-                        "\nError Reason: " + xmlDoc.parseError.reason +
-                        "Error Line: " + xmlDoc.parseError.srcText);
+            {
+                alert("Error in line " + xmlDoc.parseError.line +
+                      " position " + xmlDoc.parseError.linePos +
+                      "\nError Code: " + xmlDoc.parseError.errorCode +
+                      "\nError Reason: " + xmlDoc.parseError.reason +
+                      "Error Line: " + xmlDoc.parseError.srcText);
             }
             return xmlDoc;
         }
-        else {
+        else 
+        {
             throw new Error("No XML parser found");
         }
     }
-    var t= _parseXml(aXMLStr);
-    if(!t) return nil;
+
+    var t = _parseXml(aXMLStr);
+    if (!t) 
+        return nil;
+        
     return t;
 }
-- (id) initWithXMLString:aXMLStr
-{   _xmlStr=aXMLStr;
-    _nameTable=[CPMutableDictionary dictionary];
-    _tagNameToObjectClass=[CPMutableDictionary dictionary];
-    _objects=[CPMutableArray array];
-    _connectors=[CPMutableArray array];
-    _entites=[CPMutableArray array];
+
+- (id)initWithXMLString:(CPString)aXMLStr
+{
+    _xmlStr = aXMLStr;
+    _nameTable = [CPMutableDictionary dictionary];
+    _tagNameToObjectClass = [CPMutableDictionary dictionary];
+    _objects = [CPMutableArray array];
+    _connectors = [CPMutableArray array];
+    _entites = [CPMutableArray array];
     return self;
 }
-- (void) setExternalNameTable:(CPDictionary) context
-{   _externalNameTable=context;
+
+- (void)setExternalNameTable:(CPDictionary)context
+{
+    _externalNameTable = context;
 }
 
-- (void) setObjectClass: (CPString)className
-         forTagName: (CPString)tagName
-{   [_tagNameToObjectClass setObject: className  forKey: tagName];
+- (void)setObjectClass:(CPString)className forTagName:(CPString)tagName
+{
+    [_tagNameToObjectClass setObject:className forKey:tagName];
 }
 
-- (void) processDOMNode: aDOMNode intoContainer:(id) aContainer
-{   if(!aDOMNode) return;
-    var children;
-    if (children = aDOMNode.childNodes)
-    {   var childrenCount=children.length;
+- (void)processDOMNode:(id)aDOMNode intoContainer:(id)aContainer
+{
+    if (!aDOMNode) 
+        return;
+        
+    var children = aDOMNode.childNodes;
+    if (children)
+    {
+        var childrenCount = children.length,
+            i;
 
-        for(i=0;i<childrenCount;i++)
-        {   [self insertMarkupObjectFromDOMNode: children[i] intoContainer: aContainer];
+        for (i = 0; i < childrenCount; i++)
+        {
+            [self insertMarkupObjectFromDOMNode:children[i] intoContainer:aContainer];
         }
     }
 }
 
 // replace symbolic relationships in entities with the real objects
-- (void) _postprocessEntities
-{   var i, l=_entites.length;
-    for(i=0;i<l;i++)
-    {   var    e=_entites[i];
-        var  eFS=[e platformObject];
-        var rels=[eFS relationships];
-        if(!rels) continue;
-        var j,l1=rels.length;
-        for(j=0;j<l1;j++)
-        {   [rels[j] setTarget: [[_nameTable objectForKey: [rels[j] target] ] platformObject] ];
+- (void)_postprocessEntities
+{
+    var i, l = _entites.length;
+    for (i = 0; i < l; i++)
+    {
+        var e = _entites[i];
+        var eFS = [e platformObject];
+        var rels = [eFS relationships];
+        if (!rels) 
+            continue;
+            
+        var j, l1 = rels.length;
+        for (j = 0; j < l1; j++)
+        {
+            [rels[j] setTarget:[[_nameTable objectForKey:[rels[j] target]] platformObject]];
         }
     }
 }
--(id) _getObjectForIdString:(CPString) peek
-{   var ret;
-    if ([peek hasPrefix: @"#"])
-    {    ret =[GSMarkupConnector getObjectForIdString: [peek substringFromIndex:1] usingNameTable: _externalNameTable];    // external objects are already platformObjects
-    } else ret= [GSMarkupConnector getPlatformObjectForIdString: peek usingNameTable: _nameTable];
+
+- (id)_getObjectForIdString:(CPString)peek
+{
+    var ret;
+    if ([peek hasPrefix:@"#"])
+    {
+        // external objects are already platformObjects
+        ret = [GSMarkupConnector getObjectForIdString:[peek substringFromIndex:1] usingNameTable:_externalNameTable];
+    }
+    else 
+    {
+        ret = [GSMarkupConnector getPlatformObjectForIdString:peek usingNameTable:_nameTable];
+    }
     return ret;
 }
 
-- (void) _postprocessForBindings:(CPArray) someArr
-{   var i, l=someArr.length;
-    for(i = 0; i < l; i++)
-    {   var o=someArr[i];
-        if(![o respondsToSelector:@selector(platformObject)]) continue;
+- (void)_postprocessForBindings:(CPArray)someArr
+{
+    var i, l = someArr.length;
+    for (i = 0; i < l; i++)
+    {
+        var o = someArr[i];
+        if (![o respondsToSelector:@selector(platformObject)]) 
+            continue;
+            
         var oPO;
         var peek;
-        if (peek=[[o attributes] objectForKey: "itemsBinding"])        // items such as in pull-down or combobox
-        {   var r = [peek rangeOfString: @"."];
+
+        // --- Items Bindings (Pull-down, ComboBox, SegmentedControl) ---
+        if (peek = [[o attributes] objectForKey:@"itemsBinding"])
+        {
+            var r = [peek rangeOfString:@"."];
             if (r.location != CPNotFound)
-            {   r = [peek rangeOfString: @"." options: CPBackwardsSearch];
-                var pathComponents = [peek componentsSeparatedByString:"."];
-                var subPathArray = [pathComponents subarrayWithRange: CPMakeRange(0, pathComponents.length-2)];
-                var baseObjectPath = (subPathArray.length>1)? subPathArray.join("."):subPathArray[0];
-                var arrCtrl = [self _getObjectForIdString: baseObjectPath];
-                var itemsFace = [peek substringFromIndex: CPMaxRange(r)];
+            {
+                r = [peek rangeOfString:@"." options:CPBackwardsSearch];
+                var pathComponents = [peek componentsSeparatedByString:@"."];
+                var subPathArray = [pathComponents subarrayWithRange:CPMakeRange(0, pathComponents.length - 2)];
+                var baseObjectPath = (subPathArray.length > 1) ? subPathArray.join(".") : subPathArray[0];
+                var arrCtrl = [self _getObjectForIdString:baseObjectPath];
+                var itemsFace = [peek substringFromIndex:CPMaxRange(r)];
                 var valItemsFace;
 
-                if([arrCtrl respondsToSelector:@selector(pk)])
+                if ([arrCtrl respondsToSelector:@selector(pk)])
                     valItemsFace = [arrCtrl pk];
 
-                oPO=[o platformObject];
+                oPO = [o platformObject];
 
-                if([oPO isKindOfClass:[CPPopUpButton class]])
-                {   if(itemsFace && valItemsFace)
+                if ([oPO isKindOfClass:[CPPopUpButton class]])
+                {
+                    if (itemsFace && valItemsFace)
                     {
-                        [oPO bind:"itemArray" toObject:arrCtrl withKeyPath: "arrangedObjects."+itemsFace options: @{"valueFace":valItemsFace}];
+                        [oPO bind:"itemArray" toObject:arrCtrl withKeyPath:"arrangedObjects." + itemsFace options:@{@"valueFace": valItemsFace}];
                     }
-                } else if([oPO isKindOfClass:[CPSegmentedControl class]])
+                }
+                else if ([oPO isKindOfClass:[CPSegmentedControl class]])
                 {
                     // crude hack to make mask bindings work in ARGOS
-                    if([[o attributes] objectForKey: "mask"])
+                    if ([[o attributes] objectForKey:@"mask"])
                     {
-                        subPathArray = [pathComponents subarrayWithRange: CPMakeRange(0, pathComponents.length-3)];  // <!> fime detect .selection/arrangedObjects instead of using a constant
-                        baseObjectPath = (subPathArray.length>1)? subPathArray.join("."):subPathArray[0];
-                        arrCtrl = [self _getObjectForIdString: baseObjectPath];
-                        itemsFace = [pathComponents subarrayWithRange: CPMakeRange(2, pathComponents.length-2)].join(".");
+                        subPathArray = [pathComponents subarrayWithRange:CPMakeRange(0, pathComponents.length - 3)]; // <!> fixme detect .selection/arrangedObjects instead of using a constant
+                        baseObjectPath = (subPathArray.length > 1) ? subPathArray.join(".") : subPathArray[0];
+                        arrCtrl = [self _getObjectForIdString:baseObjectPath];
+                        itemsFace = [pathComponents subarrayWithRange:CPMakeRange(2, pathComponents.length - 2)].join(".");
                         [oPO bind:"mask" toObject:arrCtrl withKeyPath:itemsFace options:nil];
                     }
-                    else if(itemsFace && valItemsFace)
-                    {   [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
+                    else if (itemsFace && valItemsFace)
+                    {
+                        [oPO bind:"segments" toObject:arrCtrl withKeyPath:"arrangedObjects." + itemsFace options:@{@"valueFace": valItemsFace}];
                     }
-                } else if([oPO isKindOfClass:[GSComboBoxTagValue class]])
-                {   [oPO bind:CPContentBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:@{"valueFace":valItemsFace}];
-                } else if([oPO isKindOfClass:[CPComboBox class]])
-                {   [oPO bind:CPContentValuesBinding toObject:arrCtrl withKeyPath:"arrangedObjects."+itemsFace options:nil];
+                }
+                else if ([oPO isKindOfClass:[GSComboBoxTagValue class]])
+                {
+                    [oPO bind:CPContentBinding toObject:arrCtrl withKeyPath:"arrangedObjects." + itemsFace options:@{@"valueFace": valItemsFace}];
+                }
+                else if ([oPO isKindOfClass:[CPComboBox class]])
+                {
+                    [oPO bind:CPContentValuesBinding toObject:arrCtrl withKeyPath:"arrangedObjects." + itemsFace options:nil];
                 }
             }
         }
-        if (peek=[[o attributes] objectForKey: "valueBinding"])
-        {   var r = [peek rangeOfString: @"."];
 
-            oPO=[o platformObject];
-            if ([oPO isKindOfClass: [CPTableView class] ])
-            {   var target=[self _getObjectForIdString: peek];
+        // --- Value Bindings ---
+        if (peek = [[o attributes] objectForKey:@"valueBinding"])
+        {
+            var r = [peek rangeOfString:@"."];
+            oPO = [o platformObject];
+            
+            if ([oPO isKindOfClass:[CPTableView class]])
+            {
+                var target = [self _getObjectForIdString:peek];
 
-                if([o boolValueForAttribute: "viewBasedBindings"] == 1)
-                {   [oPO bind:"content"          toObject: target withKeyPath:"arrangedObjects" options: nil];
-                    [oPO bind:"selectionIndexes" toObject: target withKeyPath:"selectionIndexes" options:nil];
-                } else        // "explicit" bindings for tableView columns, where you do not want to connect the columns individually but through "identifier" property
-                {   var _content=[o content];
-                    var j, l1 = _content? _content.length : 0;
+                if ([o boolValueForAttribute:"viewBasedBindings"] == 1)
+                {
+                    [oPO bind:"content" toObject:target withKeyPath:"arrangedObjects" options:nil];
+                    [oPO bind:"selectionIndexes" toObject:target withKeyPath:"selectionIndexes" options:nil];
+                }
+                else
+                {
+                    // "explicit" bindings for tableView columns
+                    var _content = [o content];
+                    var j, l1 = _content ? _content.length : 0;
 
-                    for(j = 0; j < l1; j++)
-                    {   var column = _content[j];
+                    for (j = 0; j < l1; j++)
+                    {
+                        var column = _content[j];
 
                         if (column && [column isKindOfClass:[GSMarkupTagTableColumn class]])
                         {
                             var bindingOptions = nil;
                             var columnAttributes = [column attributes];
-                            
-                            if ([columnAttributes objectForKey:"transformingRegex"])
-                            {
-                                var bindingTransformer = [[FSRegexBindingTransformer alloc] initWithRegex:[columnAttributes objectForKey:"transformingRegex"]
-                                                                                                 template:[columnAttributes objectForKey:"transformingTemplate"]
-                                                                                             reverseRegex:[columnAttributes objectForKey:"transformingReverseRegex"]
-                                                                                          reverseTemplate:[columnAttributes objectForKey:"transformingReverseTemplate"]];
-                                bindingOptions = @{CPValueTransformerBindingOption:bindingTransformer};
-                            }
 
                             [[column platformObject] bind:CPValueBinding
                                                  toObject:target
-                                              withKeyPath:@"arrangedObjects."+[[column attributes] objectForKey:"identifier"]
+                                              withKeyPath:@"arrangedObjects." + [[column attributes] objectForKey:@"identifier"]
                                                   options:bindingOptions];
 
-                            if(target)
-                                target.__tableViewForSpinner=[[column platformObject] tableView];
+                            if (target)
+                                target.__tableViewForSpinner = [[column platformObject] tableView];
                         }
                     }
                 }
             }
             else
-            {   var objectName = [peek substringToIndex: r.location];
-                var target = [self _getObjectForIdString: objectName];
+            {
+                var objectName = [peek substringToIndex:r.location];
+                var target = [self _getObjectForIdString:objectName];
+                var keyValuePath = [peek substringFromIndex:CPMaxRange(r)];
+                var binding = CPValueBinding;
 
-                var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
-
-                var binding=CPValueBinding;
-                if([oPO  isKindOfClass:[FSArrayController class]])
-                {   binding="contentArray";
-                } else if([oPO isKindOfClass:[CPPopUpButton class]])
-                {   binding="selectedTag";
+                if ([oPO isKindOfClass:[FSArrayController class]])
+                {
+                    binding = "contentArray";
+                }
+                else if ([oPO isKindOfClass:[CPPopUpButton class]])
+                {
+                    binding = "selectedTag";
                 }
 
-                var options=nil;
-                if([[o attributes] objectForKey: "continuousBinding"]==="YES") options=@{CPContinuouslyUpdatesValueBindingOption:YES};
+                var options = nil;
+                if ([[o attributes] objectForKey:@"continuousBinding"] === "YES")
+                    options = @{CPContinuouslyUpdatesValueBindingOption: YES};
 
-				[oPO bind:binding toObject:target withKeyPath:keyValuePath options:options];
+                [oPO bind:binding toObject:target withKeyPath:keyValuePath options:options];
 
-                if([oPO isKindOfClass:[CPCollectionView class]])
+                if ([oPO isKindOfClass:[CPCollectionView class]])
                 {
                     if (r.location != CPNotFound)
-                    {   var pathComponents=[peek componentsSeparatedByString:"."];
-                        if(pathComponents.length>2)
-                        {   var subPathArray=[pathComponents subarrayWithRange: CPMakeRange(1, pathComponents.length-2)];
-                            keyValuePath =subPathArray.join(".")+".selectionIndexes";
-                        } else keyValuePath="selectionIndexes";
-                    } else keyValuePath="selectionIndexes"
-                    [oPO bind: "selectionIndexes" toObject: target withKeyPath: keyValuePath options: nil ];
+                    {
+                        var pathComponents = [peek componentsSeparatedByString:@"."];
+                        if (pathComponents.length > 2)
+                        {
+                            var subPathArray = [pathComponents subarrayWithRange:CPMakeRange(1, pathComponents.length - 2)];
+                            keyValuePath = subPathArray.join(".") + ".selectionIndexes";
+                        }
+                        else
+                        {
+                            keyValuePath = "selectionIndexes";
+                        }
+                    }
+                    else
+                    {
+                        keyValuePath = "selectionIndexes";
+                    }
+                    [oPO bind:"selectionIndexes" toObject:target withKeyPath:keyValuePath options:nil];
                 }
             }
         }
-        if (peek=[[o attributes] objectForKey: "enabledBinding"])
-        {   var r = [peek rangeOfString: @"."];
-            var objectName = [peek substringToIndex: r.location];
-            var target = [self _getObjectForIdString: objectName];
-            var keyValuePath = [peek substringFromIndex: CPMaxRange(r)];
-            var binding=CPEnabledBinding;
-            var options=nil;
-            oPO=[o platformObject];
-            [oPO bind:binding toObject:target withKeyPath:keyValuePath options: options ];
 
-        }
-        if (peek=[[o attributes] objectForKey: "filterPredicate"])
+        // --- Enabled Bindings ---
+        if (peek = [[o attributes] objectForKey:@"enabledBinding"])
         {
-            oPO=[o platformObject];
-            if( [oPO isKindOfClass:[FSArrayController class]])
-            {   [oPO setClearsFilterPredicateOnInsertion:NO];
-                [oPO setFilterPredicate: [self _getObjectForIdString:peek] ];
+            var r = [peek rangeOfString:@"."];
+            var objectName = [peek substringToIndex:r.location];
+            var target = [self _getObjectForIdString:objectName];
+            var keyValuePath = [peek substringFromIndex:CPMaxRange(r)];
+            var binding = CPEnabledBinding;
+            var options = nil;
+            oPO = [o platformObject];
+            [oPO bind:binding toObject:target withKeyPath:keyValuePath options:options];
+        }
+
+        // --- Filter Predicate ---
+        if (peek = [[o attributes] objectForKey:@"filterPredicate"])
+        {
+            oPO = [o platformObject];
+            if ([oPO isKindOfClass:[FSArrayController class]])
+            {
+                [oPO setClearsFilterPredicateOnInsertion:NO];
+                [oPO setFilterPredicate:[self _getObjectForIdString:peek]];
             }
         }
-        if (peek=[[o attributes] objectForKey: "formatterClass"])
-        {   var displayFormat=[[o attributes] objectForKey: "displayFormat"];
-            var editingFormat=[[o attributes] objectForKey: "editingFormat"];
-            var emptyIsValid=([o boolValueForAttribute: "editingFormat"]==1);
-            oPO=[o platformObject];
-            if(!displayFormat && !editingFormat)
-                 [oPO setFormatter: [CPClassFromString(peek) new]];
-            else [oPO setFormatter: [CPClassFromString(peek)
-                    formatterWithDisplayFormat: displayFormat
-                    editingFormat: editingFormat
-                    emptyIsValid: emptyIsValid]];
 
+        // --- Formatters ---
+        if (peek = [[o attributes] objectForKey:@"formatterClass"])
+        {
+            var displayFormat = [[o attributes] objectForKey:@"displayFormat"];
+            var editingFormat = [[o attributes] objectForKey:@"editingFormat"];
+            var emptyIsValid = ([o boolValueForAttribute:@"editingFormat"] == 1);
+            oPO = [o platformObject];
+            if (!displayFormat && !editingFormat)
+                [oPO setFormatter:[CPClassFromString(peek) new]];
+            else
+                [oPO setFormatter:[CPClassFromString(peek)
+                                      formatterWithDisplayFormat:displayFormat
+                                      editingFormat:editingFormat
+                                      emptyIsValid:emptyIsValid]];
         }
+
         if ([[o content] count])
             [self _postprocessForBindings:[o content]];
     }
 }
 
-- (void) _postprocessForEntities:(CPArray) someArr
-{   var i, l=someArr.length;
-    for(i=0;i<l;i++)
-    {   var o=someArr[i];
+- (void)_postprocessForEntities:(CPArray)someArr
+{
+    var i, l = someArr.length;
+    for (i = 0; i < l; i++)
+    {
+        var o = someArr[i];
 
-        if(![o isKindOfClass:GSMarkupArrayController])
+        if (![o isKindOfClass:GSMarkupArrayController])
             continue;
 
-        var oPO=[o platformObject];
+        var oPO = [o platformObject];
         var peek;
-        if(peek=[[o attributes] objectForKey:"sortDescriptor"])
-        {   [oPO setSortDescriptors:[[self _getObjectForIdString:peek]]];
-        }
-        if (peek=[[o attributes] objectForKey:"entity"])
+        
+        if (peek = [[o attributes] objectForKey:@"sortDescriptor"])
         {
-            var entity=[_replicationNameTable objectForKey:peek];
-            if(!entity)
-                entity=[[_nameTable objectForKey:peek] platformObject];
-            if(!entity)
+            [oPO setSortDescriptors:[[self _getObjectForIdString:peek]]];
+        }
+        
+        if (peek = [[o attributes] objectForKey:@"entity"])
+        {
+            var entity = [_replicationNameTable objectForKey:peek];
+            if (!entity)
+                entity = [[_nameTable objectForKey:peek] platformObject];
+                
+            if (!entity)
             {
                 var re = new RegExp("(.+)@([0-9]+)");
                 var m = re.exec(peek);
-                if(m)
+                if (m)
                 {
-                    if(!_replicationNameTable) _replicationNameTable = @{};
+                    if (!_replicationNameTable) 
+                        _replicationNameTable = @{};
+                        
                     entity = [[[_nameTable objectForKey:m[1]] platformObject] copyOfEntity];
-                    [_replicationNameTable setObject:entity forKey:peek]
+                    [_replicationNameTable setObject:entity forKey:peek];
                 }
             }
-            [oPO setEntity: entity];
+            [oPO setEntity:entity];
         }
-        if( [o boolValueForAttribute: "autoFetch"] == 1 )
-        {   var entityName=[[o attributes] objectForKey: "entity"];
+        
+        if ([o boolValueForAttribute:@"autoFetch"] == 1)
+        {
+            var entityName = [[o attributes] objectForKey:@"entity"];
             if (entityName)
-            {   var entity;
-                if (entity=[[_nameTable objectForKey: entityName ] platformObject])
-                {   var ao = [[FSMutableArray alloc] initWithArray:[] ofEntity:entity];
-                    ao._kvoMethod=@selector(setContent:);
-                    ao._kvoOwner=oPO
-                    [oPO setContent:ao]
+            {
+                var entity;
+                if (entity = [[_nameTable objectForKey:entityName] platformObject])
+                {
+                    var ao = [[FSMutableArray alloc] initWithArray:[] ofEntity:entity];
+                    ao._kvoMethod = @selector(setContent:);
+                    ao._kvoOwner = oPO;
+                    [oPO setContent:ao];
                     [entity._store fetchObjectsForURLRequest:[entity._store requestForAddressingAllObjectsInEntity:entity] inEntity:entity requestDelegate:ao];
                 }
             }
-        } else if ([o boolValueForAttribute: "autoFetchSync"] == 1)
-        {	var entityName=[[o attributes] objectForKey:"entity"];
+        }
+        else if ([o boolValueForAttribute:@"autoFetchSync"] == 1)
+        {
+            var entityName = [[o attributes] objectForKey:@"entity"];
             if (entityName)
-            {	var entity;
-                if (entity=[[_nameTable objectForKey:entityName] platformObject])
-                    [oPO setContent:[entity allObjects] ];
+            {
+                var entity;
+                if (entity = [[_nameTable objectForKey:entityName] platformObject])
+                    [oPO setContent:[entity allObjects]];
             }
         }
 
-        if([[o content] count])
+        if ([[o content] count])
             [self _postprocessForEntities:[o content]];
     }
 }
 
--(void) parse
-{   var t= [self parseXMLString:_xmlStr];
+- (void)parse
+{
+    var t = [self parseXMLString:_xmlStr];
 
-    var objs= t.getElementsByTagName("objects");
-    if(objs) [self processDOMNode: objs[0] intoContainer: _objects];
+    var objs = t.getElementsByTagName("objects");
+    if (objs) 
+        [self processDOMNode:objs[0] intoContainer:_objects];
 
-    var  entities= t.getElementsByTagName("entities");
-    if(entities)
-    {   [self processDOMNode: entities[0] intoContainer: _entites];
+    var entities = t.getElementsByTagName("entities");
+    if (entities)
+    {
+        [self processDOMNode:entities[0] intoContainer:_entites];
         [self _postprocessEntities];
     }
 
-    var  cons= t.getElementsByTagName("connectors");
-    if(cons) [self processDOMNode: cons[0] intoContainer: _connectors];
+    var cons = t.getElementsByTagName("connectors");
+    if (cons) 
+        [self processDOMNode:cons[0] intoContainer:_connectors];
 
     [self _postprocessForEntities:_objects];
     [self _postprocessForBindings:_objects];
 }
 
--(id) nameTable
-{   return _nameTable;
+- (id)nameTable
+{
+    return _nameTable;
 }
--(id) objects
-{   return _objects;
-}
--(id) connectors
-{   return _connectors;
-}
--(id) entities
-{   return _entities;
-}
-@end
 
+- (id)objects
+{
+    return _objects;
+}
+
+- (id)connectors
+{
+    return _connectors;
+}
+
+- (id)entities
+{
+    return _entities;
+}
+
+@end
