@@ -25,10 +25,8 @@ Declaratively connect to your database entities. `FSArrayController` handles fet
 <!DOCTYPE gsmarkup>
 <gsmarkup>
     <objects>
-        <!-- Automatic Sort Descriptors -->
         <sortDescriptor id="time_sort" key="insertion_time" ascending="NO"/>
 
-        <!-- The Controller: auto-fetches data and listens for WebSocket updates -->
         <arrayController id="manuscripts_controller" 
                          entity="manuscripts" 
                          autoFetch="YES" 
@@ -36,7 +34,6 @@ Declaratively connect to your database entities. `FSArrayController` handles fet
     </objects>
 
     <entities>
-        <!-- Map directly to your Postgres table -->
         <entity id="manuscripts" store="#CPOwner.store">
             <column name="id" primaryKey="YES"/>
             <column name="name"/>
@@ -46,7 +43,6 @@ Declaratively connect to your database entities. `FSArrayController` handles fet
     </entities>
 
     <connectors>
-        <!-- Hook the controller to your AppController -->
         <outlet source="#CPOwner" target="manuscripts_controller" label="manuscriptsController"/>
     </connectors>
 </gsmarkup>
