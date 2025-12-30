@@ -236,9 +236,11 @@
 {	var j = JSON.parse(data);
 	var a = [];
 	if(j)
-	{	var i,l=j.length;
+	{
+        var i,l=j.length;
+
 		for(i=0;i < l;i++)
-		{	var pk=j[i][_entity._pk];
+		{	var pk = j[i][_entity._pk];
 			var peek;
 			if (peek=[_entity _registeredObjectForPK:pk])	// enforce singleton pattern
 				a.push(peek);
@@ -258,18 +260,19 @@
 			}
 		}
 	}
-	if(_kvoKey&& _kvoOwner)
+
+	if (_kvoKey && _kvoOwner)
 		[_kvoOwner willChangeValueForKey: _kvoKey];
 
 	[self _setRepresentedObject:a];
 
-	if(_kvoKey && _kvoOwner)
+	if (_kvoKey && _kvoOwner)
         [_kvoOwner didChangeValueForKey: _kvoKey];
 
-    if(_kvoMethod && _kvoOwner)
+    if (_kvoMethod && _kvoOwner)
         [_kvoOwner performSelector:_kvoMethod withObject:self];
 
-	if(_entity.__ACForSpinner && _entity.__ACForSpinner.__tableViewForSpinner)
+	if (_entity.__ACForSpinner && _entity.__ACForSpinner.__tableViewForSpinner)
 		[_entity.__ACForSpinner.__tableViewForSpinner _stopAnimation: self];
 }
 
