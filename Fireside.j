@@ -21,6 +21,10 @@
 - (CPArray)allObjects { return self; }
 @end
 
+@implementation CPString (DataFix)
+- (CPString)rawString { return self; }
+@end
+
 @implementation CPDictionary (JSONExport)
 - (CPString)toJSON
 {
@@ -255,7 +259,9 @@ var FSRelationshipTypeFuzzy = 2;
 
 - (id)_registeredObjectForPK:(id)somePK
 {
-    if(!_pkcache) return nil;
+    if (!_pkcache)
+        return nil;
+
     return _pkcache[somePK];
 }
 
@@ -459,7 +465,8 @@ var _allRelationships;
         var payload = JSON.parse(jsonString);
         var entity = [_registeredEntities objectForKey:payload.table];
 
-        if (!entity) return;
+        if (!entity)
+           return;
 
         var object = [entity _registeredObjectForPK:payload.pk];
         
@@ -485,9 +492,10 @@ var _allRelationships;
             [entity _registerObjectInPKCache:object];
             [entity _applyRemoteChange:"INSERT" object:object];
         }
-        else if (object)
+        else if (object) // UPDATE
         {
             // Apply whatever data we received (partial updates)
+            console.log("FSStore: Payload not truncated. refreshing PK: " + payload.pk);
             [object _refreshDataFromJSONObject:payload.data];
         }
 
@@ -498,15 +506,15 @@ var _allRelationships;
             // We trigger a standard fetch for this specific object.
             // This will hit: GET /DB/manuscripts/id/123
             // The result will automatically merge into the singleton 'object' via _processJSON
-            
-            // We pass "0" for Synchronous to ensure it happens in background
-            var opts = [CPDictionary dictionaryWithObject:"0" forKey:"FSSynchronous"];
-            
-            [self fetchObjectsWithKey:[entity pk] 
+
+            // force full refetch
+            entity._pkcache[payload.pk] = undefined;
+
+            [self fetchObjectsWithKey:[entity pk]
                        equallingValue:payload.pk 
                              inEntity:entity 
-                              options:opts];
-                              
+                              options:nil];
+
             console.log("FSStore: Payload truncated. Fetching full object out-of-band for PK: " + payload.pk);
         }
     }
@@ -573,7 +581,9 @@ var _allRelationships;
     if(aKey == [someEntity pk])
     {
         var peek = [someEntity _registeredObjectForPK:someVal];
-        if(peek) return [CPArray arrayWithObject:peek];
+
+        if (peek)
+            return [CPArray arrayWithObject:peek];
     }
 
     var isFuzzy = (myOptions && [myOptions objectForKey:"FSFuzzySearch"]);
@@ -615,13 +625,19 @@ var _allRelationships;
     [CPURLConnection sendAsynchronousRequest:request queue:[CPOperationQueue mainQueue] completionHandler:function(resp, data, err)
      {
         if(err || !data) return;
+
         var json = JSON.parse([data rawString]);
         var objects = [];
-        for(var i = 0; i<json.length; i++) {
+
+        for(var i = 0; i < json.length; i++)
+        {
             [objects addObject:[self _processJSON:json[i] forEntity:someEntity]];
         }
+
         [resultArray addObjectsFromArray:objects];
-        if(someEntity.__ACForSpinner) [someEntity.__ACForSpinner setContent:resultArray];
+
+        if (someEntity.__ACForSpinner)
+            [someEntity.__ACForSpinner setContent:resultArray];
     }];
 
     return resultArray;
@@ -776,7 +792,9 @@ var _allRelationships;
                 [_obj didChangeValueForKey:key];
             }
             _obj._changes = nil;
-            if (json) [_obj _refreshDataFromJSONObject:json];
+
+            if (json)
+                [_obj _refreshDataFromJSONObject:json];
         }
     } catch(e) { console.error("JSON Error: " + e); }
     [self finish];
@@ -821,8 +839,10 @@ var _allRelationships;
 - (void)reload
 {
     var pk = [_data objectForKey:_entity._pk];
+
     if (_entity._pkcache) _entity._pkcache[pk] = undefined;
     var fresh = [_entity objectWithPK:pk];
+
     if(fresh) [self _refreshDataFromJSONObject:fresh._data];
 }
 
@@ -833,6 +853,9 @@ var _allRelationships;
         if (o.hasOwnProperty(propName))
         {
             var pnv = o[propName];
+
+            console.log("PNV: "+pnv);
+
             if(pnv !== nil && ![pnv isEqual:[_data objectForKey:propName]])
             {
                 [self willChangeValueForKey:propName];
