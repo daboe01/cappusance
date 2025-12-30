@@ -1,7 +1,6 @@
 /*
- * Fireside: a battle-tested restful ORM mapper for cappuccino
- * (c) 2016-2025  by Daniel Boehringer
- * Modernized & PubSub Enabled Live-Sync Edition
+ * Fireside: Modernized & PubSub Enabled
+ * Transparent Live-Sync Edition
  */
 
 @import <Foundation/CPObject.j>
@@ -463,32 +462,52 @@ var _allRelationships;
         if (!entity) return;
 
         var object = [entity _registeredObjectForPK:payload.pk];
-
-        if (payload.type === "UPDATE")
-        {
-            if (object) [object _refreshDataFromJSONObject:payload.data];
-        }
-        else if (payload.type === "INSERT")
-        {
-            // Even if we don't have it, create it so we can push it to live arrays
-            if (!object)
-            {
-                object = [[FSObject alloc] initWithEntity:entity];
-                [object _setDataFromJSONObject:payload.data];
-                [entity _registerObjectInPKCache:object];
-            }
-
-            // Push to any active arrays that match
-            [entity _applyRemoteChange:"INSERT" object:object];
-        }
-        else if (payload.type === "DELETE")
+        
+        // 1. Handle DELETE (Simple, no fetching needed)
+        if (payload.type === "DELETE")
         {
             if (object)
             {
-                // Remove from active arrays first
                 [entity _applyRemoteChange:"DELETE" object:object];
                 entity._pkcache[payload.pk] = undefined;
             }
+            return;
+        }
+
+        // 2. Handle INSERT / UPDATE (Partial Apply)
+        
+        // If it's an INSERT and we don't have it, create the skeleton immediately
+        // so the UI updates (e.g. the row appears in the table with just the Name)
+        if (payload.type === "INSERT" && !object)
+        {
+            object = [[FSObject alloc] initWithEntity:entity];
+            [object _setDataFromJSONObject:payload.data];
+            [entity _registerObjectInPKCache:object];
+            [entity _applyRemoteChange:"INSERT" object:object];
+        }
+        else if (object)
+        {
+            // Apply whatever data we received (partial updates)
+            [object _refreshDataFromJSONObject:payload.data];
+        }
+
+        // 3. Handle Truncation (The "Out-of-Band" Fetch)
+        if (payload.truncated)
+        {
+            // The server told us "I have more data, but it didn't fit."
+            // We trigger a standard fetch for this specific object.
+            // This will hit: GET /DB/manuscripts/id/123
+            // The result will automatically merge into the singleton 'object' via _processJSON
+            
+            // We pass "0" for Synchronous to ensure it happens in background
+            var opts = [CPDictionary dictionaryWithObject:"0" forKey:"FSSynchronous"];
+            
+            [self fetchObjectsWithKey:[entity pk] 
+                       equallingValue:payload.pk 
+                             inEntity:entity 
+                              options:opts];
+                              
+            console.log("FSStore: Payload truncated. Fetching full object out-of-band for PK: " + payload.pk);
         }
     }
     catch (e) { console.error(e); }
