@@ -125,8 +125,8 @@ Initialize the store. That's it. Fireside detects the entity, subscribes to the 
 @end
 ```
 
-### 4. The Backend (e.g. Mojo.js or Mojolicious)
-**[Mojojs](https://mojojs.org/)** is a perfect match as this framework easily provides the REST API and the WebSocket stream. The following generic script handles CRUD and broadcasts updates to all connected clients. You could use this script with minimal modifications for all your projects. However, because Fireside is backend-agnostic any other backend will do.
+### 4. The Backend (e.g. Mojo.js)
+**[Mojo.js](https://mojojs.org/)** is a perfect match as this framework easily provides the REST API and the WebSocket stream. The following generic script handles CRUD and broadcasts updates to all connected clients. You could use this script with minimal modifications for all your projects. However, because Fireside is backend-agnostic any other backend will do.
 
 ```javascript
 import mojo from '@mojojs/core';
