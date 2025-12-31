@@ -6,7 +6,7 @@ On top of the layout engine, Cappusance adds support for modern Cocoa controls, 
 
 ## Fireside: Modernized & Real-Time
 
-Fireside brings the spirit of **EOF/WebObjects** to the browser. It automatically glues your database to the GUI with bidirectional bindings.
+Fireside brings the spirit of **Enterprise Objects Framework (NeXT)** to the browser. It automatically glues your database to the GUI with bidirectional bindings.
 
 *   **Declarative:** Database entities map to `ArrayControllers`; relations are expressed as master-detail bindings.
 *   **Transparent Live Sync:** Leveraging WebSockets and Postgres PubSub, changes made in one client are instantly reflected in all other connected clients without writing a single line of synchronization code.
