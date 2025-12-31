@@ -261,5 +261,3 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/daboe01/cappusance?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
