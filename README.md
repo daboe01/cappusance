@@ -126,96 +126,123 @@ Initialize the store. That's it. Fireside detects the entity, subscribes to the 
 ```
 
 ### 4. The Backend (Mojolicious)
-**[Mojolicious](http://mojolicio.us/)** with `Mojo::Pg` is a perfect match as this framework easily provides the REST API and the WebSocket stream. The following generic script handles CRUD and broadcasts updates to all connected clients. You could use this script with minimal modifications for all your projects. However, because Fireside is backend-agnostic any other backend will do.
+**[Mojojs](https://mojojs.org/)** is a perfect match as this framework easily provides the REST API and the WebSocket stream. The following generic script handles CRUD and broadcasts updates to all connected clients. You could use this script with minimal modifications for all your projects. However, because Fireside is backend-agnostic any other backend will do.
 
-```perl
-use Mojolicious::Lite;
-use Mojo::Pg;
-use Mojo::JSON qw(encode_json decode_json);
+```javascript
+import mojo from '@mojojs/core';
+import postgres from 'postgres';
 
-# 1. Connect to Postgres
-helper pg => sub { state $pg = Mojo::Pg->new('postgresql://postgres@localhost/name_of_your_postgres_database') };
+const app = mojo();
 
-# 2. WebSocket Route for Live Sync
-websocket '/DB/socket' => sub {
-    my $c = shift;
-    $c->inactivity_timeout(3600);
+// 1. Connect to Postgres
+// We use the 'postgres' library which handles connection pooling automatically.
+const sql = postgres('postgresql://postgres@localhost/name_of_your_postgres_database');
 
-    # Listen for PG notifications and forward to WebSocket
-    my $cb = $c->pg->pubsub->listen(fireside_updates => sub {
-        my ($pubsub, $payload) = @_;
-        $c->send({json => decode_json($payload)});
+// Register a helper to access the DB easily in routes
+app.decorateContext('sql', sql);
+
+// 2. WebSocket Route for Live Sync
+app.websocket('/DB/socket', async ctx => {
+    // Increase timeout (Node uses milliseconds, so 3600 * 1000)
+    ctx.req.socket.setTimeout(3600000);
+
+    // Listen for PG notifications
+    // postgres.js handles the dedicated connection for listening automatically
+    const listener = await ctx.sql.listen('fireside_updates', payload => {
+        // payload is a string in postgres.js, just like Mojo::Pg
+        ctx.send({ json: JSON.parse(payload) });
     });
 
-    $c->on(finish => sub { shift->pg->pubsub->unlisten(fireside_updates => $cb) });
-};
+    // Clean up on WebSocket close
+    ctx.on('close', () => {
+        listener.unlisten();
+    });
+});
 
-# 3. Helper to Broadcast Changes (Safe for Large Payloads)
-helper notify_change => sub {
-    my ($self, $table, $pk, $type, $data) = @_;
-
-    my $payload = {
-        table => $table,
-        pk    => $pk,
-        type  => $type,
-        data  => $data
+// 3. Helper to Broadcast Changes (Safe for Large Payloads)
+app.decorateContext('notifyChange', async function(table, pk, type, data) {
+    let payload = {
+        table,
+        pk,
+        type,
+        data
     };
 
-    my $json_str = encode_json($payload);
+    let jsonStr = JSON.stringify(payload);
 
-    if (length($json_str) > 7500) {
-        $payload = {
-            table     => $table,
-            pk        => $pk,
-            type      => $type,
-            truncated => Mojo::JSON->true,
-            data      => { id => $pk }
+    // Check byte length (Postgres NOTIFY limit is 8000 bytes)
+    if (Buffer.byteLength(jsonStr) > 7500) {
+        payload = {
+            table,
+            pk,
+            type,
+            truncated: true,
+            data: { [pk]: data[pk] || pk } // Keep only the ID
         };
-
-        $json_str = encode_json($payload);
+        jsonStr = JSON.stringify(payload);
     }
 
-    $self->pg->pubsub->notify(fireside_updates => $json_str);
-};
+    await this.sql.notify('fireside_updates', jsonStr);
+});
 
-# 4. Generic REST API
-get '/DB/:table' => sub {
-    my $c = shift;
-    $c->render(json => $c->pg->db->select($c->param('table'))->hashes);
-};
+// 4. Generic REST API
 
-post '/DB/:table/:pk' => sub {
-    my $c = shift;
-    my ($table, $pk) = ($c->param('table'), $c->param('pk'));
-    my $json = $c->req->json;
+// GET /DB/:table
+app.get('/DB/:table', async ctx => {
+    const table = ctx.req.params.table;
+    // postgres.js uses tagged templates for safety against SQL injection
+    // ctx.sql(table) treats the variable as an identifier (table name)
+    const rows = await ctx.sql`SELECT * FROM ${ctx.sql(table)}`;
+    await ctx.render({ json: rows });
+});
+
+// POST /DB/:table/:pk
+app.post('/DB/:table/:pk', async ctx => {
+    const { table, pk } = ctx.req.params;
+    const json = await ctx.req.json();
+
+    // Insert and return the Primary Key
+    const [row] = await ctx.sql`
+        INSERT INTO ${ctx.sql(table)} ${ctx.sql(json)}
+        RETURNING ${ctx.sql(pk)}
+    `;
     
-    my $id = $c->pg->db->insert($table, $json, {returning => $pk})->hash->{$pk};
-    $json->{$pk} = $id;
-    
-    $c->notify_change($table, $id, 'INSERT', $json);
-    $c->render(json => {pk => $id});
-};
+    const id = row[pk];
+    json[pk] = id;
 
-patch '/DB/:table/:pk/:id' => sub {
-    my $c = shift;
-    my ($table, $pk, $id) = ($c->param('table'), $c->param('pk'), $c->param('id'));
-    my $json = $c->req->json;
+    await ctx.notifyChange(table, id, 'INSERT', json);
+    await ctx.render({ json: { pk: id } });
+});
 
-    $c->pg->db->update($table, $json, {$pk => $id});
-    $c->notify_change($table, $id, 'UPDATE', $json);
-    $c->render(json => {status => 'ok'});
-};
+// PATCH /DB/:table/:pk/:id
+app.patch('/DB/:table/:pk/:id', async ctx => {
+    const { table, pk, id } = ctx.req.params;
+    const json = await ctx.req.json();
 
-del '/DB/:table/:pk/:id' => sub {
-    my $c = shift;
-    my ($table, $pk, $id) = ($c->param('table'), $c->param('pk'), $c->param('id'));
-    
-    $c->pg->db->delete($table, {$pk => $id});
-    $c->notify_change($table, $id, 'DELETE', {});
-    $c->render(json => {status => 'ok'});
-};
+    await ctx.sql`
+        UPDATE ${ctx.sql(table)} 
+        SET ${ctx.sql(json)} 
+        WHERE ${ctx.sql(pk)} = ${id}
+    `;
 
-app->start;
+    await ctx.notifyChange(table, id, 'UPDATE', json);
+    await ctx.render({ json: { status: 'ok' } });
+});
+
+// DELETE /DB/:table/:pk/:id
+app.delete('/DB/:table/:pk/:id', async ctx => {
+    const { table, pk, id } = ctx.req.params;
+
+    await ctx.sql`
+        DELETE FROM ${ctx.sql(table)} 
+        WHERE ${ctx.sql(pk)} = ${id}
+    `;
+
+    await ctx.notifyChange(table, id, 'DELETE', {});
+    await ctx.render({ json: { status: 'ok' } });
+});
+
+app.start();
 ```
 
 A comprehensive, real-world use case utilizing these technologies can be found here:
