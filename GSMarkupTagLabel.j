@@ -1,117 +1,173 @@
 /* -*-objc-*-
-GSMarkupTagTextLabel.m
+   GSMarkupTagTextLabel.m
 
-Copyright (C) 2002 Free Software Foundation, Inc.
+   Copyright (C) 2002 Free Software Foundation, Inc.
 
-Author: Nicola Pero <n.pero@mi.flashnet.it>
-Date: March 2002
+   Author: Nicola Pero <n.pero@mi.flashnet.it>
+   Date: March 2002
 
-This file is part of GNUstep Renaissance
+   This file is part of GNUstep Renaissance
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Library General Public
-License as published by the Free Software Foundation; either
-version 2 of the License, or (at your option) any later version.
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public
+   License as published by the Free Software Foundation; either
+   version 2 of the License, or (at your option) any later version.
+   
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Library General Public License for more details.
-
-You should have received a copy of the GNU Library General Public
-License along with this library; see the file COPYING.LIB.
-If not, write to the Free Software Foundation,
-59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+   You should have received a copy of the GNU Library General Public
+   License along with this library; see the file COPYING.LIB.
+   If not, write to the Free Software Foundation,
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 @import "GSMarkupTagView.j"
 
 @implementation FSLabel:CPTextField
 -(BOOL)acceptsFirstResponder
-{	return NO;
+{
+	return NO;
 }
 @end
 
+@implementation GSMarkupTagLabel : GSMarkupTagView
 
-@implementation GSMarkupTagLabel:GSMarkupTagView
-+ (CPString) tagName
++ (CPString)tagName
 {
     return @"label";
 }
 
-+ (Class) platformObjectClass
++ (Class)platformObjectClass
 {
     return [FSLabel class];
 }
 
-- (id) initPlatformObject: (id)platformObject
+- (id)initPlatformObject:(id)platformObject
 {
-    platformObject = [super initPlatformObject: platformObject];
+    platformObject = [super initPlatformObject:platformObject];
 
-    /* this is not editable, without border and without background.  */
-    [platformObject setEditable: NO];
-    [platformObject setBezeled: NO];
-    [platformObject setBordered: NO];
+    /* This is not editable, without border and without background by default. */
+    [platformObject setEditable:NO];
+    [platformObject setBezeled:NO];
+    [platformObject setBordered:NO];
 
-    var c = [self boolValueForAttribute: @"wordWrap"];
+    var wordWrap = [self boolValueForAttribute:@"wordWrap"];
 
-    if (c == 1)
+    if (wordWrap == 1)
     {
-        [platformObject setLineBreakMode:CPLineBreakByWordWrapping]
-    } else
+        [platformObject setLineBreakMode:CPLineBreakByWordWrapping];
+    }
+    else
     {
-        [platformObject setLineBreakMode:CPLineBreakByClipping]
+        [platformObject setLineBreakMode:CPLineBreakByClipping];
     }
 
-
-    /* selectable; by default we are selectable so the user can copy&paste
-     * strings from a GUI (eg, error messages).  */
+    /* Selectable; by default we are selectable so the user can copy&paste
+     * strings from a GUI (eg, error messages). */
     {
-        var selectable = [self boolValueForAttribute: @"selectable"];
+        var selectable = [self boolValueForAttribute:@"selectable"];
 
         if (selectable == 0)
         {
-            [platformObject setSelectable: NO];
+            [platformObject setSelectable:NO];
         }
         else
         {
-            [platformObject setSelectable: YES];
+            [platformObject setSelectable:YES];
         }
     }
 
-    /* textColor */
+    /* Font & Size */
     {
-        var c = [self colorValueForAttribute: @"textColor"];
-
-        if (c != nil)
+        var fontSize = 12.0;
+        var sizeAttr = [self stringValueForAttribute:@"size"];
+        if (sizeAttr)
         {
-            [platformObject setTextColor: c];
+            var parsedSize = parseFloat(sizeAttr);
+            if (!isNaN(parsedSize))
+            {
+                fontSize = parsedSize;
+            }
+        }
+
+        var fontAttr = [self stringValueForAttribute:@"font"];
+        var font = nil;
+        if (fontAttr)
+        {
+            if (fontAttr === @"bold" || fontAttr === @"boldSystemFont")
+            {
+                font = [CPFont boldSystemFontOfSize:fontSize];
+            }
+            else
+            {
+                font = [CPFont fontWithName:fontAttr size:fontSize];
+            }
+        }
+        else if (sizeAttr)
+        {
+            font = [CPFont systemFontOfSize:fontSize];
+        }
+
+        if (font)
+        {
+            [platformObject setFont:font];
+        }
+    }
+
+    /* Margin / Content Inset */
+    {
+        var marginStr = [self stringValueForAttribute:@"margin"];
+        if (marginStr)
+        {
+            var marginVal = parseFloat(marginStr);
+            if (!isNaN(marginVal))
+            {
+                [platformObject setValue:CGInsetMake(marginVal, marginVal, marginVal, marginVal) forThemeAttribute:@"content-inset"];
+            }
+        }
+    }
+
+    /* textColor / color */
+    {
+        var textColor = [self colorValueForAttribute:@"textColor"];
+        if (textColor == nil)
+        {
+            textColor = [self colorValueForAttribute:@"color"];
+        }
+
+        if (textColor != nil)
+        {
+            [platformObject setTextColor:textColor];
         }
     }
 
     /* backgroundColor */
     {
-        var c = [self colorValueForAttribute: @"backgroundColor"];
+        var c = [self colorValueForAttribute:@"backgroundColor"];
         if (c != nil)
         {
-            [platformObject setBackgroundColor: c];
-            [platformObject setDrawsBackground: YES];
+            [platformObject setBackgroundColor:c];
+            [platformObject setDrawsBackground:YES];
         }
         else
         {
-            [platformObject setDrawsBackground: NO];
+            [platformObject setDrawsBackground:NO];
         }
     }
     
-    /* eventual text is in the content.  */
+    /* Eventual text in the tag content. */
     {
         var count = [_content count];
         
         if (count > 0)
         {
-            var s = [_content objectAtIndex: 0];
+            var s = [_content objectAtIndex:0];
             
-            if (s != nil  &&  [s isKindOfClass: [CPString class]])
-            {	[platformObject setStringValue: s];
+            if (s != nil && [s isKindOfClass:[CPString class]])
+            {
+                [platformObject setStringValue:s];
             }
         }
     }
