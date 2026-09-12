@@ -652,13 +652,18 @@ var _allRelationships;
 {
     var pk = row[[entity pk]];
     var obj = [entity _registeredObjectForPK:pk];
-    if(!obj) {
+
+    if(!obj)
+    {
         obj = [[FSObject alloc] initWithEntity:entity];
         [obj _setDataFromJSONObject:row];
         [entity _registerObjectInPKCache:obj];
-    } else {
+    }
+    else
+    {
         [obj _refreshDataFromJSONObject:row];
     }
+
     return obj;
 }
 
