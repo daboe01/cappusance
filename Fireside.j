@@ -471,7 +471,7 @@ var _allRelationships;
 
         var object = [entity _registeredObjectForPK:payload.pk];
         
-        // 1. Handle DELETE (Simple, no fetching needed)
+        // 1. DELETE
         if (payload.type === "DELETE")
         {
             if (object)
@@ -482,10 +482,7 @@ var _allRelationships;
             return;
         }
 
-        // 2. Handle INSERT / UPDATE (Partial Apply)
-        
-        // If it's an INSERT and we don't have it, create the skeleton immediately
-        // so the UI updates (e.g. the row appears in the table with just the Name)
+        // 2. INSERT / UPDATE
         if (payload.type === "INSERT" && !object)
         {
             object = [[FSObject alloc] initWithEntity:entity];
@@ -493,33 +490,43 @@ var _allRelationships;
             [entity _registerObjectInPKCache:object];
             [entity _applyRemoteChange:"INSERT" object:object];
         }
-        else if (object) // UPDATE
+        else if (object && !payload.truncated)
         {
-            // Apply whatever data we received (partial updates)
-            console.log("FSStore: Payload not truncated. refreshing PK: " + payload.pk);
+            // Kurzer Payload: Daten direkt in das bestehende Objekt mergen
             [object _refreshDataFromJSONObject:payload.data];
         }
 
-        // 3. Handle Truncation (The "Out-of-Band" Fetch)
+        // 3. TRUNCATED PAYLOAD (> 7.500 Zeichen wie lange Arztbriefe)
         if (payload.truncated)
         {
-            // The server told us "I have more data, but it didn't fit."
-            // We trigger a standard fetch for this specific object.
-            // This will hit: GET /DB/manuscripts/id/123
-            // The result will automatically merge into the singleton 'object' via _processJSON
+            // Wir laden nur die Daten für diesen EINEN Datenpunkt nach
+            // und aktualisieren ihn "in place", OHNE den controller zu überschreiben!
+            var urlStr = _baseURL + "/" + [entity name] + "/" + [entity pk] + "/" + encodeURIComponent(payload.pk);
+            var req = [CPURLRequest requestWithURL:urlStr];
 
-            // force full refetch
-            entity._pkcache[payload.pk] = undefined;
-
-            [self fetchObjectsWithKey:[entity pk]
-                       equallingValue:payload.pk 
-                             inEntity:entity 
-                              options:nil];
-
-            console.log("FSStore: Payload truncated. Fetching full object out-of-band for PK: " + payload.pk);
+            [CPURLConnection sendAsynchronousRequest:req
+                                               queue:[CPOperationQueue mainQueue]
+                                   completionHandler:function(resp, data, err)
+            {
+                if (!err && data)
+                {
+                    try {
+                        var rows = JSON.parse([data rawString]);
+                        if (rows && rows.length > 0)
+                        {
+                            // Aktualisiert die Ivars des existierenden Singletons
+                            [self _processJSON:rows[0] forEntity:entity];
+                        }
+                    } catch(e) {
+                        console.error("FSStore Truncation Refresh Error:", e);
+                    }
+                }
+            }];
         }
     }
-    catch (e) { console.error(e); }
+    catch (e) {
+        console.error("FSStore _handlePushNotification Error:", e);
+    }
 }
 
 // Factories
@@ -579,10 +586,9 @@ var _allRelationships;
 {
     [self registerEntity:someEntity];
 
-    if(aKey == [someEntity pk])
+    if (aKey == [someEntity pk])
     {
         var peek = [someEntity _registeredObjectForPK:someVal];
-
         if (peek)
             return [CPArray arrayWithObject:peek];
     }
@@ -591,54 +597,52 @@ var _allRelationships;
     var urlStr = _baseURL + "/" + [someEntity name] + "/" + aKey + (isFuzzy ? "/like/" : "/") + encodeURIComponent(someVal);
     var request = [CPURLRequest requestWithURL:urlStr];
 
-    // Define Matcher for this fetch
     var matcher = function(candidateObj) {
-        if (aKey === "1" && someVal === "1") return true; // All Objects
+        if (aKey === "1" && someVal === "1") return true;
         var val = [candidateObj valueForKey:aKey];
-        // Loose equality (to match "1" with 1)
         return val == someVal;
     };
 
-    // --- Synchronous Path ---
-    if(myOptions && parseInt([myOptions objectForKey:"FSSynchronous"], 10))
+    // Synchroner Pfad
+    if (myOptions && parseInt([myOptions objectForKey:"FSSynchronous"], 10))
     {
         var data = [CPURLConnection sendSynchronousRequest:request returningResponse:nil];
         if (!data) return nil;
         var json = JSON.parse([data rawString]);
         var resArray = [CPMutableArray array];
-        for(var i = 0; i<json.length; i++) {
+        for (var i = 0; i < json.length; i++) {
             [resArray addObject:[self _processJSON:json[i] forEntity:someEntity]];
         }
         var finalArr = [[FSMutableArray alloc] initWithArray:resArray ofEntity:someEntity];
-
-        // AUTO-TRACKING
         [someEntity _registerLiveArray:finalArr withMatcher:matcher];
-
         return finalArr;
     }
 
-    // --- Asynchronous Path ---
+    // Asynchroner Pfad
     var resultArray = [[FSMutableArray alloc] initWithArray:@[] ofEntity:someEntity];
-
-    // AUTO-TRACKING immediately (it will populate later, but we track the instance)
     [someEntity _registerLiveArray:resultArray withMatcher:matcher];
 
     [CPURLConnection sendAsynchronousRequest:request queue:[CPOperationQueue mainQueue] completionHandler:function(resp, data, err)
-     {
-        if(err || !data) return;
+    {
+        if (err || !data) return;
 
         var json = JSON.parse([data rawString]);
         var objects = [];
 
-        for(var i = 0; i < json.length; i++)
+        for (var i = 0; i < json.length; i++)
         {
             [objects addObject:[self _processJSON:json[i] forEntity:someEntity]];
         }
 
         [resultArray addObjectsFromArray:objects];
 
-        if (someEntity.__ACForSpinner)
+        // setContent darf NUR ausgeführt werden, wenn die Initialabfrage
+        // wirklich ALLE Objekte abgefragt hat ("1" == "1").
+        // Niemals bei Einzelabfragen nach ID oder Nachlade-Vorgängen!
+        if (someEntity.__ACForSpinner && aKey === "1" && someVal === "1")
+        {
             [someEntity.__ACForSpinner setContent:resultArray];
+        }
     }];
 
     return resultArray;

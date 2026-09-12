@@ -357,5 +357,39 @@ function getFontWithSelectorSize(selector, type, size)
   return integerMask;
 }
 
+- (CPColor)colorValueForAttribute:(CPString)attribute
+{
+    var value = [_attributes objectForKey:attribute];
+    if (value == nil)
+        return nil;
+
+    var clean = value;
+    if ([clean hasPrefix:@"#"])
+        clean = [clean substringFromIndex:1];
+
+    var sel = CPSelectorFromString(clean + "Color");
+    if (sel && [CPColor respondsToSelector:sel])
+        return [CPColor performSelector:sel];
+
+    if (clean.length === 3)
+    {
+        var r = clean.charAt(0), g = clean.charAt(1), b = clean.charAt(2);
+        clean = r + r + g + g + b + b;
+    }
+
+    if (clean.length === 6 || clean.length === 8)
+    {
+        var r = parseInt(clean.substring(0, 2), 16) / 255.0;
+        var g = parseInt(clean.substring(2, 4), 16) / 255.0;
+        var b = parseInt(clean.substring(4, 6), 16) / 255.0;
+        var a = (clean.length === 8) ? (parseInt(clean.substring(6, 8), 16) / 255.0) : 1.0;
+
+        if (!isNaN(r) && !isNaN(g) && !isNaN(b))
+            return [CPColor colorWithCalibratedRed:r green:g blue:b alpha:a];
+    }
+
+    return nil;
+}
+
 @end
 
