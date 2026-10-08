@@ -10,6 +10,7 @@
 @import <Foundation/CPURLRequest.j>
 @import <Foundation/CPURLConnection.j>
 @import <Foundation/CPOperationQueue.j>
+@import <Foundation/CPNotificationCenter.j>
 @import "FSMutableArray.j"
 
 // MARK: - Utilities
@@ -47,9 +48,13 @@
 
 // MARK: - Forward Declarations & Constants
 
-var FSRelationshipTypeToOne = 0;
-var FSRelationshipTypeToMany = 1;
-var FSRelationshipTypeFuzzy = 2;
+FSRelationshipTypeToOne = 0;
+FSRelationshipTypeToMany = 1;
+FSRelationshipTypeFuzzy = 2;
+
+// Live-Sync Notifications (userInfo: type, table, pk, object bzw. payload)
+FSStoreDidApplyRemoteChangeNotification = @"FSStoreDidApplyRemoteChangeNotification";
+FSStoreDidReceivePushNotification       = @"FSStoreDidReceivePushNotification";
 
 @class FSStore
 @class FSObject
@@ -71,6 +76,7 @@ var FSRelationshipTypeFuzzy = 2;
 
     // Live Sync Tracking
     Array               _liveArrays;
+    Array               _controllers;
 }
 
 - (id)initWithName:(CPString)aName andStore:(FSStore)someStore
@@ -293,11 +299,18 @@ var FSRelationshipTypeFuzzy = 2;
 
 /*
  * Called by FSStore when a Push Notification arrives.
- * Updates all tracked arrays.
+ * Updates all tracked arrays WITHOUT touching the database (the server
+ * already knows about the change) and returns the arrays that changed.
+ *
+ * Wichtig: Nicht addObject:/removeObject: auf FSMutableArray verwenden,
+ * die lösen INSERT/DELETE am Server aus (bei Arrays mit Defaults, z.B.
+ * mandant_id, entstand so eine doppelte Zeile).
  */
-- (void)_applyRemoteChange:(CPString)type object:(id)object
+- (CPArray)_applyRemoteChange:(CPString)type object:(id)object
 {
-    if (!_liveArrays || _liveArrays.length === 0) return;
+    var touched = [];
+
+    if (!_liveArrays || _liveArrays.length === 0) return touched;
 
     var activeArrays = [];
 
@@ -306,34 +319,105 @@ var FSRelationshipTypeFuzzy = 2;
         var entry = _liveArrays[i];
         var arr = entry.ref.deref();
 
-        // If array was collected, drop it (unless we are forced to keep strong refs)
-        if (arr)
-        {
-            activeArrays.push(entry);
+        // If array was collected, drop it
+        if (!arr)
+            continue;
 
-            try
+        activeArrays.push(entry);
+
+        try
+        {
+            var idx = [arr indexOfObjectIdenticalTo:object];
+
+            if (type === "INSERT")
             {
-                if (type === "INSERT")
+                if (idx === CPNotFound && entry.matcher && entry.matcher(object))
                 {
-                    // Check if object belongs in this array based on criteria
-                    if (entry.matcher && entry.matcher(object))
-                    {
-                        // Prevent duplicates
-                        if (![arr containsObject:object])
-                            [arr addObject:object];
-                    }
-                }
-                else if (type === "DELETE")
-                {
-                    // removeObject works because we use singleton FSObjects
-                    [arr removeObject:object];
+                    if ([arr respondsToSelector:@selector(_insertRemoteObject:)])
+                        [arr _insertRemoteObject:object];
+                    else
+                        arr.push(object);
+
+                    touched.push(arr);
                 }
             }
-            catch (e) { console.error("Error applying remote change to array: " + e); }
+            else if (type === "DELETE")
+            {
+                if (idx !== CPNotFound)
+                {
+                    if ([arr respondsToSelector:@selector(_removeRemoteObject:)])
+                        [arr _removeRemoteObject:object];
+                    else
+                        arr.splice(idx, 1);
+
+                    touched.push(arr);
+                }
+            }
         }
+        catch (e) { console.error("Error applying remote change to array: " + e); }
     }
 
     _liveArrays = activeArrays;
+
+    return touched;
+}
+
+// MARK: - Controller-Registry (Live Sync ohne Neuladen)
+
+- (void)_registerController:(id)aController
+{
+    if (!_controllers) _controllers = [];
+    if (_controllers.indexOf(aController) === -1) _controllers.push(aController);
+}
+
+/*
+ * Ordnet die Array-Controller dieses Entities neu an, deren Inhalt eines der
+ * geänderten Arrays ist oder das geänderte Objekt enthält.
+ * rearrangeObjects erhält die Selektion über die Objektidentität. Das geht nur,
+ * weil die FSObjects Singletons im PK-Cache bleiben. Ein Neuladen mit frischen
+ * Objekten (PK-Cache leeren + reload) verliert dagegen die Selektion, und der
+ * Controller springt per avoidsEmptySelection in die erste Zeile.
+ */
+- (void)_rearrangeControllersForArrays:(CPArray)someArrays object:(id)anObject
+{
+    if (!_controllers) return;
+
+    for (var i = 0; i < _controllers.length; i++)
+    {
+        var ac = _controllers[i];
+
+        try
+        {
+            var content = [ac content];
+            if (!content || !content.isa)
+                continue;
+
+            var hit = (someArrays && someArrays.indexOf(content) !== -1) ||
+                      (anObject && [content indexOfObjectIdenticalTo:anObject] !== CPNotFound);
+
+            if (!hit)
+                continue;
+
+            [ac rearrangeObjects];
+
+            // Felder, die an selection.xyz gebunden sind, neu lesen lassen.
+            // Die Selektion selbst bleibt unverändert.
+            if (anObject && [[ac selectedObjects] indexOfObjectIdenticalTo:anObject] !== CPNotFound)
+            {
+                if ([ac respondsToSelector:@selector(_selectionWillChange)] && [ac respondsToSelector:@selector(_selectionDidChange)])
+                {
+                    [ac _selectionWillChange];
+                    [ac _selectionDidChange];
+                }
+                else
+                {
+                    [ac willChangeValueForKey:@"selection"];
+                    [ac didChangeValueForKey:@"selection"];
+                }
+            }
+        }
+        catch (e) { console.error("Error rearranging controller: " + e); }
+    }
 }
 
 @end
@@ -401,8 +485,55 @@ var _allRelationships;
 
 - (void)_invalidateCache
 {
+    // Nur den Relationship-Cache verwerfen. Der PK-Cache des Ziels bleibt
+    // bestehen, damit die Objekte Singletons bleiben (Selektion, Live-Sync).
+    // Frische Daten mergt _processJSON beim Nachladen in die bestehenden Objekte.
     _target_cache = [];
-    [_target _invalidatePKCache];
+}
+
+- (void)_dropCacheForKey:(id)aKey
+{
+    if (_target_cache)
+        delete _target_cache[aKey];
+}
+
+/*
+ * Lädt ein bereits gecachtes To-Many-Array im Hintergrund neu und tauscht den
+ * Inhalt erst aus, wenn die Daten da sind: kein leerer Zwischenzustand, kein
+ * Flackern, keine neuen Objektinstanzen.
+ */
+- (void)_refetchCachedArrayForKey:(id)aKey
+{
+    var cached = _target_cache ? _target_cache[aKey] : nil;
+
+    if (!cached || ![cached respondsToSelector:@selector(_setRemoteContent:)])
+        return;
+
+    var target = _target,
+        store = [target store],
+        urlStr = [store baseURL] + "/" + [target name] + "/" + [self targetColumn] +
+                 (_type == FSRelationshipTypeFuzzy ? "/like/" : "/") + encodeURIComponent(aKey);
+
+    [CPURLConnection sendAsynchronousRequest:[CPURLRequest requestWithURL:urlStr]
+                                       queue:[CPOperationQueue mainQueue]
+                           completionHandler:function(resp, data, err)
+    {
+        if (err || !data)
+            return;
+
+        try
+        {
+            var json = JSON.parse([data rawString]),
+                objects = [];
+
+            for (var i = 0; i < json.length; i++)
+                objects.push([store _processJSON:json[i] forEntity:target]);
+
+            [cached _setRemoteContent:objects];
+            [target _rearrangeControllersForArrays:[cached] object:nil];
+        }
+        catch (e) { console.error("FSRelationship refetch error:", e); }
+    }];
 }
 
 + (CPArray)relationshipsWithTargetEntity:(FSEntity)anEntity
@@ -461,74 +592,126 @@ var _allRelationships;
 
 - (void)_handlePushNotification:(CPString)jsonString
 {
+    var payload;
+
+    try { payload = JSON.parse(jsonString); }
+    catch (e)
+    {
+        console.error("FSStore _handlePushNotification Error:", e);
+        return;
+    }
+
+    // Rohdaten (z.B. TASK_PROGRESS) für die App bereitstellen
+    [[CPNotificationCenter defaultCenter] postNotificationName:FSStoreDidReceivePushNotification
+                                                        object:self
+                                                      userInfo:[CPDictionary dictionaryWithObject:payload forKey:@"payload"]];
+
+    if (payload && payload.table)
+        [self _applyPushPayload:payload attempt:0];
+}
+
+- (void)_applyPushPayload:(Object)payload attempt:(int)attempt
+{
     try
     {
-        var payload = JSON.parse(jsonString);
         var entity = [_registeredEntities objectForKey:payload.table];
 
         if (!entity)
            return;
 
-        var object = [entity _registeredObjectForPK:payload.pk];
-        
+        var object = [entity _registeredObjectForPK:payload.pk],
+            touched;
+
         // 1. DELETE
         if (payload.type === "DELETE")
         {
-            if (object)
-            {
-                [entity _applyRemoteChange:"DELETE" object:object];
-                entity._pkcache[payload.pk] = undefined;
-            }
+            if (!object)
+                return;
+
+            touched = [entity _applyRemoteChange:"DELETE" object:object];
+            entity._pkcache[payload.pk] = undefined;
+            [entity _rearrangeControllersForArrays:touched object:nil];
+            [self _postRemoteChange:"DELETE" entity:entity object:object pk:payload.pk];
             return;
         }
 
-        // 2. INSERT / UPDATE
-        if (payload.type === "INSERT" && !object)
+        // 2. Eigener INSERT noch unterwegs: Antwort des POST abwarten, sonst
+        //    entsteht ein zweites Objekt für dieselbe Zeile
+        if (payload.type === "INSERT" && !object && [_persistenceQueue operationCount] > 0 && attempt < 20)
         {
-            object = [[FSObject alloc] initWithEntity:entity];
-            [object _setDataFromJSONObject:payload.data];
-            [entity _registerObjectInPKCache:object];
-            [entity _applyRemoteChange:"INSERT" object:object];
-        }
-        else if (object && !payload.truncated)
-        {
-            // Kurzer Payload: Daten direkt in das bestehende Objekt mergen
-            [object _refreshDataFromJSONObject:payload.data];
+            window.setTimeout(function() { [self _applyPushPayload:payload attempt:attempt + 1]; }, 150);
+            return;
         }
 
-        // 3. TRUNCATED PAYLOAD (> 7.500 Zeichen wie lange Arztbriefe)
-        // Nur für lokal geladene Objekte nachladen. Sonst holt jeder Client
-        // bei Bulk-Läufen (Minion, Recompute by Tag) jede geänderte Zeile.
-        if (payload.truncated && object)
+        // 3. TRUNCATED PAYLOAD (> 7.500 Zeichen wie lange Arztbriefe):
+        //    genau diese eine Zeile nachladen und dann normal weiterverarbeiten.
+        //    UPDATEs nur für lokal geladene Objekte, sonst holt jeder Client
+        //    bei Bulk-Läufen (Minion) jede geänderte Zeile.
+        if (payload.truncated)
         {
-            // Wir laden nur die Daten für diesen EINEN Datenpunkt nach
-            // und aktualisieren ihn "in place", OHNE den controller zu überschreiben!
+            if (!object && payload.type !== "INSERT")
+                return;
+
             var urlStr = _baseURL + "/" + [entity name] + "/" + [entity pk] + "/" + encodeURIComponent(payload.pk);
-            var req = [CPURLRequest requestWithURL:urlStr];
 
-            [CPURLConnection sendAsynchronousRequest:req
+            [CPURLConnection sendAsynchronousRequest:[CPURLRequest requestWithURL:urlStr]
                                                queue:[CPOperationQueue mainQueue]
                                    completionHandler:function(resp, data, err)
             {
-                if (!err && data)
+                if (err || !data)
+                    return;
+
+                try
                 {
-                    try {
-                        var rows = JSON.parse([data rawString]);
-                        if (rows && rows.length > 0)
-                        {
-                            // Aktualisiert die Ivars des existierenden Singletons
-                            [self _processJSON:rows[0] forEntity:entity];
-                        }
-                    } catch(e) {
-                        console.error("FSStore Truncation Refresh Error:", e);
-                    }
+                    var rows = JSON.parse([data rawString]);
+
+                    if (rows && rows.length > 0)
+                        [self _applyPushPayload:{ table: payload.table, pk: payload.pk, type: payload.type, data: rows[0] } attempt:0];
                 }
+                catch (e) { console.error("FSStore Truncation Refresh Error:", e); }
             }];
+            return;
         }
+
+        // 4. INSERT eines noch unbekannten Objekts: in passende Live-Arrays einhängen
+        if (!object)
+        {
+            if (payload.type !== "INSERT")
+                return;
+
+            object = [[FSObject alloc] initWithEntity:entity];
+            [object _setDataFromJSONObject:payload.data];
+            [entity _registerObjectInPKCache:object];
+
+            touched = [entity _applyRemoteChange:"INSERT" object:object];
+            [entity _rearrangeControllersForArrays:touched object:nil];
+            [self _postRemoteChange:"INSERT" entity:entity object:object pk:payload.pk];
+            return;
+        }
+
+        // 5. UPDATE (oder INSERT eines schon bekannten Objekts): in place mergen,
+        //    betroffene Controller neu anordnen, Selektion bleibt erhalten
+        [object _refreshDataFromJSONObject:payload.data];
+
+        touched = (payload.type === "INSERT") ? [entity _applyRemoteChange:"INSERT" object:object] : [];
+        [entity _rearrangeControllersForArrays:touched object:object];
+        [self _postRemoteChange:payload.type entity:entity object:object pk:payload.pk];
     }
     catch (e) {
-        console.error("FSStore _handlePushNotification Error:", e);
+        console.error("FSStore _applyPushPayload Error:", e);
     }
+}
+
+- (void)_postRemoteChange:(CPString)type entity:(FSEntity)anEntity object:(id)anObject pk:(id)aPK
+{
+    var info = [CPDictionary dictionaryWithObjectsAndKeys:type, @"type",
+                                                          [anEntity name], @"table",
+                                                          anObject, @"object",
+                                                          aPK, @"pk"];
+
+    [[CPNotificationCenter defaultCenter] postNotificationName:FSStoreDidApplyRemoteChangeNotification
+                                                        object:self
+                                                      userInfo:info];
 }
 
 // Factories
@@ -636,7 +819,13 @@ var _allRelationships;
             [objects addObject:[self _processJSON:json[i] forEntity:someEntity]];
         }
 
-        [resultArray addObjectsFromArray:objects];
+        // Set content WITHOUT an INSERT on the server: addObjectsFromArray: would go
+        // through _addToDBObject and, for arrays with defaults (to-many relationships),
+        // POST every loaded row again as a new row.
+        [resultArray _setRemoteContent:objects];
+
+        // Let controllers showing this array rearrange (selection is kept)
+        [someEntity _rearrangeControllersForArrays:[resultArray] object:nil];
 
         // setContent darf NUR ausgeführt werden, wenn die Initialabfrage
         // wirklich ALLE Objekte abgefragt hat ("1" == "1").
@@ -724,6 +913,33 @@ var _allRelationships;
         console.error("Failed to parse JSON: " + e);
         return [[FSMutableArray alloc] initWithArray:@[] ofEntity:someEntity];
     }
+}
+
+@end
+
+
+// MARK: - FSMutableArray Live Sync
+// Inhalt ändern OHNE INSERT/DELETE am Server (die Änderung kommt ja vom Server)
+
+@implementation FSMutableArray (FSLiveSync)
+
+- (void)_setRemoteContent:(CPArray)someObjects
+{
+    [self _setRepresentedObject:someObjects];
+}
+
+- (void)_insertRemoteObject:(id)anObject
+{
+    var target = [[self _representedObject] copy];
+    [target addObject:anObject];
+    [self _setRepresentedObject:target];
+}
+
+- (void)_removeRemoteObject:(id)anObject
+{
+    var target = [[self _representedObject] copy];
+    [target removeObjectIdenticalTo:anObject];
+    [self _setRepresentedObject:target];
 }
 
 @end
@@ -843,6 +1059,35 @@ var _allRelationships;
     return self;
 }
 
+// Live Sync: bereits geladene To-Many-Beziehungen im Hintergrund neu holen
+// (z.B. Prozeduren nach neu erzeugter Rechnung). Der Inhalt wird erst
+// ausgetauscht, wenn die Daten da sind.
+- (void)refreshLoadedRelationships
+{
+    var rels = [_entity relationships];
+
+    for (var i = 0; i < [rels count]; i++)
+    {
+        var rel = [rels objectAtIndex:i];
+        if ([rel type] == FSRelationshipTypeToOne)
+            continue;
+
+        [rel _refetchCachedArrayForKey:[self valueForKey:[rel bindingColumn] || [_entity pk]]];
+    }
+}
+
+// Geladene Beziehungen verwerfen, beim nächsten Zugriff werden sie frisch geholt
+- (void)invalidateLoadedRelationships
+{
+    var rels = [_entity relationships];
+
+    for (var i = 0; i < [rels count]; i++)
+    {
+        var rel = [rels objectAtIndex:i];
+        [rel _dropCacheForKey:[self valueForKey:[rel bindingColumn] || [_entity pk]]];
+    }
+}
+
 - (void)reload
 {
     var pk = [_data objectForKey:_entity._pk];
@@ -888,7 +1133,7 @@ var _allRelationships;
 - (int)typeOfKey:(CPString)aKey
 {
     if( [[_entity columns] containsObject:aKey]) return 0;
-    if( [_entity relationOfName:aKey]) return 1;
+    if( [_entity relationshipWithName:aKey]) return 1;
     return CPNotFound;
 }
 
@@ -910,7 +1155,7 @@ var _allRelationships;
     }
     else if(type == 1)
     {
-        var rel = [_entity relationOfName:aKey];
+        var rel = [_entity relationshipWithName:aKey];
         var bindingColumn = [rel bindingColumn] || [_entity pk];
         var isToMany = ([rel type] == FSRelationshipTypeToMany);
         var myoptions = [CPMutableDictionary dictionary];

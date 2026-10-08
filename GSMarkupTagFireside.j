@@ -125,7 +125,17 @@ var _sharedUndoManager;
 }
 -(void) setEntity: anEntity
 {	_entity=anEntity;
+	if (!anEntity)
+		return;
+
 	_entity.__ACForSpinner=self;
+
+	// Live-Sync: Controller beim Entity registrieren, damit Fireside ihn bei
+	// Push-Änderungen gezielt neu anordnen kann (Selektion bleibt erhalten).
+	// respondsToSelector, weil Renaissance hier zunächst auch einen
+	// symbolischen Namen (String) übergeben kann, bevor das Entity aufgelöst ist.
+	if ([anEntity respondsToSelector:@selector(_registerController:)])
+		[anEntity _registerController:self];
 }
 -(void) selectObjectWithPK: myPk
 {	var o= [_entity objectWithPK: myPk];
