@@ -745,7 +745,10 @@ var _allRelationships;
 
 - (void)insertObject:(id)obj
 {
-    if(!obj._changes) return;
+
+    if (!obj._changes)
+        obj._changes = [CPMutableDictionary dictionary];
+
     var req = [self requestForInsertingObjectInEntity:[obj entity]];
     [req setHTTPBody:[obj._changes toJSON]];
     [_persistenceQueue addOperation:[[FSRequestOperation alloc] initWithRequest:req object:obj type:"INSERT"]];
