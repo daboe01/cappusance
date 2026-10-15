@@ -745,7 +745,6 @@ var _allRelationships;
 
 - (void)insertObject:(id)obj
 {
-
     if (!obj._changes)
         obj._changes = [CPMutableDictionary dictionary];
 
